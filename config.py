@@ -63,7 +63,8 @@ class Config:
                 'jdf_template': 'default.jdf',
                 'burn_speed': '8x',
                 'verify_after_burn': True,
-                'auto_eject': False
+                'auto_eject': False,
+                'robot_uuid': '00000000-0000-0000-0000-000000000000'
             },
             'jobs': {
                 'max_concurrent': 3,
@@ -140,6 +141,11 @@ class Config:
         return Path(self.config_data['folders']['temp'])
 
     # Robot Configuration
+    @property
+    def robot_uuid(self):
+        """Robot UUID identifier."""
+        return self.config_data['robot']['robot_uuid']
+
     @property
     def robot_name(self):
         """Robot name identifier."""

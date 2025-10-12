@@ -1,14 +1,13 @@
 """
-Job Queue System for managing ISO burning tasks
+Job Queue Management for EPSON PP-100 Disc Burner Application
 """
 
-import uuid
-import time
 import threading
-from enum import Enum
+import uuid
+from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Callable, Any
 from dataclasses import dataclass, field
-from datetime import datetime
+from enum import Enum
 import logging
 
 from config import Config

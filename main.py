@@ -16,12 +16,13 @@ import os
 import argparse
 import logging
 from datetime import datetime
+from typing import Dict, Any
 from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction, QMessageBox
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal
 from PyQt5.QtGui import QIcon
 
 from config import Config
-from job_queue import JobQueue
+from job_queue import JobQueue, BurnJob, JobStatus, JobPriority
 from gui.main_window import MainWindow
 from background_worker import BackgroundWorker
 from local_storage import LocalStorage
@@ -58,11 +59,14 @@ class EpsonBurnerApp:
         # Setup system tray
         self.setup_system_tray()
 
-        # Create main window (initially hidden)
-        self.main_window = MainWindow(self.config, self.job_queue)
+        # Create main window only if GUI is requested initially
+        self.main_window = None
+        if show_gui:
+            self._create_main_window()
 
-        # Connect signals
-        self.connect_signals()
+        # Connect signals (only if main window exists)
+        if self.main_window:
+            self.connect_signals()
 
         # Start background worker
         self.background_worker.start()
@@ -70,11 +74,15 @@ class EpsonBurnerApp:
         # Load existing jobs from storage
         self.load_existing_jobs()
 
-        # Show main window if requested
-        if show_gui:
+        # Show main window if requested (but main window might not exist yet)
+        if show_gui and self.main_window:
             QTimer.singleShot(1000, self.show_main_window)  # Delay to ensure proper initialization
 
-        self.logger.info("EPSON PP-100 Disc Burner application initialized")
+    def _create_main_window(self):
+        """Create main window (lazy loading)."""
+        if self.main_window is None:
+            self.main_window = MainWindow(self.config, self.job_queue)
+            self.connect_signals()
 
     def setup_logging(self):
         """Setup application logging."""
@@ -152,11 +160,12 @@ class EpsonBurnerApp:
 
     def connect_signals(self):
         """Connect application signals."""
-        # Connect job manager signals to update GUI
-        self.job_queue.add_job_update_callback(self.main_window.on_job_updated)
+        if self.main_window:
+            # Connect job manager signals to update GUI
+            self.job_queue.add_job_update_callback(self.main_window.on_job_updated)
 
-        # Connect main window signals to job queue
-        self.main_window.job_updated.connect(self.on_job_updated_from_gui)
+            # Connect main window signals to job queue
+            self.main_window.job_updated.connect(self.on_job_updated_from_gui)
 
         # Connect tray icon messages
         self.tray_icon.messageClicked.connect(self.on_tray_message_clicked)
@@ -206,30 +215,43 @@ class EpsonBurnerApp:
                     'projectId': job_record.project_id
                 }
 
-                # Create job object (simplified for compatibility)
-                class SimpleJob:
-                    def __init__(self):
-                        self.id = job_record.id
-                        self.iso_info = iso_info
-                        self.priority = job_record.priority or 2
-                        self.status = job_record.status or 'pending'
-                        self.created_at = job_record.created_at or datetime.now()
-                        self.updated_at = job_record.updated_at or datetime.now()
-                        self.iso_path = job_record.iso_path
-                        self.jdf_path = job_record.jdf_path
-                        self.progress = job_record.progress or 0.0
-                        self.error_message = job_record.error_message
-                        self.retry_count = job_record.retry_count or 0
-                        self.robot_job_id = job_record.robot_job_id
-                        self.estimated_completion = job_record.estimated_completion
+                # Create BurnJob from storage record
+                from job_queue import BurnJob, JobPriority
 
-                job = SimpleJob()
+                # Convert string status to enum
+                try:
+                    status_enum = JobStatus(job_record.status or 'pending')
+                except (ValueError, AttributeError):
+                    status_enum = JobStatus.PENDING
+
+                # Convert priority
+                try:
+                    priority_enum = JobPriority(job_record.priority) if job_record.priority else JobPriority.NORMAL
+                except (ValueError, AttributeError):
+                    priority_enum = JobPriority.NORMAL
+
+                # Create BurnJob object
+                job = BurnJob(
+                    id=job_record.id,
+                    iso_info=iso_info,
+                    priority=priority_enum,
+                    status=status_enum,
+                    created_at=job_record.created_at or datetime.now(),
+                    updated_at=job_record.updated_at or datetime.now(),
+                    iso_path=job_record.iso_path,
+                    jdf_path=job_record.jdf_path,
+                    progress=job_record.progress or 0.0,
+                    error_message=job_record.error_message,
+                    retry_count=job_record.retry_count or 0,
+                    robot_job_id=job_record.robot_job_id,
+                    estimated_completion=job_record.estimated_completion
+                )
 
                 # Add to job queue
                 self.job_queue.jobs[job.id] = job
 
                 # Add to queue if still pending
-                if job.status in ['pending', 'downloading', 'generating_jdf', 'jdf_ready', 'queued_for_burning']:
+                if job.status in [JobStatus.PENDING, JobStatus.DOWNLOADING, JobStatus.GENERATING_JDF, JobStatus.JDF_READY, JobStatus.QUEUED_FOR_BURNING]:
                     self.job_queue._insert_job_by_priority(job.id)
 
             self.logger.info(f"Loaded {len(jobs)} existing jobs from storage")
@@ -239,13 +261,15 @@ class EpsonBurnerApp:
 
     def show_main_window(self):
         """Show the main application window."""
+        self._create_main_window()  # Ensure window exists
         self.main_window.show()
         self.main_window.raise_()
         self.main_window.activateWindow()
 
     def hide_main_window(self):
         """Hide the main application window."""
-        self.main_window.hide()
+        if self.main_window:
+            self.main_window.hide()
 
     def on_tray_activated(self, reason):
         """Handle tray icon activation."""
@@ -254,6 +278,7 @@ class EpsonBurnerApp:
 
     def show_system_status(self):
         """Show system status dialog."""
+        self._create_main_window()  # Ensure window exists
         try:
             status = self.background_worker.get_worker_status()
 
@@ -290,6 +315,7 @@ class EpsonBurnerApp:
 
     def force_api_check(self):
         """Force an immediate API check for new ISOs."""
+        self._create_main_window()  # Ensure window exists
         try:
             success = self.background_worker.trigger_api_check_now()
 
@@ -317,7 +343,7 @@ class EpsonBurnerApp:
         """Quit the application completely."""
         # Confirm quit
         reply = QMessageBox.question(
-            self.main_window,
+            None,  # Use None since main window might not exist yet
             'Confirmar salida',
             '¿Está seguro de que desea salir?\nEsto detendrá todos los trabajos en progreso.',
             QMessageBox.Yes | QMessageBox.No,
@@ -335,7 +361,7 @@ class EpsonBurnerApp:
             self.save_application_state()
 
             # Close main window if open
-            if self.main_window.isVisible():
+            if self.main_window and self.main_window.isVisible():
                 self.main_window.close()
 
             # Quit application
@@ -353,7 +379,7 @@ class EpsonBurnerApp:
             for job in self.job_queue.get_all_jobs():
                 self.storage.update_job_status(
                     job.id,
-                    job.status,
+                    job.status.value,
                     job.error_message,
                     job.progress
                 )

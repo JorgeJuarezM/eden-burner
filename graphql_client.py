@@ -4,6 +4,7 @@ GraphQL client for querying ISO files from API
 
 import asyncio
 import json
+import os
 from typing import List, Dict, Optional, Any
 from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
@@ -28,12 +29,12 @@ class GraphQLClient:
         # Initialize transport
         headers = {}
         if self.config.api_key:
-            headers['Authorization'] = f'Bearer {self.config.api_key}'
+            headers['Authorization'] = f'Token {self.config.api_key}'
 
         self.transport = AIOHTTPTransport(
             url=self.config.graphql_endpoint,
             headers=headers,
-            timeout=aiohttp.ClientTimeout(total=self.config.api_timeout)
+            timeout=self.config.api_timeout  # Pass timeout directly as seconds
         )
 
         # Initialize client
@@ -51,33 +52,37 @@ class GraphQLClient:
         try:
             # GraphQL query for new ISOs
             query_string = '''
-            query GetNewIsos($lastCheckTime: String) {
-                newIsos(lastCheckTime: $lastCheckTime) {
+            query isosByBurner($burner: UUID!) {
+                downloadIsosByBurner(burner: $burner) {
                     id
-                    filename
-                    fileSize
-                    downloadUrl
-                    checksum
-                    createdAt
-                    description
-                    projectId
-                    priority
+                    study {
+                    patient{
+                        fullName
+                        identifier
+                        birthDate
+                    }
+                    dicomDateTime
+                    dicomDescription
+                    }
+                    fileUrl
                 }
             }
             '''
 
             query = gql(query_string)
 
-            variables = {}
-            if last_check_time:
-                variables['lastCheckTime'] = last_check_time
+            variables = {
+                'burner': self.config.robot_uuid    
+            }
+            # if last_check_time:
+            #     variables['lastCheckTime'] = last_check_time
 
             # Execute query with retry logic
             max_retries = self.config.config_data['api']['retry_attempts']
             for attempt in range(max_retries):
                 try:
                     result = await self.client.execute_async(query, variable_values=variables)
-                    return result.get('newIsos', [])
+                    return result.get('downloadIsosByBurner', [])
                 except Exception as e:
                     self.logger.warning(f"Query attempt {attempt + 1} failed: {e}")
                     if attempt == max_retries - 1:
@@ -98,7 +103,7 @@ class GraphQLClient:
         Returns:
             True if download successful, False otherwise
         """
-        download_url = iso_info.get('downloadUrl')
+        download_url = iso_info.get('fileUrl')
         if not download_url:
             self.logger.error(f"No download URL for ISO: {iso_info.get('id')}")
             return False

@@ -39,7 +39,8 @@
             "env": {
                 "PYTHONPATH": "${workspaceFolder}",
                 "EPSON_DEBUG": "1",
-                "DISPLAY": "${env:DISPLAY}"
+                "DISPLAY": "${env:DISPLAY}",
+                "QT_MAC_WANTS_LAYER": "1"
             }
         },
         {

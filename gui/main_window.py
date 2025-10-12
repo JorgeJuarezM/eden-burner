@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QH
                            QAction, QMessageBox, QSplitter, QGroupBox, QTextEdit,
                            QComboBox, QLineEdit, QFormLayout, QSpinBox, QCheckBox,
                            QSystemTrayIcon, QMenu, QStyle, QSizePolicy)
-from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, pyqtSlot
+from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, pyqtSlot, QMetaObject, Q_ARG
 from PyQt5.QtGui import QFont, QIcon, QColor, QPalette
 
 from config import Config
@@ -58,6 +58,16 @@ class JobTableWidget(QTableWidget):
         Args:
             jobs: List of jobs to display
         """
+        # Schedule GUI update for main thread
+        QMetaObject.invokeMethod(
+            self, "_update_jobs_gui",
+            Qt.QueuedConnection,
+            Q_ARG(list, jobs)
+        )
+
+    @pyqtSlot(list)
+    def _update_jobs_gui(self, jobs: List[BurnJob]):
+        """Update table GUI from main thread."""
         self.setRowCount(len(jobs))
 
         for row, job in enumerate(jobs):

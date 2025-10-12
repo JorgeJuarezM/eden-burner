@@ -126,8 +126,6 @@ dmypy.json
 
 # IDE files
 .vscode/settings.json
-.vscode/tasks.json
-.vscode/launch.json
 .idea/
 *.swp
 *.swo
