@@ -6,13 +6,12 @@ Tests configuration without GUI dependencies
 
 import sys
 import os
-from pathlib import Path
 
-# Add current directory to path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
 try:
-    from config import Config
+    from config.config import Config
 except ImportError as e:
     print(f"Error importing config: {e}")
     print("Make sure you're running from the correct directory")

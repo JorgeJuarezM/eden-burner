@@ -22,10 +22,19 @@ from PyQt5.QtCore import Qt, QTimer, pyqtSignal
 from PyQt5.QtGui import QIcon
 
 from config import Config
-from job_queue import JobQueue, BurnJob, JobStatus, JobPriority
-from gui.main_window import MainWindow
-from background_worker import BackgroundWorker
-from local_storage import LocalStorage
+import job_queue
+import gui.main_window
+import background_worker
+import local_storage
+
+# Import classes directly
+JobQueue = job_queue.JobQueue
+BurnJob = job_queue.BurnJob
+JobStatus = job_queue.JobStatus
+JobPriority = job_queue.JobPriority
+MainWindow = gui.main_window.MainWindow
+BackgroundWorker = background_worker.BackgroundWorker
+LocalStorage = local_storage.LocalStorage
 
 
 class EpsonBurnerApp:
@@ -224,7 +233,7 @@ class EpsonBurnerApp:
                 }
 
                 # Create BurnJob from storage record
-                from job_queue import BurnJob, JobPriority
+                from .job_queue import BurnJob, JobPriority
 
                 # Convert string status to enum
                 try:
@@ -416,6 +425,7 @@ def main():
     if args.test_config:
         # Test configuration without starting GUI
         try:
+            from config import Config
             config = Config()
             config_errors = config.validate_config()
             if config_errors:
