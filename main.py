@@ -211,8 +211,16 @@ class EpsonBurnerApp:
                     'fileSize': job_record.file_size,
                     'downloadUrl': job_record.download_url,
                     'checksum': job_record.checksum,
-                    'description': job_record.description,
-                    'projectId': job_record.project_id
+                    'study': {
+                        'patient': {
+                            'fullName': job_record.study_patient_name,
+                            'identifier': job_record.study_patient_id,
+                            'birthDate': job_record.study_patient_birth_date.isoformat() if job_record.study_patient_birth_date else None,
+                        },
+                        'dicomDateTime': job_record.study_dicom_date_time.isoformat() if job_record.study_dicom_date_time else None,
+                        'dicomDescription': job_record.study_dicom_description,
+                    },
+                    'fileUrl': job_record.download_url  # GraphQL API uses fileUrl
                 }
 
                 # Create BurnJob from storage record
@@ -400,8 +408,29 @@ def main():
     parser = argparse.ArgumentParser(description='EPSON PP-100 Disc Burner Application')
     parser.add_argument('--background', action='store_true',
                        help='Run in background mode (system tray only, no GUI on startup)')
+    parser.add_argument('--test-config', action='store_true',
+                       help='Test configuration and exit')
 
     args = parser.parse_args()
+
+    if args.test_config:
+        # Test configuration without starting GUI
+        try:
+            config = Config()
+            config_errors = config.validate_config()
+            if config_errors:
+                print("Configuration errors found:")
+                for error in config_errors:
+                    print(f"  - {error}")
+                return 1
+            else:
+                print("Configuration is valid")
+                print(f"Robot UUID: {config.robot_uuid}")
+                print(f"API Endpoint: {config.graphql_endpoint}")
+                return 0
+        except Exception as e:
+            print(f"Error testing configuration: {e}")
+            return 1
 
     # Default behavior: show GUI
     # Use --background flag to run in system tray only mode

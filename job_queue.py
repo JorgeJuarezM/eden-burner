@@ -9,6 +9,7 @@ from typing import Dict, List, Optional, Callable, Any
 from dataclasses import dataclass, field
 from enum import Enum
 import logging
+from pathlib import Path
 
 from config import Config
 from iso_downloader import ISODownloadManager
@@ -368,12 +369,15 @@ class JobQueue:
         """Move completed job files to completed folder."""
         try:
             if job.iso_path:
+                from pathlib import Path
                 completed_iso = self.config.completed_folder / Path(job.iso_path).name
                 import shutil
                 shutil.move(job.iso_path, completed_iso)
 
             if job.jdf_path:
+                from pathlib import Path
                 completed_jdf = self.config.completed_folder / Path(job.jdf_path).name
+                import shutil
                 shutil.move(job.jdf_path, completed_jdf)
 
         except Exception as e:

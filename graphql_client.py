@@ -71,14 +71,25 @@ class GraphQLClient:
 
             query = gql(query_string)
 
+            # Ensure robot_uuid is available and valid
+            robot_uuid = getattr(self.config, 'robot_uuid', None)
+            if not robot_uuid:
+                self.logger.error("robot_uuid not configured in application config")
+                return []
+
             variables = {
-                'burner': self.config.robot_uuid    
+                'burner': robot_uuid
             }
             # if last_check_time:
             #     variables['lastCheckTime'] = last_check_time
 
             # Execute query with retry logic
-            max_retries = self.config.config_data['api']['retry_attempts']
+            max_retries = 3  # default retry attempts
+            if hasattr(self.config, 'config_data') and 'api' in self.config.config_data and 'retry_attempts' in self.config.config_data['api']:
+                max_retries = self.config.config_data['api']['retry_attempts']
+            elif hasattr(self.config, 'retry_attempts'):
+                max_retries = self.config.retry_attempts
+
             for attempt in range(max_retries):
                 try:
                     result = await self.client.execute_async(query, variable_values=variables)

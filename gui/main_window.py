@@ -31,7 +31,7 @@ class JobTableWidget(QTableWidget):
 
     def setup_table(self):
         """Setup table headers and properties."""
-        headers = ['ID', 'ISO', 'Estado', 'Progreso', 'Prioridad', 'Creado', 'Actualizado']
+        headers = ['ID', 'Paciente', 'Estudio', 'Estado', 'Progreso', 'Prioridad', 'Creado', 'Actualizado']
 
         self.setColumnCount(len(headers))
         self.setHorizontalHeaderLabels(headers)
@@ -71,12 +71,15 @@ class JobTableWidget(QTableWidget):
         header = self.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.Stretch)
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)  # ID column
-        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)  # Status column
+        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)  # Status column
 
         # Set minimum column widths
         self.setColumnWidth(0, 100)  # ID
-        self.setColumnWidth(2, 100)  # Status
-        self.setColumnWidth(3, 150)  # Progress
+        self.setColumnWidth(1, 200)  # Patient
+        self.setColumnWidth(2, 200)  # Study
+        self.setColumnWidth(3, 100)  # Status
+        self.setColumnWidth(4, 150)  # Progress
+        self.setColumnWidth(5, 80)   # Priority
 
     def update_jobs(self, jobs: List[BurnJob]):
         """Update table with job data.
@@ -110,6 +113,23 @@ class JobTableWidget(QTableWidget):
             iso_item.setForeground(QColor(255, 255, 255))  # White text
             self.setItem(row, 1, iso_item)
 
+            # Patient information
+            study_info = job.iso_info.get('study', {})
+            patient_info = study_info.get('patient', {})
+            patient_name = patient_info.get('fullName', 'Desconocido')
+            patient_item = QTableWidgetItem(patient_name)
+            patient_item.setForeground(QColor(255, 255, 255))  # White text
+            self.setItem(row, 1, patient_item)
+
+            # Study information  
+            study_desc = study_info.get('dicomDescription', 'Sin descripción')
+            if len(study_desc) > 50:
+                study_desc = study_desc[:47] + '...'
+            study_item = QTableWidgetItem(study_desc)
+            study_item.setToolTip(study_info.get('dicomDescription', ''))
+            study_item.setForeground(QColor(255, 255, 255))  # White text
+            self.setItem(row, 2, study_item)
+
             # Status with color coding
             status_item = QTableWidgetItem(job.status.value.title())
             status_item.setToolTip(f"Estado: {job.status.value}")
@@ -135,7 +155,7 @@ class JobTableWidget(QTableWidget):
                 status_item.setBackground(QColor(224, 224, 224))  # Light gray background
                 status_item.setForeground(QColor(0, 0, 0))  # Black text
 
-            self.setItem(row, 2, status_item)
+            self.setItem(row, 3, status_item)
 
             # Progress bar
             progress_bar = QProgressBar()
@@ -150,7 +170,7 @@ class JobTableWidget(QTableWidget):
             else:
                 progress_bar.setStyleSheet("QProgressBar::chunk { background-color: #ADD8E6; }")
 
-            self.setCellWidget(row, 3, progress_bar)
+            self.setCellWidget(row, 4, progress_bar)
 
             # Priority
             priority_text = {
@@ -161,17 +181,17 @@ class JobTableWidget(QTableWidget):
             }
             priority_item = QTableWidgetItem(priority_text.get(job.priority, 'Normal'))
             priority_item.setForeground(QColor(255, 255, 255))  # White text
-            self.setItem(row, 4, priority_item)
+            self.setItem(row, 5, priority_item)
 
             # Created time
             created_item = QTableWidgetItem(job.created_at.strftime('%Y-%m-%d %H:%M'))
             created_item.setForeground(QColor(255, 255, 255))  # White text
-            self.setItem(row, 5, created_item)
+            self.setItem(row, 6, created_item)
 
             # Updated time
             updated_item = QTableWidgetItem(job.updated_at.strftime('%Y-%m-%d %H:%M'))
             updated_item.setForeground(QColor(255, 255, 255))  # White text
-            self.setItem(row, 6, updated_item)
+            self.setItem(row, 7, updated_item)
 
     def get_selected_job_id(self) -> Optional[str]:
         """Get the ID of the currently selected job.
@@ -211,6 +231,14 @@ class JobDetailsWidget(QWidget):
 
         self.filename_label = QLabel('--')
         info_layout.addRow("Archivo ISO:", self.filename_label)
+
+        # Patient information
+        self.patient_label = QLabel('--')
+        info_layout.addRow("Paciente:", self.patient_label)
+
+        # Study information
+        self.study_label = QLabel('--')
+        info_layout.addRow("Estudio:", self.study_label)
 
         self.progress_label = QLabel('--')
         info_layout.addRow("Progreso:", self.progress_label)
@@ -274,6 +302,19 @@ class JobDetailsWidget(QWidget):
         self.job_id_label.setText(job.id[:16] + '...' if len(job.id) > 16 else job.id)
         self.status_label.setText(job.status.value.title())
         self.filename_label.setText(job.iso_info.get('filename', 'Unknown'))
+
+        # Patient information
+        study_info = job.iso_info.get('study', {})
+        patient_info = study_info.get('patient', {})
+        patient_name = patient_info.get('fullName', 'Desconocido')
+        patient_id = patient_info.get('identifier', 'N/A')
+        self.patient_label.setText(f"{patient_name} (ID: {patient_id})")
+
+        # Study information
+        study_desc = study_info.get('dicomDescription', 'Sin descripción')
+        study_datetime = study_info.get('dicomDateTime', 'N/A')
+        self.study_label.setText(f"{study_desc[:50]}..." if len(study_desc) > 50 else study_desc)
+
         self.progress_label.setText(f"{job.progress:.1f}%")
         self.created_label.setText(job.created_at.strftime('%Y-%m-%d %H:%M:%S'))
         self.updated_label.setText(job.updated_at.strftime('%Y-%m-%d %H:%M:%S'))
@@ -304,6 +345,8 @@ class JobDetailsWidget(QWidget):
         self.job_id_label.setText('--')
         self.status_label.setText('--')
         self.filename_label.setText('--')
+        self.patient_label.setText('--')
+        self.study_label.setText('--')
         self.progress_label.setText('--')
         self.created_label.setText('--')
         self.updated_label.setText('--')
