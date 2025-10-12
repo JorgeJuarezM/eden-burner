@@ -42,7 +42,7 @@ class Config:
 
     def get_default_config(self):
         """Get default configuration values."""
-        app_dir = Path(__file__).parent
+        app_dir = Path(__file__).parent.parent  # Go up one level to project root
 
         return {
             'api': {
