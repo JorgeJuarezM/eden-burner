@@ -1,0 +1,70 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "python": "${workspaceFolder}/venv/bin/python3",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "EPSON_DEBUG": "1"
+            }
+        },
+        {
+            "name": "Python: Main Application",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "python": "${workspaceFolder}/venv/bin/python3",
+            "args": ["--background"],
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "EPSON_DEBUG": "1"
+            }
+        },
+        {
+            "name": "Python: Main Application (GUI)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "python": "${workspaceFolder}/venv/bin/python3",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "EPSON_DEBUG": "1",
+                "DISPLAY": "${env:DISPLAY}"
+            }
+        },
+        {
+            "name": "Python: Build Script",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/build_simple.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "python": "${workspaceFolder}/venv/bin/python3",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Python: Test Configuration",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/test_config.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "python": "${workspaceFolder}/venv/bin/python3",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        }
+    ]
+}
