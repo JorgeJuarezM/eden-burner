@@ -71,13 +71,30 @@ Para personalizar el ejecutable:
 
 #### Para Usuarios Finales:
 - **macOS**: Distribuir el archivo `.app` o crear un `.dmg`
-- **Windows**: Distribuir el ejecutable `.exe`
+- **Windows**: Distribuir el ejecutable `.exe` o el instalador `.exe`
 - **Linux**: Distribuir el ejecutable independiente
 
 #### Instalación (opcional):
 - **macOS**: Arrastrar `.app` a la carpeta Aplicaciones
-- **Windows**: Ejecutar el `.exe` directamente
+- **Windows**: Ejecutar el `.exe` directamente o usar el instalador NSIS
 - **Linux**: Ejecutar el binario directamente
+
+### 🪟 Windows Instalador NSIS
+
+Para crear un instalador profesional para Windows:
+
+```bash
+# En una máquina Windows con NSIS instalado:
+makensis windows_installer.nsi
+
+# Esto crea: epson-burner-app-windows-installer.exe
+```
+
+Características del instalador:
+- ✅ Instalación en `Program Files`
+- ✅ Accesos directos en escritorio e inicio
+- ✅ Desinstalación completa
+- ✅ Registro en "Agregar/Quitar programas"
 
 ### 🛠️ Solución de Problemas
 

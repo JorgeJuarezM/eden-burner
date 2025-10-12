@@ -1,0 +1,16 @@
+INSTRUCCIONES PARA WINDOWS:
+
+1. Para crear el ejecutable Windows:
+   a. Copie este directorio completo a una máquina Windows
+   b. Ejecute: python build_windows.py
+
+2. Para crear un instalador:
+   a. Instale NSIS en Windows
+   b. Ejecute: makensis windows_installer.nsi
+
+3. El ejecutable final estará en:
+   dist/epson-burner-app-windows.exe
+
+NOTA: Actualmente este paquete contiene el ejecutable de macOS.
+Para obtener el ejecutable de Windows real, ejecute el proceso
+de construcción en una máquina Windows.

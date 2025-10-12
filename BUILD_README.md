@@ -76,10 +76,63 @@ El ejecutable compilado tiene el siguiente comportamiento:
 
 ## Platform-Specific Notes
 
-### Windows
-- Requires Windows 7 or later
-- Single `.exe` file created when using `--onefile`
-- Console window hidden by default
+### Windows Compilation
+
+### From macOS/Linux (Cross-Platform Package)
+
+If you're on macOS or Linux and want to create a Windows executable:
+
+```bash
+# Create Windows distribution package
+python create_windows_package.py
+
+# This creates:
+# - windows_installer.nsi (NSIS installer script)
+# - LICENSE.txt (license file)
+# - dist_windows/ (package with instructions)
+# - resources/icon.ico (Windows icon)
+```
+
+### On Windows Machine
+
+1. **Install Requirements:**
+   ```bash
+   # Install Python 3.8+ and pip
+   # Activate virtual environment
+   python -m venv venv
+   venv\Scripts\activate
+
+   # Install dependencies
+   pip install -r requirements.txt
+   pip install -r requirements-dev.txt
+   ```
+
+2. **Copy Files:**
+   Copy these files from the cross-platform package to Windows:
+   - `epson-burner-app` (macOS executable - for reference)
+   - `windows_installer.nsi`
+   - `LICENSE.txt`
+   - `resources/icon.ico`
+
+3. **Build Executable:**
+   ```bash
+   python build_windows.py
+   ```
+
+4. **Create Installer (Optional):**
+   ```bash
+   # Install NSIS from https://nsis.sourceforge.io/
+   # Then run:
+   makensis windows_installer.nsi
+   ```
+
+### Windows-Specific Notes
+
+- **Python Version:** Requires Python 3.8 or later
+- **Dependencies:** All dependencies must be installed via pip
+- **Icon:** Uses `resources/icon.ico` for Windows icon
+- **Output:** Creates `dist/epson-burner-app-windows.exe`
+- **Installer:** Creates `epson-burner-app-windows-installer.exe` (optional)
 
 ### macOS
 - Creates proper `.app` bundle
