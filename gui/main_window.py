@@ -390,7 +390,7 @@ class MainWindow(QMainWindow):
     def setup_ui(self):
         """Setup the main window UI."""
         self.setWindowTitle(self.config.window_title)
-        self.setMinimumSize(1000, 700)
+        self.setMinimumSize(1200, 800)
 
         # Create central widget
         central_widget = QWidget()
@@ -399,21 +399,9 @@ class MainWindow(QMainWindow):
         # Main layout
         layout = QVBoxLayout(central_widget)
 
-        # Create splitter for resizable panels
-        splitter = QSplitter(Qt.Horizontal)
-
-        # Left panel - Job list
-        left_panel = self.create_job_list_panel()
-        splitter.addWidget(left_panel)
-
-        # Right panel - Job details
-        right_panel = self.create_job_details_panel()
-        splitter.addWidget(right_panel)
-
-        # Set splitter proportions
-        splitter.setSizes([600, 400])
-
-        layout.addWidget(splitter)
+        # Create main content area (table takes full width)
+        self.main_content = self.create_main_content()
+        layout.addWidget(self.main_content)
 
         # Status bar
         self.status_bar = QStatusBar()
@@ -422,6 +410,28 @@ class MainWindow(QMainWindow):
 
         # Menu bar
         self.setup_menu_bar()
+
+    def create_main_content(self):
+        """Create the main content area with table and optional sidebar."""
+        # Main horizontal layout
+        main_layout = QHBoxLayout()
+
+        # Left side - Job table (takes most space)
+        left_panel = self.create_job_list_panel()
+        main_layout.addWidget(left_panel, 1)  # Stretch factor 1
+
+        # Right side - Sidebar for job details (initially hidden)
+        self.details_sidebar = self.create_details_sidebar()
+        self.details_sidebar.setVisible(False)  # Initially hidden
+        self.details_sidebar.setMaximumWidth(400)
+        self.details_sidebar.setMinimumWidth(300)
+        main_layout.addWidget(self.details_sidebar, 0)  # Stretch factor 0 (fixed size)
+
+        # Create container widget
+        container = QWidget()
+        container.setLayout(main_layout)
+
+        return container
 
     def create_job_list_panel(self):
         """Create the job list panel."""
@@ -450,10 +460,9 @@ class MainWindow(QMainWindow):
         filter_layout.addStretch()
         layout.addLayout(filter_layout)
 
-        # Job table
+        # Job table - no height limit to use full available space
         self.job_table = JobTableWidget()
-        self.job_table.setMaximumHeight(400)
-        self.job_table.itemSelectionChanged.connect(self.on_job_selection_changed)
+        self.job_table.itemDoubleClicked.connect(self.on_job_double_clicked)
         layout.addWidget(self.job_table)
 
         # Queue status
@@ -476,10 +485,88 @@ class MainWindow(QMainWindow):
 
         return panel
 
-    def create_job_details_panel(self):
-        """Create the job details panel."""
+    def mousePressEvent(self, event):
+        """Handle mouse press events to hide sidebar when clicking outside."""
+        if self.details_sidebar.isVisible():
+            # Check if click is outside the sidebar area
+            sidebar_rect = self.details_sidebar.geometry()
+            if not sidebar_rect.contains(event.pos()):
+                self.hide_details_sidebar()
+
+        super().mousePressEvent(event)
+
+    def create_details_sidebar(self):
+        sidebar = QWidget()
+        sidebar.setStyleSheet("""
+            QWidget {
+                background-color: #2d2d2d;
+                border-left: 2px solid #555555;
+            }
+        """)
+
+        layout = QVBoxLayout(sidebar)
+
+        # Header with title and close button
+        header_layout = QHBoxLayout()
+
+        title_label = QLabel("Detalles del Trabajo")
+        title_label.setFont(QFont('Arial', 12, QFont.Bold))
+        title_label.setStyleSheet("color: #ffffff; padding: 5px;")
+        header_layout.addWidget(title_label)
+
+        header_layout.addStretch()
+
+        # Close button
+        self.close_sidebar_btn = QPushButton("✕")
+        self.close_sidebar_btn.setFixedSize(30, 30)
+        self.close_sidebar_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #555555;
+                color: #ffffff;
+                border: none;
+                border-radius: 15px;
+                font-size: 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #777777;
+            }
+        """)
+        self.close_sidebar_btn.clicked.connect(self.hide_details_sidebar)
+        header_layout.addWidget(self.close_sidebar_btn)
+
+        layout.addLayout(header_layout)
+
+        # Job details widget
         self.job_details = JobDetailsWidget()
-        return self.job_details
+        layout.addWidget(self.job_details)
+
+        return sidebar
+
+    def on_job_double_clicked(self, item):
+        """Handle double click on job item."""
+        row = item.row()
+        job_id = self.job_table.get_selected_job_id()
+
+        if job_id:
+            job = self.job_queue.get_job(job_id)
+            if job:
+                self.show_details_sidebar(job)
+
+    def show_details_sidebar(self, job):
+        """Show the details sidebar with job information."""
+        self.job_details.update_job_details(job)
+        self.details_sidebar.setVisible(True)
+        self.selected_job_id = job.id
+
+        # Animate sidebar appearance (optional)
+        self.details_sidebar.setMaximumWidth(400)
+
+    def hide_details_sidebar(self):
+        """Hide the details sidebar."""
+        self.details_sidebar.setVisible(False)
+        self.job_details.clear_details()
+        self.selected_job_id = None
 
     def setup_menu_bar(self):
         """Setup the menu bar."""
@@ -517,6 +604,15 @@ class MainWindow(QMainWindow):
         # Connect job queue signals
         self.job_queue.add_job_update_callback(self.on_job_updated)
 
+    def on_job_updated(self, job: BurnJob):
+        """Handle job update signal."""
+        self.job_updated.emit(job)
+        self.refresh_job_display()
+
+        # Update sidebar if showing this job
+        if self.selected_job_id == job.id and self.details_sidebar.isVisible():
+            self.job_details.update_job_details(job)
+
     def setup_timers(self):
         """Setup update timers."""
         # Timer for refreshing data
@@ -528,11 +624,6 @@ class MainWindow(QMainWindow):
         self.status_timer = QTimer()
         self.status_timer.timeout.connect(self.update_status_bar)
         self.status_timer.start(5000)  # Every 5 seconds
-
-    def on_job_updated(self, job: BurnJob):
-        """Handle job update signal."""
-        self.job_updated.emit(job)
-        self.refresh_job_display()
 
     def on_job_selection_changed(self):
         """Handle job selection change in table."""
