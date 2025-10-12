@@ -1,0 +1,45 @@
+# Configuración para la aplicación EPSON PP-100 Disc Burner
+# Este archivo contiene información sensible (claves API) por lo que está ignorado por git
+# Copie este archivo como config.yaml y configure sus valores
+
+# Configuración de API GraphQL
+api:
+  graphql_endpoint: "https://your-api-endpoint.com/graphql"  # Cambiar por tu endpoint real
+  api_key: "your-api-key-here"  # Agregar tu clave API si es necesaria
+  timeout: 30
+  retry_attempts: 3
+
+# Carpetas para almacenamiento de archivos
+folders:
+  downloads: "downloads"           # Carpeta para ISOs descargados
+  jdf_files: "jdf_files"          # Carpeta para archivos JDF generados
+  completed: "completed"          # Carpeta para trabajos completados
+  failed: "failed"               # Carpeta para trabajos fallidos
+  temp: "temp"                   # Carpeta temporal
+
+# Configuración del robot EPSON PP-100
+robot:
+  name: "EPSON_PP_100"
+  jdf_template: "default.jdf"
+  burn_speed: "8x"               # Velocidad de quemado (4x, 8x, 16x, etc.)
+  verify_after_burn: true        # Verificar discos después de quemar
+  auto_eject: false              # Expulsar automáticamente después de completar
+
+# Configuración de trabajos
+jobs:
+  max_concurrent: 3              # Número máximo de trabajos simultáneos
+  check_interval: 5              # Intervalo de verificación en segundos
+  retry_failed: true             # Reintentar trabajos fallidos automáticamente
+
+# Configuración de logging
+logging:
+  level: "INFO"                  # DEBUG, INFO, WARNING, ERROR
+  file: "epson-burner.log"       # Archivo de log
+  max_size: 10485760            # Tamaño máximo del archivo (10MB)
+  backup_count: 5                # Número de archivos de respaldo
+
+# Configuración de interfaz gráfica
+gui:
+  refresh_interval: 2            # Intervalo de actualización en segundos
+  theme: "default"               # Tema de la interfaz
+  show_notifications: true       # Mostrar notificaciones del sistema

@@ -143,6 +143,7 @@ Thumbs.db
 # Project specific files
 *.db
 *.log
+config.yaml
 config.local.yaml
 downloads/
 jdf_files/
