@@ -13,6 +13,7 @@ Features:
 
 import sys
 import os
+import argparse
 import logging
 from datetime import datetime
 from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction, QMessageBox
@@ -29,7 +30,7 @@ from local_storage import LocalStorage
 class EpsonBurnerApp:
     """Main application class for EPSON PP-100 disc burner management."""
 
-    def __init__(self):
+    def __init__(self, show_gui=False):
         # Load configuration FIRST
         self.config = Config()
 
@@ -68,6 +69,10 @@ class EpsonBurnerApp:
 
         # Load existing jobs from storage
         self.load_existing_jobs()
+
+        # Show main window if requested
+        if show_gui:
+            QTimer.singleShot(1000, self.show_main_window)  # Delay to ensure proper initialization
 
         self.logger.info("EPSON PP-100 Disc Burner application initialized")
 
@@ -365,8 +370,19 @@ class EpsonBurnerApp:
 
 def main():
     """Main entry point."""
+    parser = argparse.ArgumentParser(description='EPSON PP-100 Disc Burner Application')
+    parser.add_argument('--show-gui', action='store_true',
+                       help='Show the main window immediately on startup')
+    parser.add_argument('--gui', action='store_true',
+                       help='Show the main window immediately on startup (alias for --show-gui)')
+
+    args = parser.parse_args()
+
+    # Check for show_gui flag (either --show-gui or --gui)
+    show_gui = args.show_gui or args.gui
+
     try:
-        burner_app = EpsonBurnerApp()
+        burner_app = EpsonBurnerApp(show_gui=show_gui)
         if hasattr(burner_app, 'logger'):  # Check if app was properly initialized
             return burner_app.run()
         else:
