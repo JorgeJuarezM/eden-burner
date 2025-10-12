@@ -54,20 +54,24 @@ After successful build, executables will be created in the `dist/` directory:
 - **macOS**: `dist/EPSON Disc Burner.app/`
 - **Linux**: `dist/epson-burner-app-linux/`
 
-## Command Line Options
+## Comportamiento por Defecto
 
-The built application supports the following command line options:
+El ejecutable compilado tiene el siguiente comportamiento:
+
+- **Por defecto**: Muestra la interfaz gráfica principal al iniciar
+- **Modo background**: Usa `--background` para ejecutar solo con system tray (sin mostrar la ventana principal)
+
+### Ejemplos de Uso
 
 ```bash
-# Show help
-epson-burner-app --help
+# Ejecutar con GUI (comportamiento por defecto)
+./dist/epson-burner-app
 
-# Show GUI on startup (Windows/macOS/Linux)
-epson-burner-app --show-gui
-epson-burner-app --gui
+# Ejecutar en modo background
+./dist/epson-burner-app --background
 
-# On macOS, you can also use:
-open "EPSON Disc Burner.app" --args --show-gui
+# Ver todas las opciones
+./dist/epson-burner-app --help
 ```
 
 ## Platform-Specific Notes

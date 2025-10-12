@@ -371,15 +371,14 @@ class EpsonBurnerApp:
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(description='EPSON PP-100 Disc Burner Application')
-    parser.add_argument('--show-gui', action='store_true',
-                       help='Show the main window immediately on startup')
-    parser.add_argument('--gui', action='store_true',
-                       help='Show the main window immediately on startup (alias for --show-gui)')
+    parser.add_argument('--background', action='store_true',
+                       help='Run in background mode (system tray only, no GUI on startup)')
 
     args = parser.parse_args()
 
-    # Check for show_gui flag (either --show-gui or --gui)
-    show_gui = args.show_gui or args.gui
+    # Default behavior: show GUI
+    # Use --background flag to run in system tray only mode
+    show_gui = not args.background
 
     try:
         burner_app = EpsonBurnerApp(show_gui=show_gui)

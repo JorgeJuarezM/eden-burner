@@ -36,7 +36,7 @@ def main():
         exe_path = Path('dist/epson-burner-app')
         if exe_path.exists():
             size_mb = exe_path.stat().st_size / (1024 * 1024)
-            print(f"\n📊 Tamaño del ejecutable: {size_mb:.".1f"MB")
+            print(f"\n📊 Tamaño del ejecutable: {size_mb:.1f} MB")
 
     else:
         print("\n❌ Error durante la reconstrucción")

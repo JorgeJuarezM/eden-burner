@@ -13,24 +13,23 @@ Se ha creado exitosamente un ejecutable independiente de la aplicación EPSON PP
 
 #### Ejecutable Independiente:
 ```bash
-# Ejecutar normalmente (aplicación en segundo plano)
-./dist/epson-burner-app
-
-# Mostrar ventana principal al inicio
-./dist/epson-burner-app --show-gui
-./dist/epson-burner-app --gui
-
-# Ver opciones disponibles
+# Mostrar ayuda
 ./dist/epson-burner-app --help
+
+# Ejecutar en modo background (solo system tray, sin GUI al inicio)
+./dist/epson-burner-app --background
+
+# Ejecutar normalmente (comportamiento por defecto - muestra GUI)
+./dist/epson-burner-app
 ```
 
 #### Bundle de macOS:
 ```bash
-# Ejecutar aplicación (doble clic o desde terminal)
+# Ejecutar aplicación normalmente (muestra GUI por defecto)
 open dist/epson-burner-app.app
 
-# Con argumentos
-open dist/epson-burner-app.app --args --show-gui
+# Ejecutar en modo background
+open dist/epson-burner-app.app --args --background
 ```
 
 ### 📋 Características del Ejecutable
@@ -42,7 +41,20 @@ open dist/epson-burner-app.app --args --show-gui
 ✅ **Configuración Incluida** - Archivo `config.yaml` empaquetado
 ✅ **Recursos Incluidos** - Todos los archivos necesarios empaquetados
 
-### 🔧 Personalización
+### 🔧 Opciones de Línea de Comandos
+
+```bash
+# Mostrar ayuda
+epson-burner-app --help
+
+# Ejecutar en modo background (solo system tray, sin GUI al inicio)
+epson-burner-app --background
+
+# Ejecutar normalmente (comportamiento por defecto - muestra GUI)
+epson-burner-app
+```
+
+### 📦 Personalización
 
 Para personalizar el ejecutable:
 
