@@ -188,20 +188,24 @@ class JobQueue:
                     self.job_queue.pop(0)
                     continue
 
-                # Check if we can start this job
-                if self._can_start_job(job):
+                # Check if we can process this job (including intermediate states)
+                if self._can_process_job(job):
                     self.job_queue.pop(0)
                     return job
 
             return None
 
-    def _can_start_job(self, job: BurnJob) -> bool:
-        """Check if a job can be started."""
-        # Check concurrent job limit
+    def _can_process_job(self, job: BurnJob) -> bool:
+        """Check if a job can be processed (started or continued)."""
+        # Check concurrent job limit - only count truly active jobs
         active_jobs = len([j for j in self.jobs.values()
                           if j.status in [JobStatus.DOWNLOADING, JobStatus.BURNING, JobStatus.VERIFYING]])
 
-        return active_jobs < self.config.max_concurrent_jobs
+        # Allow processing if:
+        # 1. We have capacity for active jobs, OR
+        # 2. The job is not in an active state (intermediate states like DOWNLOADED, JDF_READY, etc.)
+        return (active_jobs < self.config.max_concurrent_jobs or
+                job.status not in [JobStatus.DOWNLOADING, JobStatus.BURNING, JobStatus.VERIFYING])
 
     def start_job_processing(self, job: BurnJob):
         """Start processing a job."""

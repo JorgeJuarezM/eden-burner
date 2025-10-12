@@ -250,8 +250,9 @@ class EpsonBurnerApp:
                 # Add to job queue
                 self.job_queue.jobs[job.id] = job
 
-                # Add to queue if still pending
-                if job.status in [JobStatus.PENDING, JobStatus.DOWNLOADING, JobStatus.GENERATING_JDF, JobStatus.JDF_READY, JobStatus.QUEUED_FOR_BURNING]:
+                # Add to queue if still needs processing
+                if job.status in [JobStatus.PENDING, JobStatus.DOWNLOADING, JobStatus.DOWNLOADED,
+                                JobStatus.GENERATING_JDF, JobStatus.JDF_READY, JobStatus.QUEUED_FOR_BURNING]:
                     self.job_queue._insert_job_by_priority(job.id)
 
             self.logger.info(f"Loaded {len(jobs)} existing jobs from storage")

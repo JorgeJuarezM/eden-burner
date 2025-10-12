@@ -105,15 +105,61 @@ class BackgroundWorker:
     def _process_job_queue(self):
         """Process the job queue."""
         try:
-            # Get next job to process
+            # Get next job to process (for new jobs or pending jobs)
             job = self.job_queue.get_next_job()
 
             if job:
                 self.logger.debug(f"Processing job: {job.id}")
                 self.job_queue.start_job_processing(job)
 
+                # After processing, check if job is ready for next stage
+                # self._check_job_stage_progression(job)
+
+            # Also check for jobs that are ready for next stage
+            self._check_ready_jobs()
+
         except Exception as e:
             self.logger.error(f"Error processing job queue: {e}")
+
+    def _check_ready_jobs(self):
+        """Check for jobs that are ready for next processing stage."""
+        try:
+            # Get all jobs that are ready for next stage
+            ready_jobs = [
+                job for job in self.job_queue.get_all_jobs()
+                if job.status in [JobStatus.DOWNLOADED, JobStatus.JDF_READY, JobStatus.QUEUED_FOR_BURNING]
+            ]
+
+            for job in ready_jobs:
+                # Check if we can start this job (enough capacity)
+                active_jobs = len([j for j in self.job_queue.get_all_jobs()
+                                 if j.status in [JobStatus.DOWNLOADING, JobStatus.BURNING, JobStatus.VERIFYING]])
+                if active_jobs < self.config.max_concurrent_jobs:
+                    self.logger.debug(f"Processing ready job {job.id} for next stage")
+                    self.job_queue.start_job_processing(job)
+                    break  # Process one at a time
+
+        except Exception as e:
+            self.logger.error(f"Error checking ready jobs: {e}")
+
+    def _check_job_stage_progression(self, job):
+        """Check if job is ready for next processing stage."""
+        try:
+            # The _check_ready_jobs method will handle this more efficiently
+            # Just trigger a check in the next iteration
+            pass
+        except Exception as e:
+            self.logger.error(f"Error checking job stage progression: {e}")
+
+    def _process_specific_job(self, job_id: str):
+        """Process a specific job if it's ready for next stage."""
+        try:
+            job = self.job_queue.get_job(job_id)
+            if job and job.status in [JobStatus.DOWNLOADED, JobStatus.JDF_READY, JobStatus.QUEUED_FOR_BURNING]:
+                self.logger.debug(f"Processing job {job_id} for next stage")
+                self.job_queue.start_job_processing(job)
+        except Exception as e:
+            self.logger.error(f"Error processing specific job {job_id}: {e}")
 
     def check_for_new_isos(self) -> bool:
         """Check for new ISO files from API.
