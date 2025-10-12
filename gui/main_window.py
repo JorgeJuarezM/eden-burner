@@ -41,6 +41,32 @@ class JobTableWidget(QTableWidget):
         self.setSelectionBehavior(QTableWidget.SelectRows)
         self.setEditTriggers(QTableWidget.NoEditTriggers)
 
+        # Set better colors for alternating rows and selection with white text
+        self.setStyleSheet("""
+            QTableWidget {
+                gridline-color: #555555;
+                selection-background-color: #1976D2;
+                selection-color: #FFFFFF;
+                background-color: #424242;
+                color: #FFFFFF;
+            }
+            QTableWidget::item {
+                color: #FFFFFF;
+            }
+            QTableWidget::item:alternate {
+                background-color: #484848;
+            }
+            QTableWidget::item:selected {
+                background-color: #1976D2;
+                color: #FFFFFF;
+            }
+            QHeaderView::section {
+                background-color: #333333;
+                color: #FFFFFF;
+                border: 1px solid #555555;
+            }
+        """)
+
         # Resize columns
         header = self.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.Stretch)
@@ -75,26 +101,39 @@ class JobTableWidget(QTableWidget):
             job_id_item = QTableWidgetItem(job.id[:8] + '...')
             job_id_item.setToolTip(job.id)
             job_id_item.setFont(QFont('Courier New', 9))
+            job_id_item.setForeground(QColor(255, 255, 255))  # White text
             self.setItem(row, 0, job_id_item)
 
             # ISO filename
             iso_name = job.iso_info.get('filename', 'Unknown')
             iso_item = QTableWidgetItem(iso_name)
+            iso_item.setForeground(QColor(255, 255, 255))  # White text
             self.setItem(row, 1, iso_item)
 
             # Status with color coding
             status_item = QTableWidgetItem(job.status.value.title())
             status_item.setToolTip(f"Estado: {job.status.value}")
 
-            # Color code by status
+            # Color code by status with better contrast
             if job.status == JobStatus.COMPLETED:
-                status_item.setBackground(QColor(144, 238, 144))  # Light green
+                status_item.setBackground(QColor(76, 175, 80))  # Green 600
+                status_item.setForeground(QColor(255, 255, 255))  # White text
             elif job.status == JobStatus.FAILED:
-                status_item.setBackground(QColor(255, 182, 193))  # Light red
+                status_item.setBackground(QColor(244, 67, 54))  # Red 600
+                status_item.setForeground(QColor(255, 255, 255))  # White text
             elif job.status in [JobStatus.BURNING, JobStatus.VERIFYING]:
-                status_item.setBackground(QColor(173, 216, 230))  # Light blue
+                status_item.setBackground(QColor(33, 150, 243))  # Blue 600
+                status_item.setForeground(QColor(255, 255, 255))  # White text
             elif job.status == JobStatus.DOWNLOADING:
-                status_item.setBackground(QColor(255, 255, 224))  # Light yellow
+                status_item.setBackground(QColor(255, 193, 7))  # Amber 600
+                status_item.setForeground(QColor(0, 0, 0))  # Black text for better contrast
+            elif job.status == JobStatus.DOWNLOADED:
+                status_item.setBackground(QColor(139, 195, 74))  # Light green (different from completed)
+                status_item.setForeground(QColor(0, 0, 0))  # Black text for better contrast
+            else:
+                # Default/PENDING status - light background, black text
+                status_item.setBackground(QColor(224, 224, 224))  # Light gray background
+                status_item.setForeground(QColor(0, 0, 0))  # Black text
 
             self.setItem(row, 2, status_item)
 
@@ -121,14 +160,17 @@ class JobTableWidget(QTableWidget):
                 JobPriority.URGENT: 'Urgente'
             }
             priority_item = QTableWidgetItem(priority_text.get(job.priority, 'Normal'))
+            priority_item.setForeground(QColor(255, 255, 255))  # White text
             self.setItem(row, 4, priority_item)
 
             # Created time
             created_item = QTableWidgetItem(job.created_at.strftime('%Y-%m-%d %H:%M'))
+            created_item.setForeground(QColor(255, 255, 255))  # White text
             self.setItem(row, 5, created_item)
 
             # Updated time
             updated_item = QTableWidgetItem(job.updated_at.strftime('%Y-%m-%d %H:%M'))
+            updated_item.setForeground(QColor(255, 255, 255))  # White text
             self.setItem(row, 6, updated_item)
 
     def get_selected_job_id(self) -> Optional[str]:
