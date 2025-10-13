@@ -120,8 +120,23 @@ class BackgroundWorker:
             # Also check for jobs that are ready for next stage
             self._check_ready_jobs()
 
+            # Check for jobs that are burning
+            self._check_burning_status()
+
         except Exception as e:
             self.logger.error(f"Error processing job queue: {e}")
+
+    def _check_burning_status(self):
+        """Check for jobs that are burning."""
+        try:
+            # Get all jobs that are burning
+            burning_jobs = self.job_queue.get_jobs_by_status(JobStatus.BURNING)
+
+            for job in burning_jobs:
+                self.job_queue._burn_worker(job)
+
+        except Exception as e:
+            self.logger.error(f"Error checking burning status: {e}")
 
     def _check_ready_jobs(self):
         """Check for jobs that are ready for next processing stage."""

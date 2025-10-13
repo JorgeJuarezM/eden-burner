@@ -185,7 +185,7 @@ class EpsonBurnerApp:
     def on_job_updated_from_gui(self, job):
         """Handle job updates from GUI."""
         # Update storage
-        self.storage.update_job_status(job.id, job.status.value, job.error_message, job.progress)
+        self.storage.update_job_state(job)
 
         # Show notification for important status changes
         if job.status.value in ["completed", "failed"]:
@@ -277,15 +277,14 @@ class EpsonBurnerApp:
                 self.job_queue.jobs[job.id] = job
 
                 # Add to queue if still needs processing
-                if job.status in [
-                    JobStatus.PENDING,
-                    JobStatus.DOWNLOADING,
-                    JobStatus.DOWNLOADED,
-                    JobStatus.GENERATING_JDF,
-                    JobStatus.JDF_READY,
-                    JobStatus.QUEUED_FOR_BURNING,
+                if job.status not in [
+                    JobStatus.COMPLETED,
+                    JobStatus.FAILED,
                 ]:
                     self.job_queue._insert_job_by_priority(job.id)
+
+                # if job.status == JobStatus.BURNING:
+                #     self.job_queue._queue_for_burning(job)
 
             self.logger.info(f"Loaded {len(jobs)} existing jobs from storage")
 
@@ -410,9 +409,7 @@ class EpsonBurnerApp:
         try:
             # Update all job statuses in storage
             for job in self.job_queue.get_all_jobs():
-                self.storage.update_job_status(
-                    job.id, job.status.value, job.error_message, job.progress
-                )
+                self.storage.update_job_state(job)
 
             self.logger.info("Application state saved")
 

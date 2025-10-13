@@ -308,8 +308,9 @@ class JobQueue:
 
         # In a real implementation, this would communicate with the robot
         # For now, we'll simulate the burning process
-        burn_thread = threading.Thread(target=self._burn_worker, args=(job,), daemon=True)
-        burn_thread.start()
+        # burn_thread = threading.Thread(target=self._burn_worker, args=(job,), daemon=True)
+        # burn_thread.start()
+        # self._burn_worker(job)
 
     def _start_burning(self, job: BurnJob):
         """Start burning process."""
@@ -320,44 +321,45 @@ class JobQueue:
     def _burn_worker(self, job: BurnJob):
         """Worker function for burning simulation."""
         try:
-            # Simulate burning process
+            # Check if ISO file exists
+            if not Path(job.iso_path).exists():
+                job.update_status(JobStatus.FAILED, "ISO file not found")
+                self._notify_job_update(job)
+                return
 
-            # Simulate different burning phases
-            phases = [
-                ("Preparing disc", 10),
-                ("Burning data", 70),
-                ("Verifying", 15),
-                ("Finalizing", 5),
-            ]
+            if job.status == JobStatus.CANCELLED:
+                print("Job cancelled")
+                job.update_status(JobStatus.CANCELLED)
+                self._notify_job_update(job)
+                return
 
-            for phase_name, phase_progress in phases:
-                time.sleep(random.uniform(1, 3))  # Simulate time
-
-                if job.status == JobStatus.CANCELLED:
-                    return
-
-                job.progress = phase_progress
+            # Replace file extension with .DON
+            done_file = Path(job.jdf_path).with_suffix(".DON")
+            if done_file.exists():
+                job.update_status(JobStatus.COMPLETED)
+                job.progress = 100.0
                 self._notify_job_update(job)
 
-            # Simulate verification if enabled
-            if self.config.verify_after_burn:
-                job.update_status(JobStatus.VERIFYING)
-                job.progress = 85
+                # Move files to completed folder
+                self._move_completed_files(job)
+                self.logger.info(f"Completed job {job.id}")
+                return
+
+            # Replace file extension with .INP
+            progress_file = Path(job.jdf_path).with_suffix(".INP")
+            if progress_file.exists():
+                print("Job in progress")
+                job.progress = 50.0
                 self._notify_job_update(job)
+                return
 
-                time.sleep(random.uniform(2, 4))
-
-                if job.status == JobStatus.CANCELLED:
-                    return
-
-            # Complete the job
-            job.update_status(JobStatus.COMPLETED)
-            job.progress = 100.0
-
-            # Move files to completed folder
-            self._move_completed_files(job)
-
-            self.logger.info(f"Completed job {job.id}")
+            # Replace file extension with .ERR
+            error_file = Path(job.jdf_path).with_suffix(".ERR")
+            if error_file.exists():
+                print("Job failed")
+                job.update_status(JobStatus.FAILED, "Burning failed")
+                self._notify_job_update(job)
+                return
 
         except Exception as e:
             job.update_status(JobStatus.FAILED, f"Burning failed: {str(e)}")

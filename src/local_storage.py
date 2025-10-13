@@ -16,6 +16,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker
 
 from config import Config
+from job_queue import BurnJob
 
 Base = declarative_base()
 
@@ -290,34 +291,27 @@ class LocalStorage:
             self.logger.error(f"Error getting jobs by status {status}: {e}")
             return []
 
-    def update_job_status(
-        self, job_id: str, status: str, error_message: str = None, progress: float = None
-    ) -> bool:
+    def update_job_state(self, job: BurnJob) -> bool:
         """Update job status and optionally error message and progress.
 
         Args:
-            job_id: Job ID
-            status: New status
-            error_message: Error message if any
-            progress: Progress percentage
+            job: Job to update
 
         Returns:
             True if updated successfully
         """
         try:
             with self.get_session() as session:
-                job = session.query(BurnJobRecord).filter_by(id=job_id).first()
-                if not job:
+                job_record = session.query(BurnJobRecord).filter_by(id=job.id).first()
+                if not job_record:
                     return False
 
-                job.status = status
-                job.updated_at = datetime.utcnow()
-
-                if error_message is not None:
-                    job.error_message = error_message
-
-                if progress is not None:
-                    job.progress = progress
+                job_record.status = job.status.value
+                job_record.progress = job.progress
+                job_record.iso_path = job.iso_path
+                job_record.jdf_path = job.jdf_path
+                job_record.error_message = job.error_message
+                job_record.updated_at = datetime.utcnow()
 
                 session.commit()
                 return True
