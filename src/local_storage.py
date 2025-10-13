@@ -561,3 +561,23 @@ class LocalStorage:
         except Exception as e:
             self.logger.error(f"Error exporting jobs to JSON: {e}")
             return False
+
+    def clear_database(self) -> bool:
+        """Clear all data from the database (drop all tables and recreate them).
+
+        Returns:
+            True if cleared successfully
+        """
+        try:
+            # Drop all tables
+            Base.metadata.drop_all(self.engine)
+
+            # Recreate all tables
+            Base.metadata.create_all(self.engine)
+
+            self.logger.info("Database cleared and recreated successfully")
+            return True
+
+        except SQLAlchemyError as e:
+            self.logger.error(f"Error clearing database: {e}")
+            return False

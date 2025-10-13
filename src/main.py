@@ -433,6 +433,7 @@ def main():
         help="Run in background mode (system tray only, no GUI on startup)",
     )
     parser.add_argument("--test-config", action="store_true", help="Test configuration and exit")
+    parser.add_argument("--clear-database", action="store_true", help="Clear the database and exit")
 
     args = parser.parse_args()
 
@@ -453,6 +454,25 @@ def main():
                 return 0
         except Exception as e:
             print(f"Error testing configuration: {e}")
+            return 1
+
+    if args.clear_database:
+        # Clear the database
+        try:
+            from local_storage import LocalStorage
+
+            config = Config()
+            storage = LocalStorage(config)
+
+            success = storage.clear_database()
+            if success:
+                print("Database cleared successfully")
+                return 0
+            else:
+                print("Error clearing database")
+                return 1
+        except Exception as e:
+            print(f"Error clearing database: {e}")
             return 1
 
     # Default behavior: show GUI
