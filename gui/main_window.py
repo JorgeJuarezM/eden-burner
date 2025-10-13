@@ -2,23 +2,26 @@
 PyQt GUI for EPSON PP-100 Disc Burner Application
 """
 
-import sys
 import os
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-                           QTabWidget, QTableWidget, QTableWidgetItem, QHeaderView,
-                           QPushButton, QLabel, QProgressBar, QStatusBar, QMenuBar,
-                           QAction, QMessageBox, QSplitter, QGroupBox, QTextEdit,
-                           QComboBox, QLineEdit, QFormLayout, QSpinBox, QCheckBox,
-                           QSystemTrayIcon, QMenu, QStyle, QSizePolicy)
-from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, pyqtSlot, QMetaObject, Q_ARG
-from PyQt5.QtGui import QFont, QIcon, QColor, QPalette
+from PyQt5.QtCore import (Q_ARG, QMetaObject, Qt, QThread, QTimer, pyqtSignal,
+                          pyqtSlot)
+from PyQt5.QtGui import QColor, QFont, QIcon, QPalette
+from PyQt5.QtWidgets import (QAction, QApplication, QCheckBox, QComboBox,
+                             QFormLayout, QGroupBox, QHBoxLayout, QHeaderView,
+                             QLabel, QLineEdit, QMainWindow, QMenu, QMenuBar,
+                             QMessageBox, QProgressBar, QPushButton,
+                             QSizePolicy, QSpinBox, QSplitter, QStatusBar,
+                             QStyle, QSystemTrayIcon, QTableWidget,
+                             QTableWidgetItem, QTabWidget, QTextEdit,
+                             QVBoxLayout, QWidget)
 
 from config import Config
-from job_queue import JobQueue, BurnJob, JobStatus, JobPriority
+from job_queue import BurnJob, JobPriority, JobQueue, JobStatus
 from local_storage import LocalStorage
 
 
@@ -31,7 +34,16 @@ class JobTableWidget(QTableWidget):
 
     def setup_table(self):
         """Setup table headers and properties."""
-        headers = ['ID', 'Paciente', 'Estudio', 'Estado', 'Progreso', 'Prioridad', 'Creado', 'Actualizado']
+        headers = [
+            "ID",
+            "Paciente",
+            "Estudio",
+            "Estado",
+            "Progreso",
+            "Prioridad",
+            "Creado",
+            "Actualizado",
+        ]
 
         self.setColumnCount(len(headers))
         self.setHorizontalHeaderLabels(headers)
@@ -42,7 +54,8 @@ class JobTableWidget(QTableWidget):
         self.setEditTriggers(QTableWidget.NoEditTriggers)
 
         # Set better colors for alternating rows and selection with white text
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             QTableWidget {
                 gridline-color: #555555;
                 selection-background-color: #1976D2;
@@ -65,7 +78,8 @@ class JobTableWidget(QTableWidget):
                 color: #FFFFFF;
                 border: 1px solid #555555;
             }
-        """)
+        """
+        )
 
         # Resize columns
         header = self.horizontalHeader()
@@ -79,7 +93,7 @@ class JobTableWidget(QTableWidget):
         self.setColumnWidth(2, 200)  # Study
         self.setColumnWidth(3, 100)  # Status
         self.setColumnWidth(4, 150)  # Progress
-        self.setColumnWidth(5, 80)   # Priority
+        self.setColumnWidth(5, 80)  # Priority
 
     def update_jobs(self, jobs: List[BurnJob]):
         """Update table with job data.
@@ -88,11 +102,7 @@ class JobTableWidget(QTableWidget):
             jobs: List of jobs to display
         """
         # Schedule GUI update for main thread
-        QMetaObject.invokeMethod(
-            self, "_update_jobs_gui",
-            Qt.QueuedConnection,
-            Q_ARG(list, jobs)
-        )
+        QMetaObject.invokeMethod(self, "_update_jobs_gui", Qt.QueuedConnection, Q_ARG(list, jobs))
 
     @pyqtSlot(list)
     def _update_jobs_gui(self, jobs: List[BurnJob]):
@@ -101,32 +111,32 @@ class JobTableWidget(QTableWidget):
 
         for row, job in enumerate(jobs):
             # Job ID (truncated)
-            job_id_item = QTableWidgetItem(job.id[:8] + '...')
+            job_id_item = QTableWidgetItem(job.id[:8] + "...")
             job_id_item.setToolTip(job.id)
-            job_id_item.setFont(QFont('Courier New', 9))
+            job_id_item.setFont(QFont("Courier New", 9))
             job_id_item.setForeground(QColor(255, 255, 255))  # White text
             self.setItem(row, 0, job_id_item)
 
             # ISO filename
-            iso_name = job.iso_info.get('filename', 'Unknown')
+            iso_name = job.iso_info.get("filename", "Unknown")
             iso_item = QTableWidgetItem(iso_name)
             iso_item.setForeground(QColor(255, 255, 255))  # White text
             self.setItem(row, 1, iso_item)
 
             # Patient information
-            study_info = job.iso_info.get('study', {})
-            patient_info = study_info.get('patient', {})
-            patient_name = patient_info.get('fullName', 'Desconocido')
+            study_info = job.iso_info.get("study", {})
+            patient_info = study_info.get("patient", {})
+            patient_name = patient_info.get("fullName", "Desconocido")
             patient_item = QTableWidgetItem(patient_name)
             patient_item.setForeground(QColor(255, 255, 255))  # White text
             self.setItem(row, 1, patient_item)
 
-            # Study information  
-            study_desc = study_info.get('dicomDescription', 'Sin descripción')
+            # Study information
+            study_desc = study_info.get("dicomDescription", "Sin descripción")
             if len(study_desc) > 50:
-                study_desc = study_desc[:47] + '...'
+                study_desc = study_desc[:47] + "..."
             study_item = QTableWidgetItem(study_desc)
-            study_item.setToolTip(study_info.get('dicomDescription', ''))
+            study_item.setToolTip(study_info.get("dicomDescription", ""))
             study_item.setForeground(QColor(255, 255, 255))  # White text
             self.setItem(row, 2, study_item)
 
@@ -148,7 +158,9 @@ class JobTableWidget(QTableWidget):
                 status_item.setBackground(QColor(255, 193, 7))  # Amber 600
                 status_item.setForeground(QColor(0, 0, 0))  # Black text for better contrast
             elif job.status == JobStatus.DOWNLOADED:
-                status_item.setBackground(QColor(139, 195, 74))  # Light green (different from completed)
+                status_item.setBackground(
+                    QColor(139, 195, 74)
+                )  # Light green (different from completed)
                 status_item.setForeground(QColor(0, 0, 0))  # Black text for better contrast
             else:
                 # Default/PENDING status - light background, black text
@@ -174,22 +186,22 @@ class JobTableWidget(QTableWidget):
 
             # Priority
             priority_text = {
-                JobPriority.LOW: 'Baja',
-                JobPriority.NORMAL: 'Normal',
-                JobPriority.HIGH: 'Alta',
-                JobPriority.URGENT: 'Urgente'
+                JobPriority.LOW: "Baja",
+                JobPriority.NORMAL: "Normal",
+                JobPriority.HIGH: "Alta",
+                JobPriority.URGENT: "Urgente",
             }
-            priority_item = QTableWidgetItem(priority_text.get(job.priority, 'Normal'))
+            priority_item = QTableWidgetItem(priority_text.get(job.priority, "Normal"))
             priority_item.setForeground(QColor(255, 255, 255))  # White text
             self.setItem(row, 5, priority_item)
 
             # Created time
-            created_item = QTableWidgetItem(job.created_at.strftime('%Y-%m-%d %H:%M'))
+            created_item = QTableWidgetItem(job.created_at.strftime("%Y-%m-%d %H:%M"))
             created_item.setForeground(QColor(255, 255, 255))  # White text
             self.setItem(row, 6, created_item)
 
             # Updated time
-            updated_item = QTableWidgetItem(job.updated_at.strftime('%Y-%m-%d %H:%M'))
+            updated_item = QTableWidgetItem(job.updated_at.strftime("%Y-%m-%d %H:%M"))
             updated_item.setForeground(QColor(255, 255, 255))  # White text
             self.setItem(row, 7, updated_item)
 
@@ -222,31 +234,31 @@ class JobDetailsWidget(QWidget):
         info_group = QGroupBox("Información del Trabajo")
         info_layout = QFormLayout()
 
-        self.job_id_label = QLabel('--')
-        self.job_id_label.setFont(QFont('Courier New', 10, QFont.Bold))
+        self.job_id_label = QLabel("--")
+        self.job_id_label.setFont(QFont("Courier New", 10, QFont.Bold))
         info_layout.addRow("ID:", self.job_id_label)
 
-        self.status_label = QLabel('--')
+        self.status_label = QLabel("--")
         info_layout.addRow("Estado:", self.status_label)
 
-        self.filename_label = QLabel('--')
+        self.filename_label = QLabel("--")
         info_layout.addRow("Archivo ISO:", self.filename_label)
 
         # Patient information
-        self.patient_label = QLabel('--')
+        self.patient_label = QLabel("--")
         info_layout.addRow("Paciente:", self.patient_label)
 
         # Study information
-        self.study_label = QLabel('--')
+        self.study_label = QLabel("--")
         info_layout.addRow("Estudio:", self.study_label)
 
-        self.progress_label = QLabel('--')
+        self.progress_label = QLabel("--")
         info_layout.addRow("Progreso:", self.progress_label)
 
-        self.created_label = QLabel('--')
+        self.created_label = QLabel("--")
         info_layout.addRow("Creado:", self.created_label)
 
-        self.updated_label = QLabel('--')
+        self.updated_label = QLabel("--")
         info_layout.addRow("Actualizado:", self.updated_label)
 
         info_group.setLayout(info_layout)
@@ -299,25 +311,25 @@ class JobDetailsWidget(QWidget):
             return
 
         # Update labels
-        self.job_id_label.setText(job.id[:16] + '...' if len(job.id) > 16 else job.id)
+        self.job_id_label.setText(job.id[:16] + "..." if len(job.id) > 16 else job.id)
         self.status_label.setText(job.status.value.title())
-        self.filename_label.setText(job.iso_info.get('filename', 'Unknown'))
+        self.filename_label.setText(job.iso_info.get("filename", "Unknown"))
 
         # Patient information
-        study_info = job.iso_info.get('study', {})
-        patient_info = study_info.get('patient', {})
-        patient_name = patient_info.get('fullName', 'Desconocido')
-        patient_id = patient_info.get('identifier', 'N/A')
+        study_info = job.iso_info.get("study", {})
+        patient_info = study_info.get("patient", {})
+        patient_name = patient_info.get("fullName", "Desconocido")
+        patient_id = patient_info.get("identifier", "N/A")
         self.patient_label.setText(f"{patient_name} (ID: {patient_id})")
 
         # Study information
-        study_desc = study_info.get('dicomDescription', 'Sin descripción')
-        study_datetime = study_info.get('dicomDateTime', 'N/A')
+        study_desc = study_info.get("dicomDescription", "Sin descripción")
+        study_datetime = study_info.get("dicomDateTime", "N/A")
         self.study_label.setText(f"{study_desc[:50]}..." if len(study_desc) > 50 else study_desc)
 
         self.progress_label.setText(f"{job.progress:.1f}%")
-        self.created_label.setText(job.created_at.strftime('%Y-%m-%d %H:%M:%S'))
-        self.updated_label.setText(job.updated_at.strftime('%Y-%m-%d %H:%M:%S'))
+        self.created_label.setText(job.created_at.strftime("%Y-%m-%d %H:%M:%S"))
+        self.updated_label.setText(job.updated_at.strftime("%Y-%m-%d %H:%M:%S"))
 
         # Update progress bar
         self.progress_bar.setValue(int(job.progress))
@@ -332,7 +344,9 @@ class JobDetailsWidget(QWidget):
 
         # Update button states
         self.retry_button.setEnabled(job.status == JobStatus.FAILED)
-        self.cancel_button.setEnabled(job.status not in [JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED])
+        self.cancel_button.setEnabled(
+            job.status not in [JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED]
+        )
 
         # Update history (placeholder for now)
         self.history_text.clear()
@@ -342,14 +356,14 @@ class JobDetailsWidget(QWidget):
 
     def clear_details(self):
         """Clear all job details."""
-        self.job_id_label.setText('--')
-        self.status_label.setText('--')
-        self.filename_label.setText('--')
-        self.patient_label.setText('--')
-        self.study_label.setText('--')
-        self.progress_label.setText('--')
-        self.created_label.setText('--')
-        self.updated_label.setText('--')
+        self.job_id_label.setText("--")
+        self.status_label.setText("--")
+        self.filename_label.setText("--")
+        self.patient_label.setText("--")
+        self.study_label.setText("--")
+        self.progress_label.setText("--")
+        self.created_label.setText("--")
+        self.updated_label.setText("--")
         self.progress_bar.setValue(0)
         self.retry_button.setEnabled(False)
         self.cancel_button.setEnabled(False)
@@ -371,8 +385,8 @@ class MainWindow(QMainWindow):
 
     # Signals
     job_updated = pyqtSignal(object)  # BurnJob
-    job_completed = pyqtSignal(str)   # job_id
-    job_failed = pyqtSignal(str)      # job_id
+    job_completed = pyqtSignal(str)  # job_id
+    job_failed = pyqtSignal(str)  # job_id
 
     def __init__(self, config: Config, job_queue: JobQueue):
         super().__init__()
@@ -440,7 +454,7 @@ class MainWindow(QMainWindow):
 
         # Panel title
         title_label = QLabel("Trabajos de Quemado")
-        title_label.setFont(QFont('Arial', 14, QFont.Bold))
+        title_label.setFont(QFont("Arial", 14, QFont.Bold))
         layout.addWidget(title_label)
 
         # Filter controls
@@ -497,12 +511,14 @@ class MainWindow(QMainWindow):
 
     def create_details_sidebar(self):
         sidebar = QWidget()
-        sidebar.setStyleSheet("""
+        sidebar.setStyleSheet(
+            """
             QWidget {
                 background-color: #2d2d2d;
                 border-left: 2px solid #555555;
             }
-        """)
+        """
+        )
 
         layout = QVBoxLayout(sidebar)
 
@@ -510,7 +526,7 @@ class MainWindow(QMainWindow):
         header_layout = QHBoxLayout()
 
         title_label = QLabel("Detalles del Trabajo")
-        title_label.setFont(QFont('Arial', 12, QFont.Bold))
+        title_label.setFont(QFont("Arial", 12, QFont.Bold))
         title_label.setStyleSheet("color: #ffffff; padding: 5px;")
         header_layout.addWidget(title_label)
 
@@ -519,7 +535,8 @@ class MainWindow(QMainWindow):
         # Close button
         self.close_sidebar_btn = QPushButton("✕")
         self.close_sidebar_btn.setFixedSize(30, 30)
-        self.close_sidebar_btn.setStyleSheet("""
+        self.close_sidebar_btn.setStyleSheet(
+            """
             QPushButton {
                 background-color: #555555;
                 color: #ffffff;
@@ -531,7 +548,8 @@ class MainWindow(QMainWindow):
             QPushButton:hover {
                 background-color: #777777;
             }
-        """)
+        """
+        )
         self.close_sidebar_btn.clicked.connect(self.hide_details_sidebar)
         header_layout.addWidget(self.close_sidebar_btn)
 
@@ -573,29 +591,29 @@ class MainWindow(QMainWindow):
         menubar = self.menuBar()
 
         # File menu
-        file_menu = menubar.addMenu('Archivo')
+        file_menu = menubar.addMenu("Archivo")
 
-        settings_action = QAction('Configuración', self)
+        settings_action = QAction("Configuración", self)
         settings_action.triggered.connect(self.show_settings)
         file_menu.addAction(settings_action)
 
         file_menu.addSeparator()
 
-        exit_action = QAction('Salir', self)
+        exit_action = QAction("Salir", self)
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
 
         # Tools menu
-        tools_menu = menubar.addMenu('Herramientas')
+        tools_menu = menubar.addMenu("Herramientas")
 
-        test_api_action = QAction('Probar Conexión API', self)
+        test_api_action = QAction("Probar Conexión API", self)
         test_api_action.triggered.connect(self.test_api_connection)
         tools_menu.addAction(test_api_action)
 
         # Help menu
-        help_menu = menubar.addMenu('Ayuda')
+        help_menu = menubar.addMenu("Ayuda")
 
-        about_action = QAction('Acerca de', self)
+        about_action = QAction("Acerca de", self)
         about_action.triggered.connect(self.show_about)
         help_menu.addAction(about_action)
 
@@ -659,7 +677,7 @@ class MainWindow(QMainWindow):
                 "downloading": JobStatus.DOWNLOADING,
                 "burning": JobStatus.BURNING,
                 "completed": JobStatus.COMPLETED,
-                "failed": JobStatus.FAILED
+                "failed": JobStatus.FAILED,
             }
             status = status_map.get(filter_status)
             if status:
@@ -701,19 +719,23 @@ class MainWindow(QMainWindow):
             self,
             "Aplicación minimizada",
             "La aplicación continúa ejecutándose en segundo plano.\n"
-            "Use el ícono de la bandeja del sistema para restaurarla."
+            "Use el ícono de la bandeja del sistema para restaurarla.",
         )
 
     def show_settings(self):
         """Show settings dialog."""
         # TODO: Implement settings dialog
-        QMessageBox.information(self, "Configuración", "Diálogo de configuración no implementado aún.")
+        QMessageBox.information(
+            self, "Configuración", "Diálogo de configuración no implementado aún."
+        )
 
     def test_api_connection(self):
         """Test API connection."""
         try:
             # This would use the job queue's download manager to test connection
-            QMessageBox.information(self, "Prueba de conexión", "Prueba de conexión no implementada aún.")
+            QMessageBox.information(
+                self, "Prueba de conexión", "Prueba de conexión no implementada aún."
+            )
         except Exception as e:
             QMessageBox.warning(self, "Error", f"Error en prueba de conexión: {e}")
 
@@ -729,7 +751,7 @@ class MainWindow(QMainWindow):
             "- Generación automática de archivos JDF\n"
             "- Interfaz intuitiva para monitoreo\n"
             "- Ejecución en segundo plano\n\n"
-            "Versión 1.0"
+            "Versión 1.0",
         )
 
     def clear_completed_jobs(self):
@@ -738,10 +760,10 @@ class MainWindow(QMainWindow):
             # Ask for confirmation
             reply = QMessageBox.question(
                 self,
-                'Confirmar limpieza',
-                '¿Está seguro de que desea limpiar los trabajos completados?',
+                "Confirmar limpieza",
+                "¿Está seguro de que desea limpiar los trabajos completados?",
                 QMessageBox.Yes | QMessageBox.No,
-                QMessageBox.No
+                QMessageBox.No,
             )
 
             if reply == QMessageBox.Yes:

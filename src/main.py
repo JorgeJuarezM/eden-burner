@@ -11,21 +11,23 @@ Features:
 - Intuitive GUI for job monitoring
 """
 
-import sys
-import os
 import argparse
 import logging
+import os
+import sys
 from datetime import datetime
-from typing import Dict, Any
-from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction, QMessageBox
+from typing import Any, Dict
+
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal
 from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import (QAction, QApplication, QMenu, QMessageBox,
+                             QSystemTrayIcon)
 
-from config import Config
-import job_queue
-import gui.main_window
 import background_worker
+import gui.main_window
+import job_queue
 import local_storage
+from config import Config
 
 # Import classes directly
 JobQueue = job_queue.JobQueue
@@ -95,20 +97,22 @@ class EpsonBurnerApp:
 
     def setup_logging(self):
         """Setup application logging."""
-        log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
         logging.basicConfig(
-            level=getattr(logging, self.config.config_data['logging']['level']),
+            level=getattr(logging, self.config.config_data["logging"]["level"]),
             format=log_format,
             handlers=[
-                logging.FileHandler(self.config.config_data['logging']['file']),
-                logging.StreamHandler()
-            ]
+                logging.FileHandler(self.config.config_data["logging"]["file"]),
+                logging.StreamHandler(),
+            ],
         )
         self.logger = logging.getLogger(__name__)
 
     def show_config_errors(self, errors: list):
         """Show configuration errors to user."""
-        error_text = "Errores de configuración encontrados:\n\n" + "\n".join(f"• {error}" for error in errors)
+        error_text = "Errores de configuración encontrados:\n\n" + "\n".join(
+            f"• {error}" for error in errors
+        )
 
         if not QApplication.instance():
             # No GUI application yet, use console
@@ -123,12 +127,13 @@ class EpsonBurnerApp:
         self.tray_icon = QSystemTrayIcon(self.app)
 
         # Try to load icon, fallback to default if not available
-        icon_path = os.path.join(os.path.dirname(__file__), '..', 'resources', 'icon.png')
+        icon_path = os.path.join(os.path.dirname(__file__), "..", "resources", "icon.png")
         if os.path.exists(icon_path):
             self.tray_icon.setIcon(QIcon(icon_path))
         else:
             # Use default system icon - fix for PyQt5 compatibility
             from PyQt5.QtWidgets import QStyle
+
             self.tray_icon.setIcon(self.app.style().standardIcon(QStyle.SP_ComputerIcon))
 
         # Set tooltip
@@ -182,15 +187,10 @@ class EpsonBurnerApp:
     def on_job_updated_from_gui(self, job):
         """Handle job updates from GUI."""
         # Update storage
-        self.storage.update_job_status(
-            job.id,
-            job.status.value,
-            job.error_message,
-            job.progress
-        )
+        self.storage.update_job_status(job.id, job.status.value, job.error_message, job.progress)
 
         # Show notification for important status changes
-        if job.status.value in ['completed', 'failed']:
+        if job.status.value in ["completed", "failed"]:
             self.show_job_notification(job)
 
     def show_job_notification(self, job):
@@ -201,10 +201,10 @@ class EpsonBurnerApp:
         title = "Trabajo de quemado"
         message = f"Trabajo {job.id[:8]}... "
 
-        if job.status.value == 'completed':
+        if job.status.value == "completed":
             message += "completado exitosamente"
             self.tray_icon.showMessage(title, message, QSystemTrayIcon.Information, 5000)
-        elif job.status.value == 'failed':
+        elif job.status.value == "failed":
             message += f"falló: {job.error_message or 'Error desconocido'}"
             self.tray_icon.showMessage(title, message, QSystemTrayIcon.Critical, 10000)
 
@@ -215,21 +215,29 @@ class EpsonBurnerApp:
             for job_record in jobs:
                 # Convert storage record to job object
                 iso_info = {
-                    'id': job_record.iso_id,
-                    'filename': job_record.filename,
-                    'fileSize': job_record.file_size,
-                    'downloadUrl': job_record.download_url,
-                    'checksum': job_record.checksum,
-                    'study': {
-                        'patient': {
-                            'fullName': job_record.study_patient_name,
-                            'identifier': job_record.study_patient_id,
-                            'birthDate': job_record.study_patient_birth_date.isoformat() if job_record.study_patient_birth_date else None,
+                    "id": job_record.iso_id,
+                    "filename": job_record.filename,
+                    "fileSize": job_record.file_size,
+                    "downloadUrl": job_record.download_url,
+                    "checksum": job_record.checksum,
+                    "study": {
+                        "patient": {
+                            "fullName": job_record.study_patient_name,
+                            "identifier": job_record.study_patient_id,
+                            "birthDate": (
+                                job_record.study_patient_birth_date.isoformat()
+                                if job_record.study_patient_birth_date
+                                else None
+                            ),
                         },
-                        'dicomDateTime': job_record.study_dicom_date_time.isoformat() if job_record.study_dicom_date_time else None,
-                        'dicomDescription': job_record.study_dicom_description,
+                        "dicomDateTime": (
+                            job_record.study_dicom_date_time.isoformat()
+                            if job_record.study_dicom_date_time
+                            else None
+                        ),
+                        "dicomDescription": job_record.study_dicom_description,
                     },
-                    'fileUrl': job_record.download_url  # GraphQL API uses fileUrl
+                    "fileUrl": job_record.download_url,  # GraphQL API uses fileUrl
                 }
 
                 # Create BurnJob from storage record
@@ -237,13 +245,17 @@ class EpsonBurnerApp:
 
                 # Convert string status to enum
                 try:
-                    status_enum = JobStatus(job_record.status or 'pending')
+                    status_enum = JobStatus(job_record.status or "pending")
                 except (ValueError, AttributeError):
                     status_enum = JobStatus.PENDING
 
                 # Convert priority
                 try:
-                    priority_enum = JobPriority(job_record.priority) if job_record.priority else JobPriority.NORMAL
+                    priority_enum = (
+                        JobPriority(job_record.priority)
+                        if job_record.priority
+                        else JobPriority.NORMAL
+                    )
                 except (ValueError, AttributeError):
                     priority_enum = JobPriority.NORMAL
 
@@ -261,15 +273,21 @@ class EpsonBurnerApp:
                     error_message=job_record.error_message,
                     retry_count=job_record.retry_count or 0,
                     robot_job_id=job_record.robot_job_id,
-                    estimated_completion=job_record.estimated_completion
+                    estimated_completion=job_record.estimated_completion,
                 )
 
                 # Add to job queue
                 self.job_queue.jobs[job.id] = job
 
                 # Add to queue if still needs processing
-                if job.status in [JobStatus.PENDING, JobStatus.DOWNLOADING, JobStatus.DOWNLOADED,
-                                JobStatus.GENERATING_JDF, JobStatus.JDF_READY, JobStatus.QUEUED_FOR_BURNING]:
+                if job.status in [
+                    JobStatus.PENDING,
+                    JobStatus.DOWNLOADING,
+                    JobStatus.DOWNLOADED,
+                    JobStatus.GENERATING_JDF,
+                    JobStatus.JDF_READY,
+                    JobStatus.QUEUED_FOR_BURNING,
+                ]:
                     self.job_queue._insert_job_by_priority(job.id)
 
             self.logger.info(f"Loaded {len(jobs)} existing jobs from storage")
@@ -303,7 +321,7 @@ class EpsonBurnerApp:
             status_text = "Estado del Sistema EPSON PP-100:\n\n"
 
             # Queue status
-            queue = status.get('queue_status', {})
+            queue = status.get("queue_status", {})
             status_text += "Trabajos en cola:\n"
             status_text += f"  Total: {queue.get('total_jobs', 0)}\n"
             status_text += f"  Pendientes: {queue.get('pending', 0)}\n"
@@ -312,13 +330,13 @@ class EpsonBurnerApp:
             status_text += f"  Fallidos: {queue.get('failed', 0)}\n\n"
 
             # Storage stats
-            storage = status.get('storage_stats', {})
+            storage = status.get("storage_stats", {})
             status_text += "Almacenamiento:\n"
             status_text += f"  Trabajos totales: {storage.get('total_jobs', 0)}\n"
             status_text += f"  Tamaño BD: {storage.get('database_size_mb', 0):.1f} MB\n\n"
 
             # Next API check
-            next_check = status.get('next_api_check_in')
+            next_check = status.get("next_api_check_in")
             if next_check:
                 minutes = next_check // 60
                 seconds = next_check % 60
@@ -341,13 +359,13 @@ class EpsonBurnerApp:
                 QMessageBox.information(
                     self.main_window,
                     "Verificación API",
-                    "Verificación completada. Revisa los trabajos para ver si se agregaron nuevos ISOs."
+                    "Verificación completada. Revisa los trabajos para ver si se agregaron nuevos ISOs.",
                 )
             else:
                 QMessageBox.warning(
                     self.main_window,
                     "Verificación API",
-                    "No se pudieron obtener nuevos ISOs o no hay conexión disponible."
+                    "No se pudieron obtener nuevos ISOs o no hay conexión disponible.",
                 )
 
         except Exception as e:
@@ -362,10 +380,10 @@ class EpsonBurnerApp:
         # Confirm quit
         reply = QMessageBox.question(
             None,  # Use None since main window might not exist yet
-            'Confirmar salida',
-            '¿Está seguro de que desea salir?\nEsto detendrá todos los trabajos en progreso.',
+            "Confirmar salida",
+            "¿Está seguro de que desea salir?\nEsto detendrá todos los trabajos en progreso.",
             QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No
+            QMessageBox.No,
         )
 
         if reply != QMessageBox.Yes:
@@ -396,10 +414,7 @@ class EpsonBurnerApp:
             # Update all job statuses in storage
             for job in self.job_queue.get_all_jobs():
                 self.storage.update_job_status(
-                    job.id,
-                    job.status.value,
-                    job.error_message,
-                    job.progress
+                    job.id, job.status.value, job.error_message, job.progress
                 )
 
             self.logger.info("Application state saved")
@@ -414,11 +429,13 @@ class EpsonBurnerApp:
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(description='EPSON PP-100 Disc Burner Application')
-    parser.add_argument('--background', action='store_true',
-                       help='Run in background mode (system tray only, no GUI on startup)')
-    parser.add_argument('--test-config', action='store_true',
-                       help='Test configuration and exit')
+    parser = argparse.ArgumentParser(description="EPSON PP-100 Disc Burner Application")
+    parser.add_argument(
+        "--background",
+        action="store_true",
+        help="Run in background mode (system tray only, no GUI on startup)",
+    )
+    parser.add_argument("--test-config", action="store_true", help="Test configuration and exit")
 
     args = parser.parse_args()
 
@@ -426,6 +443,7 @@ def main():
         # Test configuration without starting GUI
         try:
             from config import Config
+
             config = Config()
             config_errors = config.validate_config()
             if config_errors:
@@ -448,7 +466,7 @@ def main():
 
     try:
         burner_app = EpsonBurnerApp(show_gui=show_gui)
-        if hasattr(burner_app, 'logger'):  # Check if app was properly initialized
+        if hasattr(burner_app, "logger"):  # Check if app was properly initialized
             return burner_app.run()
         else:
             return 1

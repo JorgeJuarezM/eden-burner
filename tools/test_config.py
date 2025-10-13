@@ -4,11 +4,11 @@ Simple configuration test for EPSON PP-100 Disc Burner Application
 Tests configuration without GUI dependencies
 """
 
-import sys
 import os
+import sys
 
 # Add parent directory to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 
 try:
     from config.config import Config
@@ -16,6 +16,7 @@ except ImportError as e:
     print(f"Error importing config: {e}")
     print("Make sure you're running from the correct directory")
     sys.exit(1)
+
 
 def test_config():
     """Test configuration loading and validation."""
@@ -43,8 +44,10 @@ def test_config():
     except Exception as e:
         print(f"Error testing configuration: {e}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 if __name__ == "__main__":
     success = test_config()

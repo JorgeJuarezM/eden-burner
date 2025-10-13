@@ -2,14 +2,14 @@
 Job Queue Management for EPSON PP-100 Disc Burner Application
 """
 
+import logging
 import threading
 import uuid
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Callable, Any
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from enum import Enum
-import logging
 from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
 
 from config import Config
 from iso_downloader import ISODownloadManager
@@ -18,6 +18,7 @@ from jdf_generator import JDFGenerator
 
 class JobStatus(Enum):
     """Job status enumeration."""
+
     PENDING = "pending"
     DOWNLOADING = "downloading"
     DOWNLOADED = "downloaded"
@@ -33,6 +34,7 @@ class JobStatus(Enum):
 
 class JobPriority(Enum):
     """Job priority enumeration."""
+
     LOW = 1
     NORMAL = 2
     HIGH = 3
@@ -42,6 +44,7 @@ class JobPriority(Enum):
 @dataclass
 class BurnJob:
     """Represents a disc burning job."""
+
     id: str
     iso_info: Dict[str, Any]
     priority: JobPriority = JobPriority.NORMAL
@@ -138,11 +141,7 @@ class JobQueue:
         job_id = str(uuid.uuid4())
 
         with self.lock:
-            job = BurnJob(
-                id=job_id,
-                iso_info=iso_info,
-                priority=priority
-            )
+            job = BurnJob(id=job_id, iso_info=iso_info, priority=priority)
 
             self.jobs[job_id] = job
 
@@ -199,14 +198,22 @@ class JobQueue:
     def _can_process_job(self, job: BurnJob) -> bool:
         """Check if a job can be processed (started or continued)."""
         # Check concurrent job limit - only count truly active jobs
-        active_jobs = len([j for j in self.jobs.values()
-                          if j.status in [JobStatus.DOWNLOADING, JobStatus.BURNING, JobStatus.VERIFYING]])
+        active_jobs = len(
+            [
+                j
+                for j in self.jobs.values()
+                if j.status in [JobStatus.DOWNLOADING, JobStatus.BURNING, JobStatus.VERIFYING]
+            ]
+        )
 
         # Allow processing if:
         # 1. We have capacity for active jobs, OR
         # 2. The job is not in an active state (intermediate states like DOWNLOADED, JDF_READY, etc.)
-        return (active_jobs < self.config.max_concurrent_jobs or
-                job.status not in [JobStatus.DOWNLOADING, JobStatus.BURNING, JobStatus.VERIFYING])
+        return active_jobs < self.config.max_concurrent_jobs or job.status not in [
+            JobStatus.DOWNLOADING,
+            JobStatus.BURNING,
+            JobStatus.VERIFYING,
+        ]
 
     def start_job_processing(self, job: BurnJob):
         """Start processing a job."""
@@ -231,11 +238,7 @@ class JobQueue:
         self._notify_job_update(job)
 
         # Start download in background thread
-        download_thread = threading.Thread(
-            target=self._download_worker,
-            args=(job,),
-            daemon=True
-        )
+        download_thread = threading.Thread(target=self._download_worker, args=(job,), daemon=True)
         download_thread.start()
 
     def _download_worker(self, job: BurnJob):
@@ -261,7 +264,7 @@ class JobQueue:
         """Handle download progress updates."""
         # Find job by ISO ID
         for job in self.jobs.values():
-            if job.iso_info.get('id') == iso_id and job.status == JobStatus.DOWNLOADING:
+            if job.iso_info.get("id") == iso_id and job.status == JobStatus.DOWNLOADING:
                 job.progress = progress.progress_percentage
                 job.updated_at = datetime.now()
                 self._notify_job_update(job)
@@ -282,7 +285,7 @@ class JobQueue:
                 job.iso_path,
                 job.id,
                 burn_speed=self.config.burn_speed,
-                verify=self.config.verify_after_burn
+                verify=self.config.verify_after_burn,
             )
 
             job.jdf_path = jdf_path
@@ -302,11 +305,7 @@ class JobQueue:
 
         # In a real implementation, this would communicate with the robot
         # For now, we'll simulate the burning process
-        burn_thread = threading.Thread(
-            target=self._burn_worker,
-            args=(job,),
-            daemon=True
-        )
+        burn_thread = threading.Thread(target=self._burn_worker, args=(job,), daemon=True)
         burn_thread.start()
 
     def _start_burning(self, job: BurnJob):
@@ -319,15 +318,15 @@ class JobQueue:
         """Worker function for burning simulation."""
         try:
             # Simulate burning process
-            import time
             import random
+            import time
 
             # Simulate different burning phases
             phases = [
                 ("Preparing disc", 10),
                 ("Burning data", 70),
                 ("Verifying", 15),
-                ("Finalizing", 5)
+                ("Finalizing", 5),
             ]
 
             for phase_name, phase_progress in phases:
@@ -370,14 +369,18 @@ class JobQueue:
         try:
             if job.iso_path:
                 from pathlib import Path
+
                 completed_iso = self.config.completed_folder / Path(job.iso_path).name
                 import shutil
+
                 shutil.move(job.iso_path, completed_iso)
 
             if job.jdf_path:
                 from pathlib import Path
+
                 completed_jdf = self.config.completed_folder / Path(job.jdf_path).name
                 import shutil
+
                 shutil.move(job.jdf_path, completed_jdf)
 
         except Exception as e:
@@ -409,7 +412,7 @@ class JobQueue:
 
             # Cancel download if active
             if job.status == JobStatus.DOWNLOADING:
-                self.download_manager.cancel_download(job.iso_info.get('id'))
+                self.download_manager.cancel_download(job.iso_info.get("id"))
 
             self.logger.info(f"Cancelled job {job_id}")
             self._notify_job_update(job)
@@ -467,15 +470,14 @@ class JobQueue:
             failed = len(self.get_jobs_by_status(JobStatus.FAILED))
 
             return {
-                'total_jobs': len(self.jobs),
-                'pending': pending,
-                'downloading': downloading,
-                'burning': burning,
-                'completed': completed,
-                'failed': failed,
-                'queue_length': len(self.job_queue),
-                'active_slots': min(self.config.max_concurrent_jobs,
-                                  downloading + burning)
+                "total_jobs": len(self.jobs),
+                "pending": pending,
+                "downloading": downloading,
+                "burning": burning,
+                "completed": completed,
+                "failed": failed,
+                "queue_length": len(self.job_queue),
+                "active_slots": min(self.config.max_concurrent_jobs, downloading + burning),
             }
 
     def cleanup_completed_jobs(self, max_age_days: int = 7):
@@ -489,8 +491,10 @@ class JobQueue:
         with self.lock:
             to_remove = []
             for job_id, job in self.jobs.items():
-                if (job.status in [JobStatus.COMPLETED, JobStatus.FAILED] and
-                    job.updated_at.timestamp() < cutoff_time):
+                if (
+                    job.status in [JobStatus.COMPLETED, JobStatus.FAILED]
+                    and job.updated_at.timestamp() < cutoff_time
+                ):
                     to_remove.append(job_id)
 
             for job_id in to_remove:

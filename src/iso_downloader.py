@@ -2,12 +2,12 @@
 ISO Download Manager with progress tracking
 """
 
-import os
 import asyncio
-import time
-from typing import Dict, List, Optional, Callable, Any
-from pathlib import Path
 import logging
+import os
+import time
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
 
 from config import Config
 from graphql_client import SyncGraphQLClient
@@ -22,7 +22,7 @@ class DownloadProgress:
         self.total_size = total_size
         self.downloaded_size = 0
         self.start_time = time.time()
-        self.status = 'pending'  # pending, downloading, completed, failed, cancelled
+        self.status = "pending"  # pending, downloading, completed, failed, cancelled
         self.error_message: Optional[str] = None
 
     @property
@@ -108,12 +108,12 @@ class ISODownloadManager:
         Returns:
             Path to downloaded file or empty string if failed
         """
-        iso_id = iso_info.get('id')
+        iso_id = iso_info.get("id")
         if not iso_id:
             self.logger.error("ISO info missing ID")
             return ""
 
-        filename = iso_info.get('filename', f"iso_{iso_id}.iso")
+        filename = iso_info.get("filename", f"iso_{iso_id}.iso")
         download_path = self.config.downloads_folder / filename
 
         # Check if file already exists
@@ -128,26 +128,26 @@ class ISODownloadManager:
 
         try:
             # Start download
-            progress.status = 'downloading'
+            progress.status = "downloading"
             self._notify_progress(iso_id, progress)
 
             success = self.graphql_client.download_iso_file(iso_info, str(download_path))
 
             if success:
-                progress.status = 'completed'
+                progress.status = "completed"
                 progress.downloaded_size = download_path.stat().st_size
                 self.completed_downloads.append(progress)
                 self.logger.info(f"Successfully downloaded ISO: {download_path}")
                 self._notify_progress(iso_id, progress)
                 return str(download_path)
             else:
-                progress.status = 'failed'
+                progress.status = "failed"
                 progress.error_message = "Download failed"
                 self._notify_progress(iso_id, progress)
                 return ""
 
         except Exception as e:
-            progress.status = 'failed'
+            progress.status = "failed"
             progress.error_message = str(e)
             self.logger.error(f"Error downloading ISO {iso_id}: {e}")
             self._notify_progress(iso_id, progress)
@@ -168,7 +168,7 @@ class ISODownloadManager:
         """
         results = {}
         for iso_info in iso_list:
-            iso_id = iso_info.get('id')
+            iso_id = iso_info.get("id")
             if iso_id:
                 download_path = self.download_iso(iso_info)
                 results[iso_id] = download_path
@@ -202,7 +202,7 @@ class ISODownloadManager:
         """
         if iso_id in self.active_downloads:
             progress = self.active_downloads[iso_id]
-            progress.status = 'cancelled'
+            progress.status = "cancelled"
             progress.error_message = "Cancelled by user"
 
             # Remove from active downloads
@@ -225,8 +225,7 @@ class ISODownloadManager:
 
         # Remove old completed downloads
         self.completed_downloads = [
-            progress for progress in self.completed_downloads
-            if progress.start_time > cutoff_time
+            progress for progress in self.completed_downloads if progress.start_time > cutoff_time
         ]
 
         self.logger.debug(f"Cleaned up old downloads, {len(self.completed_downloads)} remaining")
@@ -242,16 +241,16 @@ class ISODownloadManager:
 
         # Calculate success rate
         if total_completed > 0:
-            successful = len([p for p in self.completed_downloads if p.status == 'completed'])
+            successful = len([p for p in self.completed_downloads if p.status == "completed"])
             success_rate = (successful / total_completed) * 100
         else:
             success_rate = 0.0
 
         return {
-            'active_downloads': total_active,
-            'completed_downloads': total_completed,
-            'success_rate': success_rate,
-            'total_size_downloaded': sum(p.downloaded_size for p in self.completed_downloads)
+            "active_downloads": total_active,
+            "completed_downloads": total_completed,
+            "success_rate": success_rate,
+            "total_size_downloaded": sum(p.downloaded_size for p in self.completed_downloads),
         }
 
     def test_api_connection(self) -> bool:

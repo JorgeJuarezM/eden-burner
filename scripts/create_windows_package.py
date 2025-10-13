@@ -7,12 +7,13 @@ Creates an NSIS installer script and package for Windows distribution
 import os
 import sys
 
+
 def create_nsis_installer():
     """Create NSIS installer script for Windows."""
     print("📦 Creating Windows installer package...")
 
     # NSIS installer script content
-    nsis_script = ''';NSIS Installer Script for EPSON PP-100 Disc Burner
+    nsis_script = """;NSIS Installer Script for EPSON PP-100 Disc Burner
 ;This script creates a Windows installer for the application
 
 !include "MUI2.nsh"
@@ -101,24 +102,24 @@ Function .onInit
         Abort
         continue:
     ${EndIf}
-FunctionEnd'''
+FunctionEnd"""
 
     # Write NSIS script
-    with open('windows_installer.nsi', 'w', encoding='utf-8') as f:
+    with open("windows_installer.nsi", "w", encoding="utf-8") as f:
         f.write(nsis_script)
 
     print("✅ NSIS installer script created: windows_installer.nsi")
 
     # Create a simple license file
-    license_content = '''EPSON PP-100 Disc Burner License Agreement
+    license_content = """EPSON PP-100 Disc Burner License Agreement
 
 This software is provided "as is" without warranty of any kind.
 
 Copyright (C) 2024 EPSON Corporation
 
-Permission is granted to use this software for personal and commercial purposes.'''
+Permission is granted to use this software for personal and commercial purposes."""
 
-    with open('LICENSE.txt', 'w', encoding='utf-8') as f:
+    with open("LICENSE.txt", "w", encoding="utf-8") as f:
         f.write(license_content)
 
     print("✅ License file created: LICENSE.txt")
@@ -133,15 +134,16 @@ Permission is granted to use this software for personal and commercial purposes.
     print("3. Run: makensis windows_installer.nsi")
     print("4. This will create: epson-burner-app-windows-installer.exe")
 
+
 def create_windows_package():
     """Create a simple ZIP package for Windows."""
     print("📦 Creating Windows ZIP package...")
 
-    import zipfile
     import shutil
+    import zipfile
 
     # Create Windows distribution directory
-    windows_dist = 'dist_windows'
+    windows_dist = "dist_windows"
     if os.path.exists(windows_dist):
         shutil.rmtree(windows_dist)
 
@@ -149,11 +151,11 @@ def create_windows_package():
 
     # Copy necessary files
     files_to_copy = [
-        'dist/epson-burner-app',  # This is actually the macOS executable, but serves as reference
-        'LICENSE.txt',
-        'resources/icon.ico',
-        'README.md',
-        'DISTRIBUTION_README.md'
+        "dist/epson-burner-app",  # This is actually the macOS executable, but serves as reference
+        "LICENSE.txt",
+        "resources/icon.ico",
+        "README.md",
+        "DISTRIBUTION_README.md",
     ]
 
     for file_path in files_to_copy:
@@ -164,7 +166,7 @@ def create_windows_package():
                 shutil.copy2(file_path, windows_dist)
 
     # Create instructions file for Windows
-    windows_instructions = '''INSTRUCCIONES PARA WINDOWS:
+    windows_instructions = """INSTRUCCIONES PARA WINDOWS:
 
 1. Para crear el ejecutable Windows:
    a. Copie este directorio completo a una máquina Windows
@@ -179,13 +181,14 @@ def create_windows_package():
 
 NOTA: Actualmente este paquete contiene el ejecutable de macOS.
 Para obtener el ejecutable de Windows real, ejecute el proceso
-de construcción en una máquina Windows.'''
+de construcción en una máquina Windows."""
 
-    with open(os.path.join(windows_dist, 'WINDOWS_BUILD.txt'), 'w', encoding='utf-8') as f:
+    with open(os.path.join(windows_dist, "WINDOWS_BUILD.txt"), "w", encoding="utf-8") as f:
         f.write(windows_instructions)
 
     print(f"✅ Windows package created: {windows_dist}/")
     print("📋 Contains build instructions for Windows")
+
 
 def main():
     print("🪟 EPSON PP-100 Disc Burner - Windows Distribution")
@@ -207,5 +210,6 @@ def main():
     print("3. Run the build process on Windows")
     print("4. Test the executable on Windows")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

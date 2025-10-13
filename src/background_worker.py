@@ -3,17 +3,18 @@ Background worker for EPSON PP-100 Disc Burner Application
 Handles job processing when GUI is closed
 """
 
-import time
-import threading
-import schedule
-from datetime import datetime, timedelta
 import logging
-from typing import Optional, Dict, Any
+import threading
+import time
+from datetime import datetime, timedelta
+from typing import Any, Dict, Optional
+
+import schedule
 
 from config import Config
-from job_queue import JobQueue, BurnJob, JobStatus
-from iso_downloader import ISODownloadManager
 from graphql_client import SyncGraphQLClient
+from iso_downloader import ISODownloadManager
+from job_queue import BurnJob, JobQueue, JobStatus
 from local_storage import LocalStorage
 
 
@@ -126,14 +127,22 @@ class BackgroundWorker:
         try:
             # Get all jobs that are ready for next stage
             ready_jobs = [
-                job for job in self.job_queue.get_all_jobs()
-                if job.status in [JobStatus.DOWNLOADED, JobStatus.JDF_READY, JobStatus.QUEUED_FOR_BURNING]
+                job
+                for job in self.job_queue.get_all_jobs()
+                if job.status
+                in [JobStatus.DOWNLOADED, JobStatus.JDF_READY, JobStatus.QUEUED_FOR_BURNING]
             ]
 
             for job in ready_jobs:
                 # Check if we can start this job (enough capacity)
-                active_jobs = len([j for j in self.job_queue.get_all_jobs()
-                                 if j.status in [JobStatus.DOWNLOADING, JobStatus.BURNING, JobStatus.VERIFYING]])
+                active_jobs = len(
+                    [
+                        j
+                        for j in self.job_queue.get_all_jobs()
+                        if j.status
+                        in [JobStatus.DOWNLOADING, JobStatus.BURNING, JobStatus.VERIFYING]
+                    ]
+                )
                 if active_jobs < self.config.max_concurrent_jobs:
                     self.logger.debug(f"Processing ready job {job.id} for next stage")
                     self.job_queue.start_job_processing(job)
@@ -155,7 +164,11 @@ class BackgroundWorker:
         """Process a specific job if it's ready for next stage."""
         try:
             job = self.job_queue.get_job(job_id)
-            if job and job.status in [JobStatus.DOWNLOADED, JobStatus.JDF_READY, JobStatus.QUEUED_FOR_BURNING]:
+            if job and job.status in [
+                JobStatus.DOWNLOADED,
+                JobStatus.JDF_READY,
+                JobStatus.QUEUED_FOR_BURNING,
+            ]:
                 self.logger.debug(f"Processing job {job_id} for next stage")
                 self.job_queue.start_job_processing(job)
         except Exception as e:
@@ -186,8 +199,9 @@ class BackgroundWorker:
                 try:
                     # Check if we already have this ISO
                     existing_jobs = [
-                        job for job in self.job_queue.get_all_jobs()
-                        if job.iso_info.get('id') == iso_info.get('id')
+                        job
+                        for job in self.job_queue.get_all_jobs()
+                        if job.iso_info.get("id") == iso_info.get("id")
                     ]
 
                     if not existing_jobs:
@@ -266,25 +280,25 @@ class BackgroundWorker:
             download_stats = self.download_manager.get_download_stats()
 
             return {
-                'running': self.running,
-                'last_api_check': self.last_api_check.isoformat() if self.last_api_check else None,
-                'next_api_check_in': self._get_next_api_check_time(),
-                'queue_status': queue_status,
-                'storage_stats': storage_stats,
-                'download_stats': download_stats,
-                'scheduled_jobs': len(schedule.get_jobs())
+                "running": self.running,
+                "last_api_check": self.last_api_check.isoformat() if self.last_api_check else None,
+                "next_api_check_in": self._get_next_api_check_time(),
+                "queue_status": queue_status,
+                "storage_stats": storage_stats,
+                "download_stats": download_stats,
+                "scheduled_jobs": len(schedule.get_jobs()),
             }
 
         except Exception as e:
             self.logger.error(f"Error getting worker status: {e}")
-            return {'error': str(e)}
+            return {"error": str(e)}
 
     def _get_next_api_check_time(self) -> Optional[int]:
         """Get time until next API check in seconds."""
         try:
             # Find next scheduled API check
             for job in schedule.get_jobs():
-                if hasattr(job, 'job_func') and job.job_func.__name__ == 'check_for_new_isos':
+                if hasattr(job, "job_func") and job.job_func.__name__ == "check_for_new_isos":
                     next_run = job.next_run
                     if next_run:
                         remaining = (next_run - datetime.now()).total_seconds()
@@ -335,7 +349,8 @@ class BackgroundWorker:
             status = self.get_worker_status()
 
             import json
-            with open(export_path, 'w', encoding='utf-8') as f:
+
+            with open(export_path, "w", encoding="utf-8") as f:
                 json.dump(status, f, indent=2, default=str)
 
             self.logger.info(f"Exported worker status to {export_path}")

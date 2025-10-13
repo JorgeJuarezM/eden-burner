@@ -2,27 +2,28 @@
 Local database storage for job states and history using SQLAlchemy
 """
 
-import os
-from datetime import datetime
-from typing import List, Optional, Dict, Any
-from pathlib import Path
 import json
 import logging
+import os
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Float, Text, Boolean
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy import (Boolean, Column, DateTime, Float, Integer, String,
+                        Text, create_engine)
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import Session, sessionmaker
 
 from config import Config
-
 
 Base = declarative_base()
 
 
 class BurnJobRecord(Base):
     """Database model for burn job records."""
-    __tablename__ = 'burn_jobs'
+
+    __tablename__ = "burn_jobs"
 
     id = Column(String, primary_key=True)
     iso_id = Column(String, nullable=False)
@@ -31,7 +32,7 @@ class BurnJobRecord(Base):
     download_url = Column(String, nullable=False)  # From fileUrl
     checksum = Column(String)  # Not provided by current API
     priority = Column(Integer, default=2)  # JobPriority.NORMAL.value
-    status = Column(String, default='pending')
+    status = Column(String, default="pending")
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -52,53 +53,63 @@ class BurnJobRecord(Base):
 
     # DICOM Study information (from GraphQL API)
     study_patient_name = Column(String)  # study.patient.fullName
-    study_patient_id = Column(String)    # study.patient.identifier
+    study_patient_id = Column(String)  # study.patient.identifier
     study_patient_birth_date = Column(DateTime)  # study.patient.birthDate
-    study_dicom_date_time = Column(DateTime)     # study.dicomDateTime
-    study_dicom_description = Column(Text)       # study.dicomDescription
+    study_dicom_date_time = Column(DateTime)  # study.dicomDateTime
+    study_dicom_description = Column(Text)  # study.dicomDescription
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert record to dictionary."""
         return {
-            'id': self.id,
-            'iso_id': self.iso_id,
-            'filename': self.filename,
-            'file_size': self.file_size,
-            'download_url': self.download_url,
-            'checksum': self.checksum,
-            'priority': self.priority,
-            'status': self.status,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
-            'iso_path': self.iso_path,
-            'jdf_path': self.jdf_path,
-            'progress': self.progress,
-            'error_message': self.error_message,
-            'retry_count': self.retry_count,
-            'robot_job_id': self.robot_job_id,
-            'estimated_completion': self.estimated_completion.isoformat() if self.estimated_completion else None,
-            'study_patient_name': self.study_patient_name,
-            'study_patient_id': self.study_patient_id,
-            'study_patient_birth_date': self.study_patient_birth_date.isoformat() if self.study_patient_birth_date else None,
-            'study_dicom_date_time': self.study_dicom_date_time.isoformat() if self.study_dicom_date_time else None,
-            'study_dicom_description': self.study_dicom_description,
+            "id": self.id,
+            "iso_id": self.iso_id,
+            "filename": self.filename,
+            "file_size": self.file_size,
+            "download_url": self.download_url,
+            "checksum": self.checksum,
+            "priority": self.priority,
+            "status": self.status,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "iso_path": self.iso_path,
+            "jdf_path": self.jdf_path,
+            "progress": self.progress,
+            "error_message": self.error_message,
+            "retry_count": self.retry_count,
+            "robot_job_id": self.robot_job_id,
+            "estimated_completion": (
+                self.estimated_completion.isoformat() if self.estimated_completion else None
+            ),
+            "study_patient_name": self.study_patient_name,
+            "study_patient_id": self.study_patient_id,
+            "study_patient_birth_date": (
+                self.study_patient_birth_date.isoformat() if self.study_patient_birth_date else None
+            ),
+            "study_dicom_date_time": (
+                self.study_dicom_date_time.isoformat() if self.study_dicom_date_time else None
+            ),
+            "study_dicom_description": self.study_dicom_description,
         }
 
     @classmethod
-    def from_job_data(cls, job_id: str, iso_info: Dict[str, Any], **kwargs) -> 'BurnJobRecord':
+    def from_job_data(cls, job_id: str, iso_info: Dict[str, Any], **kwargs) -> "BurnJobRecord":
         """Create record from job data matching GraphQL API response."""
         # Extract study information
-        study = iso_info.get('study', {})
-        patient = study.get('patient', {})
+        study = iso_info.get("study", {})
+        patient = study.get("patient", {})
 
         # Generate filename from study info
-        patient_name = patient.get('fullName', 'Unknown')
-        dicom_date = study.get('dicomDateTime', '')
-        filename = f"{patient_name}_{dicom_date}".replace(' ', '_').replace(':', '') if dicom_date else f"{patient_name}_study"
+        patient_name = patient.get("fullName", "Unknown")
+        dicom_date = study.get("dicomDateTime", "")
+        filename = (
+            f"{patient_name}_{dicom_date}".replace(" ", "_").replace(":", "")
+            if dicom_date
+            else f"{patient_name}_study"
+        )
 
         # Handle backward compatibility with old data format
-        old_filename = iso_info.get('filename')
-        if old_filename and not filename.startswith('Unknown'):
+        old_filename = iso_info.get("filename")
+        if old_filename and not filename.startswith("Unknown"):
             filename = old_filename
 
         # Convert string dates to datetime objects for SQLAlchemy
@@ -106,30 +117,32 @@ class BurnJobRecord(Base):
             if isinstance(date_str, str):
                 try:
                     from datetime import datetime
-                    return datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+
+                    return datetime.fromisoformat(date_str.replace("Z", "+00:00"))
                 except (ValueError, AttributeError):
                     return None
             return date_str
 
         return cls(
             id=job_id,
-            iso_id=iso_info.get('id', ''),
+            iso_id=iso_info.get("id", ""),
             filename=filename,
-            file_size=iso_info.get('fileSize'),
-            download_url=iso_info.get('fileUrl') or iso_info.get('downloadUrl', ''),
-            checksum=iso_info.get('checksum'),
-            study_patient_name=patient.get('fullName'),
-            study_patient_id=patient.get('identifier'),
-            study_patient_birth_date=parse_datetime(patient.get('birthDate')),
-            study_dicom_date_time=parse_datetime(study.get('dicomDateTime')),
-            study_dicom_description=study.get('dicomDescription'),
-            **kwargs
+            file_size=iso_info.get("fileSize"),
+            download_url=iso_info.get("fileUrl") or iso_info.get("downloadUrl", ""),
+            checksum=iso_info.get("checksum"),
+            study_patient_name=patient.get("fullName"),
+            study_patient_id=patient.get("identifier"),
+            study_patient_birth_date=parse_datetime(patient.get("birthDate")),
+            study_dicom_date_time=parse_datetime(study.get("dicomDateTime")),
+            study_dicom_description=study.get("dicomDescription"),
+            **kwargs,
         )
 
 
 class JobHistoryRecord(Base):
     """Database model for job history records."""
-    __tablename__ = 'job_history'
+
+    __tablename__ = "job_history"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     job_id = Column(String, nullable=False)
@@ -141,12 +154,12 @@ class JobHistoryRecord(Base):
     def to_dict(self) -> Dict[str, Any]:
         """Convert record to dictionary."""
         return {
-            'id': self.id,
-            'job_id': self.job_id,
-            'status': self.status,
-            'timestamp': self.timestamp.isoformat() if self.timestamp else None,
-            'message': self.message,
-            'error': self.error
+            "id": self.id,
+            "job_id": self.job_id,
+            "status": self.status,
+            "timestamp": self.timestamp.isoformat() if self.timestamp else None,
+            "message": self.message,
+            "error": self.error,
         }
 
 
@@ -167,7 +180,7 @@ class LocalStorage:
         db_dir.mkdir(parents=True, exist_ok=True)
 
         # Create database engine
-        db_url = f'sqlite:///{self.config.database_file}'
+        db_url = f"sqlite:///{self.config.database_file}"
         self.engine = create_engine(db_url, echo=False)
 
         # Create tables (will be no-op if they already exist)
@@ -204,20 +217,20 @@ class LocalStorage:
                     existing.updated_at = datetime.utcnow()
 
                     # Update DICOM study fields if provided
-                    if 'study' in iso_info:
-                        study = iso_info['study']
-                        patient = study.get('patient', {})
+                    if "study" in iso_info:
+                        study = iso_info["study"]
+                        patient = study.get("patient", {})
 
-                        if hasattr(existing, 'study_patient_name'):
-                            existing.study_patient_name = patient.get('fullName')
-                        if hasattr(existing, 'study_patient_id'):
-                            existing.study_patient_id = patient.get('identifier')
-                        if hasattr(existing, 'study_patient_birth_date'):
-                            existing.study_patient_birth_date = patient.get('birthDate')
-                        if hasattr(existing, 'study_dicom_date_time'):
-                            existing.study_dicom_date_time = study.get('dicomDateTime')
-                        if hasattr(existing, 'study_dicom_description'):
-                            existing.study_dicom_description = study.get('dicomDescription')
+                        if hasattr(existing, "study_patient_name"):
+                            existing.study_patient_name = patient.get("fullName")
+                        if hasattr(existing, "study_patient_id"):
+                            existing.study_patient_id = patient.get("identifier")
+                        if hasattr(existing, "study_patient_birth_date"):
+                            existing.study_patient_birth_date = patient.get("birthDate")
+                        if hasattr(existing, "study_dicom_date_time"):
+                            existing.study_dicom_date_time = study.get("dicomDateTime")
+                        if hasattr(existing, "study_dicom_description"):
+                            existing.study_dicom_description = study.get("dicomDescription")
 
                     record = existing
                 else:
@@ -277,8 +290,9 @@ class LocalStorage:
             self.logger.error(f"Error getting jobs by status {status}: {e}")
             return []
 
-    def update_job_status(self, job_id: str, status: str, error_message: str = None,
-                         progress: float = None) -> bool:
+    def update_job_status(
+        self, job_id: str, status: str, error_message: str = None, progress: float = None
+    ) -> bool:
         """Update job status and optionally error message and progress.
 
         Args:
@@ -338,8 +352,9 @@ class LocalStorage:
             self.logger.error(f"Error deleting job {job_id}: {e}")
             return False
 
-    def add_history_record(self, job_id: str, status: str, message: str = None,
-                          error: bool = False) -> bool:
+    def add_history_record(
+        self, job_id: str, status: str, message: str = None, error: bool = False
+    ) -> bool:
         """Add a history record for a job.
 
         Args:
@@ -354,10 +369,7 @@ class LocalStorage:
         try:
             with self.get_session() as session:
                 history = JobHistoryRecord(
-                    job_id=job_id,
-                    status=status,
-                    message=message,
-                    error=error
+                    job_id=job_id, status=status, message=message, error=error
                 )
                 session.add(history)
                 session.commit()
@@ -378,7 +390,12 @@ class LocalStorage:
         """
         try:
             with self.get_session() as session:
-                return session.query(JobHistoryRecord).filter_by(job_id=job_id).order_by(JobHistoryRecord.timestamp).all()
+                return (
+                    session.query(JobHistoryRecord)
+                    .filter_by(job_id=job_id)
+                    .order_by(JobHistoryRecord.timestamp)
+                    .all()
+                )
         except SQLAlchemyError as e:
             self.logger.error(f"Error getting history for job {job_id}: {e}")
             return []
@@ -398,20 +415,31 @@ class LocalStorage:
 
             with self.get_session() as session:
                 # Delete old history records first
-                deleted_history = session.query(JobHistoryRecord).join(BurnJobRecord).filter(
-                    BurnJobRecord.updated_at < cutoff_date,
-                    BurnJobRecord.status.in_(['completed', 'failed'])
-                ).delete(synchronize_session=False)
+                deleted_history = (
+                    session.query(JobHistoryRecord)
+                    .join(BurnJobRecord)
+                    .filter(
+                        BurnJobRecord.updated_at < cutoff_date,
+                        BurnJobRecord.status.in_(["completed", "failed"]),
+                    )
+                    .delete(synchronize_session=False)
+                )
 
                 # Delete old jobs
-                deleted_jobs = session.query(BurnJobRecord).filter(
-                    BurnJobRecord.updated_at < cutoff_date,
-                    BurnJobRecord.status.in_(['completed', 'failed'])
-                ).delete(synchronize_session=False)
+                deleted_jobs = (
+                    session.query(BurnJobRecord)
+                    .filter(
+                        BurnJobRecord.updated_at < cutoff_date,
+                        BurnJobRecord.status.in_(["completed", "failed"]),
+                    )
+                    .delete(synchronize_session=False)
+                )
 
                 session.commit()
 
-                self.logger.info(f"Cleaned up {deleted_jobs} old jobs and {deleted_history} history records")
+                self.logger.info(
+                    f"Cleaned up {deleted_jobs} old jobs and {deleted_history} history records"
+                )
                 return deleted_jobs
 
         except SQLAlchemyError as e:
@@ -427,18 +455,18 @@ class LocalStorage:
         try:
             with self.get_session() as session:
                 total_jobs = session.query(BurnJobRecord).count()
-                pending_jobs = session.query(BurnJobRecord).filter_by(status='pending').count()
-                completed_jobs = session.query(BurnJobRecord).filter_by(status='completed').count()
-                failed_jobs = session.query(BurnJobRecord).filter_by(status='failed').count()
+                pending_jobs = session.query(BurnJobRecord).filter_by(status="pending").count()
+                completed_jobs = session.query(BurnJobRecord).filter_by(status="completed").count()
+                failed_jobs = session.query(BurnJobRecord).filter_by(status="failed").count()
                 total_history = session.query(JobHistoryRecord).count()
 
                 return {
-                    'total_jobs': total_jobs,
-                    'pending_jobs': pending_jobs,
-                    'completed_jobs': completed_jobs,
-                    'failed_jobs': failed_jobs,
-                    'total_history_records': total_history,
-                    'database_size_mb': self._get_database_size()
+                    "total_jobs": total_jobs,
+                    "pending_jobs": pending_jobs,
+                    "completed_jobs": completed_jobs,
+                    "failed_jobs": failed_jobs,
+                    "total_history_records": total_history,
+                    "database_size_mb": self._get_database_size(),
                 }
 
         except SQLAlchemyError as e:
@@ -462,11 +490,12 @@ class LocalStorage:
             Path to backup file or None if failed
         """
         try:
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            backup_path = self.config.database_file.with_suffix(f'.backup_{timestamp}')
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            backup_path = self.config.database_file.with_suffix(f".backup_{timestamp}")
 
             # Simple file copy backup
             import shutil
+
             shutil.copy2(self.config.database_file, backup_path)
 
             self.logger.info(f"Created database backup: {backup_path}")
@@ -489,7 +518,7 @@ class LocalStorage:
             keep_count = self.config.database_backup_count
 
         try:
-            backup_pattern = self.config.database_file.stem + '.backup_*'
+            backup_pattern = self.config.database_file.stem + ".backup_*"
             backup_files = list(self.config.database_file.parent.glob(backup_pattern))
 
             if len(backup_files) <= keep_count:
@@ -523,7 +552,7 @@ class LocalStorage:
             jobs = self.get_all_jobs()
             job_data = [job.to_dict() for job in jobs]
 
-            with open(output_path, 'w', encoding='utf-8') as f:
+            with open(output_path, "w", encoding="utf-8") as f:
                 json.dump(job_data, f, indent=2, default=str)
 
             self.logger.info(f"Exported {len(jobs)} jobs to {output_path}")

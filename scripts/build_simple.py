@@ -4,17 +4,19 @@ Simple build script for EPSON PP-100 Disc Burner Application
 """
 
 import os
-import sys
 import subprocess
+import sys
+
 
 def get_venv_python():
     """Get the Python executable from the virtual environment."""
-    venv_python = os.path.join(os.path.dirname(__file__), 'venv', 'bin', 'python3')
+    venv_python = os.path.join(os.path.dirname(__file__), "venv", "bin", "python3")
     if os.path.exists(venv_python):
         return venv_python
     else:
         # Fallback to current Python
         return sys.executable
+
 
 def build_simple():
     """Build a simple executable using PyInstaller defaults."""
@@ -25,19 +27,21 @@ def build_simple():
 
     # Simple PyInstaller command
     cmd = [
-        python_exe, '-m', 'PyInstaller',
-        '--onefile',
-        '--windowed',
-        '--name=epson-burner-app',
-        '--hidden-import=PyQt5.QtCore',
-        '--hidden-import=PyQt5.QtGui',
-        '--hidden-import=PyQt5.QtWidgets',
-        '--hidden-import=PyQt5.QtNetwork',
-        '--hidden-import=PyQt5.QtPrintSupport',
-        '--hidden-import=schedule',
-        '--hidden-import=yaml',
-        '--hidden-import=sqlalchemy.ext.baked',
-        'main.py'
+        python_exe,
+        "-m",
+        "PyInstaller",
+        "--onefile",
+        "--windowed",
+        "--name=epson-burner-app",
+        "--hidden-import=PyQt5.QtCore",
+        "--hidden-import=PyQt5.QtGui",
+        "--hidden-import=PyQt5.QtWidgets",
+        "--hidden-import=PyQt5.QtNetwork",
+        "--hidden-import=PyQt5.QtPrintSupport",
+        "--hidden-import=schedule",
+        "--hidden-import=yaml",
+        "--hidden-import=sqlalchemy.ext.baked",
+        "main.py",
     ]
 
     print(f"Running: {' '.join(cmd)}")
@@ -50,7 +54,8 @@ def build_simple():
         print(f"✗ Build failed: {e}")
         return False
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     success = build_simple()
     if success:
         print("\n🎉 Executable created in 'dist/' directory!")

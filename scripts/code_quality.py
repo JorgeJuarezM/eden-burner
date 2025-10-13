@@ -5,9 +5,9 @@ Code Quality Tools for EPSON PP-100 Disc Burner Application
 This script provides automated code formatting, linting, and import cleaning.
 """
 
+import os
 import subprocess
 import sys
-import os
 from pathlib import Path
 
 
@@ -47,7 +47,7 @@ def check_tools():
         ("black", "Black code formatter"),
         ("isort", "Import sorter"),
         ("flake8", "Python linter"),
-        ("mypy", "Static type checker")
+        ("mypy", "Static type checker"),
     ]
 
     missing_tools = []
@@ -126,10 +126,17 @@ def clean_imports():
     # Run autoflake to remove unused imports (optional)
     try:
         if subprocess.run(["autoflake", "--version"], capture_output=True).returncode == 0:
-            run_command([
-                "autoflake", "--in-place", "--remove-unused-variables",
-                "--remove-all-unused-imports", "--recursive", "."
-            ], "Autoflake unused import removal")
+            run_command(
+                [
+                    "autoflake",
+                    "--in-place",
+                    "--remove-unused-variables",
+                    "--remove-all-unused-imports",
+                    "--recursive",
+                    ".",
+                ],
+                "Autoflake unused import removal",
+            )
         else:
             print("⚠️  autoflake not installed - skipping unused import removal")
     except:
@@ -188,12 +195,12 @@ def main():
     command = sys.argv[1]
 
     commands = {
-        'format': format_code,
-        'lint': lint_code,
-        'clean': clean_imports,
-        'quality': run_quality_checks,
-        'check-tools': check_tools,
-        'help': show_help
+        "format": format_code,
+        "lint": lint_code,
+        "clean": clean_imports,
+        "quality": run_quality_checks,
+        "check-tools": check_tools,
+        "help": show_help,
     }
 
     if command not in commands:

@@ -4,12 +4,13 @@ GraphQL client for querying ISO files from API
 
 import asyncio
 import json
-import os
-from typing import List, Dict, Optional, Any
-from gql import gql, Client
-from gql.transport.aiohttp import AIOHTTPTransport
-import aiohttp
 import logging
+import os
+from typing import Any, Dict, List, Optional
+
+import aiohttp
+from gql import Client, gql
+from gql.transport.aiohttp import AIOHTTPTransport
 
 from config import Config
 
@@ -29,12 +30,12 @@ class GraphQLClient:
         # Initialize transport
         headers = {}
         if self.config.api_key:
-            headers['Authorization'] = f'Token {self.config.api_key}'
+            headers["Authorization"] = f"Token {self.config.api_key}"
 
         self.transport = AIOHTTPTransport(
             url=self.config.graphql_endpoint,
             headers=headers,
-            timeout=self.config.api_timeout  # Pass timeout directly as seconds
+            timeout=self.config.api_timeout,  # Pass timeout directly as seconds
         )
 
         # Initialize client
@@ -51,7 +52,7 @@ class GraphQLClient:
         """
         try:
             # GraphQL query for new ISOs
-            query_string = '''
+            query_string = """
             query isosByBurner($burner: UUID!) {
                 downloadIsosByBurner(burner: $burner) {
                     id
@@ -67,38 +68,40 @@ class GraphQLClient:
                     fileUrl
                 }
             }
-            '''
+            """
 
             query = gql(query_string)
 
             # Ensure robot_uuid is available and valid
-            robot_uuid = getattr(self.config, 'robot_uuid', None)
+            robot_uuid = getattr(self.config, "robot_uuid", None)
             if not robot_uuid:
                 self.logger.error("robot_uuid not configured in application config")
                 return []
 
-            variables = {
-                'burner': robot_uuid
-            }
+            variables = {"burner": robot_uuid}
             # if last_check_time:
             #     variables['lastCheckTime'] = last_check_time
 
             # Execute query with retry logic
             max_retries = 3  # default retry attempts
-            if hasattr(self.config, 'config_data') and 'api' in self.config.config_data and 'retry_attempts' in self.config.config_data['api']:
-                max_retries = self.config.config_data['api']['retry_attempts']
-            elif hasattr(self.config, 'retry_attempts'):
+            if (
+                hasattr(self.config, "config_data")
+                and "api" in self.config.config_data
+                and "retry_attempts" in self.config.config_data["api"]
+            ):
+                max_retries = self.config.config_data["api"]["retry_attempts"]
+            elif hasattr(self.config, "retry_attempts"):
                 max_retries = self.config.retry_attempts
 
             for attempt in range(max_retries):
                 try:
                     result = await self.client.execute_async(query, variable_values=variables)
-                    return result.get('downloadIsosByBurner', [])
+                    return result.get("downloadIsosByBurner", [])
                 except Exception as e:
                     self.logger.warning(f"Query attempt {attempt + 1} failed: {e}")
                     if attempt == max_retries - 1:
                         raise
-                    await asyncio.sleep(2 ** attempt)  # Exponential backoff
+                    await asyncio.sleep(2**attempt)  # Exponential backoff
 
         except Exception as e:
             self.logger.error(f"Error querying new ISOs: {e}")
@@ -114,7 +117,7 @@ class GraphQLClient:
         Returns:
             True if download successful, False otherwise
         """
-        download_url = iso_info.get('fileUrl')
+        download_url = iso_info.get("fileUrl")
         if not download_url:
             self.logger.error(f"No download URL for ISO: {iso_info.get('id')}")
             return False
@@ -132,14 +135,14 @@ class GraphQLClient:
                         return False
 
                     # Get file size for progress tracking
-                    content_length = response.headers.get('Content-Length')
+                    content_length = response.headers.get("Content-Length")
                     if content_length:
                         total_size = int(content_length)
                     else:
                         total_size = None
 
                     # Download in chunks
-                    with open(download_path, 'wb') as f:
+                    with open(download_path, "wb") as f:
                         downloaded = 0
                         async for chunk in response.content.iter_chunked(8192):
                             f.write(chunk)
@@ -150,17 +153,19 @@ class GraphQLClient:
                                 self.logger.debug(f"Download progress: {progress:.1f}%")
 
             # Verify file size if provided
-            if 'fileSize' in iso_info:
+            if "fileSize" in iso_info:
                 actual_size = os.path.getsize(download_path)
-                expected_size = iso_info['fileSize']
+                expected_size = iso_info["fileSize"]
                 if actual_size != expected_size:
-                    self.logger.error(f"File size mismatch: expected {expected_size}, got {actual_size}")
+                    self.logger.error(
+                        f"File size mismatch: expected {expected_size}, got {actual_size}"
+                    )
                     os.remove(download_path)
                     return False
 
             # Verify checksum if provided
-            if 'checksum' in iso_info:
-                if not self._verify_checksum(download_path, iso_info['checksum']):
+            if "checksum" in iso_info:
+                if not self._verify_checksum(download_path, iso_info["checksum"]):
                     self.logger.error(f"Checksum verification failed for {download_path}")
                     os.remove(download_path)
                     return False
@@ -189,18 +194,18 @@ class GraphQLClient:
 
         try:
             # Parse checksum format (assume MD5 for now, can be extended)
-            if ':' in expected_checksum:
-                algorithm, checksum = expected_checksum.split(':', 1)
+            if ":" in expected_checksum:
+                algorithm, checksum = expected_checksum.split(":", 1)
             else:
-                algorithm, checksum = 'md5', expected_checksum
+                algorithm, checksum = "md5", expected_checksum
 
             algorithm = algorithm.lower()
             checksum = checksum.lower()
 
             # Calculate actual checksum
             hash_func = getattr(hashlib, algorithm)()
-            with open(file_path, 'rb') as f:
-                for chunk in iter(lambda: f.read(8192), b''):
+            with open(file_path, "rb") as f:
+                for chunk in iter(lambda: f.read(8192), b""):
                     hash_func.update(chunk)
 
             actual_checksum = hash_func.hexdigest()
@@ -218,7 +223,7 @@ class GraphQLClient:
         """
         try:
             # Simple test query
-            test_query = gql('query { __typename }')
+            test_query = gql("query { __typename }")
             await self.client.execute_async(test_query)
             return True
         except Exception as e:
