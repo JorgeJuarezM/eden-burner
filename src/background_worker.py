@@ -3,6 +3,7 @@ Background worker for EPSON PP-100 Disc Burner Application
 Handles job processing when GUI is closed
 """
 
+import json
 import logging
 import threading
 import time
@@ -347,8 +348,6 @@ class BackgroundWorker:
         """
         try:
             status = self.get_worker_status()
-
-            import json
 
             with open(export_path, "w", encoding="utf-8") as f:
                 json.dump(status, f, indent=2, default=str)

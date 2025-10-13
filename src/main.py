@@ -20,7 +20,7 @@ from typing import Any, Dict
 
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (QAction, QApplication, QMenu, QMessageBox,
+from PyQt5.QtWidgets import (QAction, QApplication, QMenu, QMessageBox, QStyle,
                              QSystemTrayIcon)
 
 import background_worker
@@ -132,8 +132,6 @@ class EpsonBurnerApp:
             self.tray_icon.setIcon(QIcon(icon_path))
         else:
             # Use default system icon - fix for PyQt5 compatibility
-            from PyQt5.QtWidgets import QStyle
-
             self.tray_icon.setIcon(self.app.style().standardIcon(QStyle.SP_ComputerIcon))
 
         # Set tooltip
@@ -241,7 +239,6 @@ class EpsonBurnerApp:
                 }
 
                 # Create BurnJob from storage record
-                from job_queue import BurnJob, JobPriority
 
                 # Convert string status to enum
                 try:
@@ -442,8 +439,6 @@ def main():
     if args.test_config:
         # Test configuration without starting GUI
         try:
-            from config import Config
-
             config = Config()
             config_errors = config.validate_config()
             if config_errors:
