@@ -79,10 +79,10 @@ class Config:
                 "show_notifications": True,
                 "theme": "default",
             },
-            "database": {"file": str(app_dir / "burner_jobs.db"), "backup_count": 5},
+            "database": {"file": str(app_dir / "database/burner_jobs.db"), "backup_count": 5},
             "logging": {
                 "level": "INFO",
-                "file": str(app_dir / "burner.log"),
+                "file": str(app_dir / "logs/burner.log"),
                 "max_size": 10 * 1024 * 1024,  # 10MB
                 "backup_count": 5,
             },

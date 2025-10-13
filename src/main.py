@@ -241,7 +241,7 @@ class EpsonBurnerApp:
                 }
 
                 # Create BurnJob from storage record
-                from .job_queue import BurnJob, JobPriority
+                from job_queue import BurnJob, JobPriority
 
                 # Convert string status to enum
                 try:
