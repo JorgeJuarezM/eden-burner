@@ -128,7 +128,8 @@ class ISODownloadManager:
             progress.status = "downloading"
             self._notify_progress(iso_id, progress)
 
-            success = self.graphql_client.download_iso_file(iso_info, str(download_path))
+            # Simple progress polling approach (more stable than real-time callbacks)
+            success = self._download_with_simple_progress(iso_info, str(download_path), progress)
 
             if success:
                 progress.status = "completed"
@@ -151,8 +152,11 @@ class ISODownloadManager:
             return ""
         finally:
             # Clean up active downloads
-            if iso_id in self.active_downloads:
-                del self.active_downloads[iso_id]
+            try:
+                if iso_id in self.active_downloads:
+                    del self.active_downloads[iso_id]
+            except Exception as e:
+                self.logger.error(f"Error cleaning up active downloads for {iso_id}: {e}")
 
     def download_isos_batch(self, iso_list: List[Dict[str, Any]]) -> Dict[str, str]:
         """Download multiple ISO files.
@@ -210,6 +214,38 @@ class ISODownloadManager:
             return True
 
         return False
+
+    def _download_with_simple_progress(
+        self, iso_info: Dict[str, Any], download_path: str, progress: DownloadProgress
+    ) -> bool:
+        """Download file with simple progress polling (more stable than real-time callbacks)."""
+        try:
+            # Simple progress callback for basic updates
+            def simple_progress_callback(downloaded_bytes: int, total_bytes: int):
+                try:
+                    progress.downloaded_size = downloaded_bytes
+                    if total_bytes > 0:
+                        progress.total_size = total_bytes
+                    # Update progress every 1% or every 5 seconds
+                    import time
+
+                    current_time = time.time()
+                    if (
+                        not hasattr(progress, "_last_update")
+                        or current_time - progress._last_update > 5.0
+                    ):
+                        progress._last_update = current_time
+                        self._notify_progress(progress.iso_id, progress)
+                except Exception as e:
+                    self.logger.error(f"Error in simple progress callback: {e}")
+
+            return self.graphql_client.download_iso_file(
+                iso_info, download_path, simple_progress_callback
+            )
+
+        except Exception as e:
+            self.logger.error(f"Error in download with simple progress: {e}")
+            return False
 
     def cleanup_old_downloads(self, max_age_hours: int = 24):
         """Clean up old completed downloads from memory.

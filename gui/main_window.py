@@ -37,7 +37,7 @@ class MainWindowUI(QMainWindow):
     def setup_ui(self):
         """Setup the main window UI."""
         self.setWindowTitle(self.config.window_title)
-        self.setFixedSize(800, 600)
+        self.setFixedSize(1024, 768)
 
         # Create central widget
         central_widget = QWidget()

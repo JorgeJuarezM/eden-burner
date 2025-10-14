@@ -236,13 +236,16 @@ class JobQueue:
 
     def _on_download_progress(self, iso_id: str, progress):
         """Handle download progress updates."""
-        # Find job by ISO ID
-        for job in self.jobs.values():
-            if job.iso_info.get("id") == iso_id and job.status == JobStatus.DOWNLOADING:
-                job.progress = progress.progress_percentage
-                job.updated_at = datetime.now()
-                self._notify_job_update(job)
-                break
+        try:
+            # Find job by ISO ID
+            for job in self.jobs.values():
+                if job.iso_info.get("id") == iso_id and job.status == JobStatus.DOWNLOADING:
+                    job.progress = progress.progress_percentage
+                    job.updated_at = datetime.now()
+                    self._notify_job_update(job)
+                    break
+        except Exception as e:
+            self.logger.error(f"Error handling download progress for {iso_id}: {e}")
 
     def _start_jdf_generation(self, job: BurnJob):
         """Start JDF file generation."""

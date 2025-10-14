@@ -5,7 +5,7 @@ GraphQL client for querying ISO files from API
 import asyncio
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 import aiohttp
 from gql import Client, gql
@@ -106,12 +106,18 @@ class GraphQLClient:
             self.logger.error(f"Error querying new ISOs: {e}")
             return []
 
-    async def download_iso_file(self, iso_info: Dict[str, Any], download_path: str) -> bool:
+    async def download_iso_file(
+        self,
+        iso_info: Dict[str, Any],
+        download_path: str,
+        progress_callback: Optional[Callable[[int, int], None]] = None,
+    ) -> bool:
         """Download ISO file from URL.
 
         Args:
             iso_info: ISO file information from GraphQL query
             download_path: Local path to save the file
+            progress_callback: Optional callback function that receives (downloaded_bytes, total_bytes)
 
         Returns:
             True if download successful, False otherwise
@@ -147,9 +153,18 @@ class GraphQLClient:
                             f.write(chunk)
                             downloaded += len(chunk)
 
-                            if total_size:
-                                progress = (downloaded / total_size) * 100
-                                self.logger.debug(f"Download progress: {progress:.1f}%")
+                            # Report progress if callback provided
+                            if progress_callback and total_size:
+                                try:
+                                    progress_callback(downloaded, total_size)
+                                except Exception as e:
+                                    self.logger.error(f"Error in progress callback: {e}")
+                            elif progress_callback:
+                                # For unknown total size, just report downloaded bytes
+                                try:
+                                    progress_callback(downloaded, 0)
+                                except Exception as e:
+                                    self.logger.error(f"Error in progress callback: {e}")
 
             # Verify file size if provided
             if "fileSize" in iso_info:
@@ -256,9 +271,16 @@ class SyncGraphQLClient:
         """Synchronous version of query_new_isos."""
         return asyncio.run(self.client.query_new_isos(last_check_time))
 
-    def download_iso_file(self, iso_info: Dict[str, Any], download_path: str) -> bool:
+    def download_iso_file(
+        self,
+        iso_info: Dict[str, Any],
+        download_path: str,
+        progress_callback: Optional[Callable[[int, int], None]] = None,
+    ) -> bool:
         """Synchronous version of download_iso_file."""
-        return asyncio.run(self.client.download_iso_file(iso_info, download_path))
+        return asyncio.run(
+            self.client.download_iso_file(iso_info, download_path, progress_callback)
+        )
 
     def test_connection(self) -> bool:
         """Synchronous version of test_connection."""

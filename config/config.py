@@ -20,6 +20,7 @@ class Config:
             # Look for config in application directory
             app_dir = Path(__file__).parent
             config_file = app_dir / "config.yaml"
+            print(f"Using default config file: {config_file}")
 
         self.config_file = Path(config_file)
         self.config_data = self.load_config()
@@ -46,7 +47,7 @@ class Config:
 
         return {
             "api": {
-                "graphql_endpoint": "https://api.example.com/graphql",
+                "graphql_endpoint": "http://localhost:8000/graphql-middleware/",
                 "api_key": "",
                 "timeout": 30,
                 "retry_attempts": 3,

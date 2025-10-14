@@ -441,7 +441,7 @@ def main():
     if args.clear_database:
         # Clear the database
         try:
-            from local_storage import LocalStorage
+            from src.local_storage import LocalStorage
 
             config = Config()
             storage = LocalStorage(config)
