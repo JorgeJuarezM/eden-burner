@@ -2,35 +2,27 @@
 PyQt GUI for EPSON PP-100 Disc Burner Application - Main Window
 """
 
-from typing import List, Optional
 
-from PyQt5.QtCore import Q_ARG, QMetaObject, Qt, QTimer, pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QColor, QFont
+from PyQt5.QtCore import QTimer, pyqtSignal
+from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (
     QAction,
     QComboBox,
-    QDialog,
-    QFormLayout,
-    QGroupBox,
     QHBoxLayout,
-    QHeaderView,
     QLabel,
     QMainWindow,
     QMessageBox,
-    QProgressBar,
     QPushButton,
     QStatusBar,
-    QTableWidget,
-    QTableWidgetItem,
-    QTextEdit,
     QVBoxLayout,
     QWidget,
 )
 
 from config import Config
 from job_queue import BurnJob, JobQueue, JobStatus
-from .job_table_widget import JobTableWidget
+
 from .job_details_dialog import JobDetailsDialog
+from .job_table_widget import JobTableWidget
 
 
 class MainWindow(QMainWindow):

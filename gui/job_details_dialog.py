@@ -4,7 +4,6 @@ Job Details Dialog for EPSON PP-100 Disc Burner Application
 
 from typing import Optional
 
-from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (
     QDialog,
@@ -12,8 +11,8 @@ from PyQt5.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
     QLabel,
-    QPushButton,
     QProgressBar,
+    QPushButton,
     QTextEdit,
     QVBoxLayout,
 )
@@ -40,7 +39,8 @@ class JobDetailsDialog(QDialog):
         """Setup the dialog UI."""
         self.setWindowTitle(f"Detalles del Trabajo - {self.job.id[:16]}...")
         self.setMinimumSize(600, 500)
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             QDialog {
                 background-color: #2d2d2d;
             }
@@ -60,7 +60,8 @@ class JobDetailsDialog(QDialog):
                 color: #ffffff;
                 background-color: #2d2d2d;
             }
-        """)
+        """
+        )
 
         layout = QVBoxLayout(self)
 
@@ -198,7 +199,9 @@ class JobDetailsDialog(QDialog):
 
         # Update history
         self.history_text.clear()
-        self.history_text.append(f"Trabajo creado: {self.job.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
+        self.history_text.append(
+            f"Trabajo creado: {self.job.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
+        )
         if self.job.error_message:
             self.history_text.append(f"Error: {self.job.error_message}")
 

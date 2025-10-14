@@ -4,7 +4,7 @@ Job Table Widget for EPSON PP-100 Disc Burner Application
 
 from typing import List, Optional
 
-from PyQt5.QtCore import Q_ARG, QMetaObject, Qt, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import Q_ARG, QMetaObject, Qt, pyqtSlot
 from PyQt5.QtGui import QColor, QFont
 from PyQt5.QtWidgets import QHeaderView, QProgressBar, QTableWidget, QTableWidgetItem
 
