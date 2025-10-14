@@ -24,11 +24,9 @@ class JobTableWidgetUI(QTableWidget):
         headers = [
             "ID",
             "Paciente",
-            "Estudio",
             "Estado",
             "Progreso",
             "Creado",
-            "Actualizado",
         ]
 
         self.setColumnCount(len(headers))
@@ -69,16 +67,15 @@ class JobTableWidgetUI(QTableWidget):
 
         # Resize columns
         header = self.horizontalHeader()
-        header.setSectionResizeMode(QHeaderView.Stretch)
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)  # ID column
-        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)  # Status column
+        header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)  # Patient
 
         # Set minimum column widths
-        self.setColumnWidth(0, 100)  # ID
-        self.setColumnWidth(1, 200)  # Patient
-        self.setColumnWidth(2, 200)  # Study
-        self.setColumnWidth(3, 100)  # Status
-        self.setColumnWidth(4, 150)  # Progress
+        self.setColumnWidth(0, 50)  # ID
+        self.setColumnWidth(1, 50)  # Patient
+        self.setColumnWidth(2, 50)  # Status
+        self.setColumnWidth(3, 50)  # Progress
+        self.setColumnWidth(4, 50)  # Created
 
 
 class JobTableWidgetLogic(JobTableWidgetUI):
@@ -110,28 +107,14 @@ class JobTableWidgetLogic(JobTableWidgetUI):
             job_id_item.setForeground(QColor(255, 255, 255))  # White text
             self.setItem(row, 0, job_id_item)
 
-            # ISO filename
-            # iso_name = job.iso_info.get("filename", "Unknown")
-            # iso_item = QTableWidgetItem(iso_name)
-            # iso_item.setForeground(QColor(255, 255, 255))  # White text
-            # self.setItem(row, 1, iso_item)
-
             # Patient information
             study_info = job.iso_info.get("study", {})
             patient_info = study_info.get("patient", {})
             patient_name = patient_info.get("fullName", "Desconocido")
             patient_item = QTableWidgetItem(patient_name)
+            patient_item.setToolTip(patient_name)
             patient_item.setForeground(QColor(255, 255, 255))  # White text
             self.setItem(row, 1, patient_item)
-
-            # Study information
-            study_desc = study_info.get("dicomDescription", "Sin descripción")
-            if len(study_desc) > 50:
-                study_desc = study_desc[:47] + "..."
-            study_item = QTableWidgetItem(study_desc)
-            study_item.setToolTip(study_info.get("dicomDescription", ""))
-            study_item.setForeground(QColor(255, 255, 255))  # White text
-            self.setItem(row, 2, study_item)
 
             # Status with color coding
             status_item = QTableWidgetItem(job.status.value.title())
@@ -160,7 +143,7 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                 status_item.setBackground(QColor(224, 224, 224))  # Light gray background
                 status_item.setForeground(QColor(0, 0, 0))  # Black text
 
-            self.setItem(row, 3, status_item)
+            self.setItem(row, 2, status_item)
 
             # Progress bar
             progress_bar = QProgressBar()
@@ -177,17 +160,12 @@ class JobTableWidgetLogic(JobTableWidgetUI):
             else:
                 progress_bar.setStyleSheet("QProgressBar::chunk { background-color: #57c24f; }")
 
-            self.setCellWidget(row, 4, progress_bar)
+            self.setCellWidget(row, 3, progress_bar)
 
             # Created time
             created_item = QTableWidgetItem(job.created_at.strftime("%Y-%m-%d %H:%M"))
             created_item.setForeground(QColor(255, 255, 255))  # White text
-            self.setItem(row, 5, created_item)
-
-            # Updated time
-            updated_item = QTableWidgetItem(job.updated_at.strftime("%Y-%m-%d %H:%M"))
-            updated_item.setForeground(QColor(255, 255, 255))  # White text
-            self.setItem(row, 6, updated_item)
+            self.setItem(row, 4, created_item)
 
     def get_selected_job_id(self) -> Optional[str]:
         """Get the ID of the currently selected job.
