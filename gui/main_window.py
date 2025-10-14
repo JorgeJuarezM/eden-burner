@@ -153,7 +153,6 @@ class MainWindowUI(QMainWindow):
         """Connect menu actions to their corresponding methods."""
         # Menu actions are already connected in setup_menu_bar
         # This method is here for potential future menu action connections
-        pass
 
 
 class MainWindowLogic(MainWindowUI):

@@ -4,7 +4,6 @@ Job Details Dialog for EPSON PP-100 Disc Burner Application
 
 from typing import Optional
 
-from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (
     QDialog,
