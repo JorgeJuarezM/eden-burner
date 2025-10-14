@@ -35,7 +35,7 @@ def get_icon_path():
     """Get the appropriate icon path for the current platform."""
     current_platform = platform.system().lower()
     script_dir = os.path.dirname(__file__)
-    assets_dir = os.path.join(script_dir, "assets")
+    assets_dir = os.path.join(script_dir, "../assets")
 
     # Define icon files for each platform
     icon_files = {
