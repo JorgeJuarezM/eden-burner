@@ -11,11 +11,12 @@ from PyQt5.QtWidgets import QHeaderView, QProgressBar, QTableWidget, QTableWidge
 from job_queue import BurnJob, JobStatus
 
 
-class JobTableWidget(QTableWidget):
-    """Custom table widget for displaying jobs."""
+class JobTableWidgetUI(QTableWidget):
+    """Table widget UI class - handles only PyQt design and widget creation."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        # Initialize UI only
         self.setup_table()
 
     def setup_table(self):
@@ -78,6 +79,14 @@ class JobTableWidget(QTableWidget):
         self.setColumnWidth(2, 200)  # Study
         self.setColumnWidth(3, 100)  # Status
         self.setColumnWidth(4, 150)  # Progress
+
+
+class JobTableWidgetLogic(JobTableWidgetUI):
+    """Table widget logic class - inherits UI and adds business logic."""
+
+    def __init__(self, parent=None):
+        # Initialize the UI base class first
+        super().__init__(parent)
 
     def update_jobs(self, jobs: List[BurnJob]):
         """Update table with job data.
@@ -190,3 +199,7 @@ class JobTableWidget(QTableWidget):
             if job_id_item:
                 return job_id_item.toolTip()  # Full job ID is in tooltip
         return None
+
+
+# JobTableWidgetLogic is the complete table widget class that combines UI and Logic
+JobTableWidget = JobTableWidgetLogic
