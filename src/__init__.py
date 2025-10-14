@@ -6,14 +6,13 @@ from .background_worker import BackgroundWorker
 from .graphql_client import GraphQLClient, SyncGraphQLClient
 from .iso_downloader import ISODownloadManager
 from .jdf_generator import JDFGenerator
-from .job_queue import BurnJob, JobPriority, JobQueue, JobStatus
+from .job_queue import BurnJob, JobQueue, JobStatus
 from .local_storage import LocalStorage
 
 __all__ = [
     "JobQueue",
     "BurnJob",
     "JobStatus",
-    "JobPriority",
     "BackgroundWorker",
     "LocalStorage",
     "GraphQLClient",

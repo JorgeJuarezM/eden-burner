@@ -5,10 +5,10 @@ Job Table Widget for EPSON PP-100 Disc Burner Application
 from typing import List, Optional
 
 from PyQt5.QtCore import Q_ARG, QMetaObject, Qt, pyqtSlot
-from PyQt5.QtGui import QColor, QFont
+from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QHeaderView, QProgressBar, QTableWidget, QTableWidgetItem
 
-from job_queue import BurnJob, JobStatus
+from src.job_queue import BurnJob, JobStatus
 
 
 class JobTableWidgetUI(QTableWidget):
@@ -104,17 +104,17 @@ class JobTableWidgetLogic(JobTableWidgetUI):
 
         for row, job in enumerate(jobs):
             # Job ID (truncated)
-            job_id_item = QTableWidgetItem(job.id[:8] + "...")
+            job_id_value = str(job.id).split("-")[-1]
+            job_id_item = QTableWidgetItem(job_id_value)
             job_id_item.setToolTip(job.id)
-            job_id_item.setFont(QFont("Courier New", 9))
             job_id_item.setForeground(QColor(255, 255, 255))  # White text
             self.setItem(row, 0, job_id_item)
 
             # ISO filename
-            iso_name = job.iso_info.get("filename", "Unknown")
-            iso_item = QTableWidgetItem(iso_name)
-            iso_item.setForeground(QColor(255, 255, 255))  # White text
-            self.setItem(row, 1, iso_item)
+            # iso_name = job.iso_info.get("filename", "Unknown")
+            # iso_item = QTableWidgetItem(iso_name)
+            # iso_item.setForeground(QColor(255, 255, 255))  # White text
+            # self.setItem(row, 1, iso_item)
 
             # Patient information
             study_info = job.iso_info.get("study", {})
@@ -122,7 +122,7 @@ class JobTableWidgetLogic(JobTableWidgetUI):
             patient_name = patient_info.get("fullName", "Desconocido")
             patient_item = QTableWidgetItem(patient_name)
             patient_item.setForeground(QColor(255, 255, 255))  # White text
-            self.setItem(row, 2, patient_item)
+            self.setItem(row, 1, patient_item)
 
             # Study information
             study_desc = study_info.get("dicomDescription", "Sin descripción")
@@ -131,26 +131,26 @@ class JobTableWidgetLogic(JobTableWidgetUI):
             study_item = QTableWidgetItem(study_desc)
             study_item.setToolTip(study_info.get("dicomDescription", ""))
             study_item.setForeground(QColor(255, 255, 255))  # White text
-            self.setItem(row, 3, study_item)
+            self.setItem(row, 2, study_item)
 
             # Status with color coding
             status_item = QTableWidgetItem(job.status.value.title())
             status_item.setToolTip(f"Estado: {job.status.value}")
 
             # Color code by status with better contrast
-            if job.status == JobStatus.COMPLETED:
+            if job.status.value == JobStatus.COMPLETED.value:
                 status_item.setBackground(QColor(76, 175, 80))  # Green 600
                 status_item.setForeground(QColor(255, 255, 255))  # White text
-            elif job.status == JobStatus.FAILED:
+            elif job.status.value == JobStatus.FAILED.value:
                 status_item.setBackground(QColor(244, 67, 54))  # Red 600
                 status_item.setForeground(QColor(255, 255, 255))  # White text
-            elif job.status in [JobStatus.BURNING, JobStatus.VERIFYING]:
+            elif job.status.value in [JobStatus.BURNING.value, JobStatus.VERIFYING.value]:
                 status_item.setBackground(QColor(33, 150, 243))  # Blue 600
                 status_item.setForeground(QColor(255, 255, 255))  # White text
-            elif job.status == JobStatus.DOWNLOADING:
+            elif job.status.value == JobStatus.DOWNLOADING.value:
                 status_item.setBackground(QColor(255, 193, 7))  # Amber 600
                 status_item.setForeground(QColor(0, 0, 0))  # Black text for better contrast
-            elif job.status == JobStatus.DOWNLOADED:
+            elif job.status.value == JobStatus.DOWNLOADED.value:
                 status_item.setBackground(
                     QColor(139, 195, 74)
                 )  # Light green (different from completed)
@@ -160,32 +160,34 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                 status_item.setBackground(QColor(224, 224, 224))  # Light gray background
                 status_item.setForeground(QColor(0, 0, 0))  # Black text
 
-            self.setItem(row, 4, status_item)
+            self.setItem(row, 3, status_item)
 
             # Progress bar
             progress_bar = QProgressBar()
             progress_bar.setRange(0, 100)
             progress_bar.setValue(int(job.progress))
+            progress_bar.setTextDirection(QProgressBar.Direction.TopToBottom)
+            progress_bar.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
             # Custom styling for progress bar
             if job.status == JobStatus.COMPLETED:
-                progress_bar.setStyleSheet("QProgressBar::chunk { background-color: #90EE90; }")
+                progress_bar.setStyleSheet("QProgressBar::chunk { background-color: #57c24f; }")
             elif job.status == JobStatus.FAILED:
                 progress_bar.setStyleSheet("QProgressBar::chunk { background-color: #FFB6C1; }")
             else:
-                progress_bar.setStyleSheet("QProgressBar::chunk { background-color: #ADD8E6; }")
+                progress_bar.setStyleSheet("QProgressBar::chunk { background-color: #57c24f; }")
 
-            self.setCellWidget(row, 5, progress_bar)
+            self.setCellWidget(row, 4, progress_bar)
 
             # Created time
             created_item = QTableWidgetItem(job.created_at.strftime("%Y-%m-%d %H:%M"))
             created_item.setForeground(QColor(255, 255, 255))  # White text
-            self.setItem(row, 6, created_item)
+            self.setItem(row, 5, created_item)
 
             # Updated time
             updated_item = QTableWidgetItem(job.updated_at.strftime("%Y-%m-%d %H:%M"))
             updated_item.setForeground(QColor(255, 255, 255))  # White text
-            self.setItem(row, 7, updated_item)
+            self.setItem(row, 6, updated_item)
 
     def get_selected_job_id(self) -> Optional[str]:
         """Get the ID of the currently selected job.

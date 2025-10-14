@@ -4,13 +4,13 @@ Job Details Dialog for EPSON PP-100 Disc Burner Application
 
 from typing import Optional
 
-from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (
     QDialog,
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QProgressBar,
     QPushButton,
     QTextEdit,
@@ -66,9 +66,12 @@ class JobDetailsDialogUI(QDialog):
         info_layout = QFormLayout()
 
         # Job ID - show complete ID with normal font size
-        self.job_id_label = QLabel("--")
-        self.job_id_label.setFont(QFont("Courier New", 10, QFont.Normal))  # Normal font weight
-        info_layout.addRow("ID:", self.job_id_label)
+        self.job_id_txt = QLineEdit("--")
+        self.job_id_txt.setReadOnly(True)
+        self.job_id_txt.setMinimumWidth(400)
+        self.job_id_txt.setMaximumWidth(400)
+        self.job_id_txt.setStyleSheet("QTextEdit { background-color: #313131; color: #ffffff; }")
+        info_layout.addRow("ID:", self.job_id_txt)
 
         self.status_label = QLabel("--")
         info_layout.addRow("Estado:", self.status_label)
@@ -163,7 +166,9 @@ class JobDetailsDialogLogic(JobDetailsDialogUI):
             self.job = job
 
         # Update labels
-        self.job_id_label.setText(self.job.id)  # Show complete ID without truncation
+        if self.job_id_txt.text() != self.job.id:
+            self.job_id_txt.setText(self.job.id)
+
         self.status_label.setText(self.job.status.value.title())
         self.filename_label.setText(self.job.iso_info.get("filename", "Unknown"))
 
