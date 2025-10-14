@@ -4,6 +4,7 @@ Job Details Dialog for EPSON PP-100 Disc Burner Application
 
 from typing import Optional
 
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (
     QDialog,
@@ -20,20 +21,16 @@ from PyQt5.QtWidgets import (
 from job_queue import BurnJob, JobStatus
 
 
-class JobDetailsDialog(QDialog):
-    """Dialog for displaying detailed job information."""
+class JobDetailsDialogUI(QDialog):
+    """Dialog UI class - handles only PyQt design and widget creation."""
 
     def __init__(self, job: BurnJob, parent=None):
         super().__init__(parent)
         self.job = job
         self.job_id = job.id
-        self.setup_ui()
-        self.update_job_details()
 
-        # Connect to parent for updates if available
-        if parent:
-            # Connect to job update signal from parent
-            parent.job_updated.connect(self.on_job_updated_from_parent)
+        # Initialize UI only
+        self.setup_ui()
 
     def setup_ui(self):
         """Setup the dialog UI."""
@@ -72,9 +69,6 @@ class JobDetailsDialog(QDialog):
         # Job ID - show complete ID with normal font size
         self.job_id_label = QLabel("--")
         self.job_id_label.setFont(QFont("Courier New", 10, QFont.Normal))  # Normal font weight
-        self.job_id_label.setText(self.job.id)  # Show complete ID without truncation
-        self.job_id_label.setWordWrap(True)  # Allow wrapping if needed
-        self.job_id_label.setToolTip(f"ID completo del trabajo: {self.job.id}")
         info_layout.addRow("ID:", self.job_id_label)
 
         self.status_label = QLabel("--")
@@ -129,13 +123,9 @@ class JobDetailsDialog(QDialog):
         button_layout = QHBoxLayout()
 
         self.retry_button = QPushButton("Reintentar")
-        self.retry_button.setEnabled(self.job.status == JobStatus.FAILED)
         button_layout.addWidget(self.retry_button)
 
         self.cancel_button = QPushButton("Cancelar")
-        self.cancel_button.setEnabled(
-            self.job.status not in [JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED]
-        )
         button_layout.addWidget(self.cancel_button)
 
         button_layout.addStretch()
@@ -145,6 +135,22 @@ class JobDetailsDialog(QDialog):
         button_layout.addWidget(close_button)
 
         layout.addLayout(button_layout)
+
+
+class JobDetailsDialogLogic(JobDetailsDialogUI):
+    """Dialog logic class - inherits UI and adds business logic."""
+
+    def __init__(self, job: BurnJob, parent=None):
+        # Initialize the UI base class first
+        super().__init__(job, parent)
+
+        # Then add business logic and initial data
+        self.update_job_details()
+
+        # Connect to parent for updates if available
+        if parent:
+            # Connect to job update signal from parent
+            parent.job_updated.connect(self.on_job_updated_from_parent)
 
     def on_job_updated_from_parent(self, job: BurnJob):
         """Handle job updates from parent window."""
@@ -233,3 +239,7 @@ class JobDetailsDialog(QDialog):
 
             self.error_group = error_group
             self.error_text = error_text
+
+
+# JobDetailsDialogLogic is the complete dialog class that combines UI and Logic
+JobDetailsDialog = JobDetailsDialogLogic
