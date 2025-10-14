@@ -46,7 +46,6 @@ class JobTableWidget(QTableWidget):
             "Estudio",
             "Estado",
             "Progreso",
-            "Prioridad",
             "Creado",
             "Actualizado",
         ]
@@ -99,7 +98,6 @@ class JobTableWidget(QTableWidget):
         self.setColumnWidth(2, 200)  # Study
         self.setColumnWidth(3, 100)  # Status
         self.setColumnWidth(4, 150)  # Progress
-        self.setColumnWidth(5, 80)  # Priority
 
     def update_jobs(self, jobs: List[BurnJob]):
         """Update table with job data.
@@ -190,26 +188,15 @@ class JobTableWidget(QTableWidget):
 
             self.setCellWidget(row, 4, progress_bar)
 
-            # Priority
-            priority_text = {
-                JobPriority.LOW: "Baja",
-                JobPriority.NORMAL: "Normal",
-                JobPriority.HIGH: "Alta",
-                JobPriority.URGENT: "Urgente",
-            }
-            priority_item = QTableWidgetItem(priority_text.get(job.priority, "Normal"))
-            priority_item.setForeground(QColor(255, 255, 255))  # White text
-            self.setItem(row, 5, priority_item)
-
             # Created time
             created_item = QTableWidgetItem(job.created_at.strftime("%Y-%m-%d %H:%M"))
             created_item.setForeground(QColor(255, 255, 255))  # White text
-            self.setItem(row, 6, created_item)
+            self.setItem(row, 5, created_item)
 
             # Updated time
             updated_item = QTableWidgetItem(job.updated_at.strftime("%Y-%m-%d %H:%M"))
             updated_item.setForeground(QColor(255, 255, 255))  # White text
-            self.setItem(row, 7, updated_item)
+            self.setItem(row, 6, updated_item)
 
     def get_selected_job_id(self) -> Optional[str]:
         """Get the ID of the currently selected job.
@@ -293,9 +280,6 @@ class JobDetailsDialog(QDialog):
         self.progress_label = QLabel("--")
         info_layout.addRow("Progreso:", self.progress_label)
 
-        self.priority_label = QLabel("--")
-        info_layout.addRow("Prioridad:", self.priority_label)
-
         self.created_label = QLabel("--")
         info_layout.addRow("Creado:", self.created_label)
 
@@ -374,15 +358,6 @@ class JobDetailsDialog(QDialog):
         # Study information
         study_desc = study_info.get("dicomDescription", "Sin descripción")
         self.study_label.setText(f"{study_desc[:50]}..." if len(study_desc) > 50 else study_desc)
-
-        # Priority
-        priority_text = {
-            JobPriority.LOW: "Baja",
-            JobPriority.NORMAL: "Normal",
-            JobPriority.HIGH: "Alta",
-            JobPriority.URGENT: "Urgente",
-        }
-        self.priority_label.setText(priority_text.get(self.job.priority, "Normal"))
 
         self.progress_label.setText(f"{self.job.progress:.1f}%")
         self.created_label.setText(self.job.created_at.strftime("%Y-%m-%d %H:%M:%S"))

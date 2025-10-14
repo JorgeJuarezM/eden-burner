@@ -38,7 +38,6 @@ from config import Config
 JobQueue = job_queue.JobQueue
 BurnJob = job_queue.BurnJob
 JobStatus = job_queue.JobStatus
-JobPriority = job_queue.JobPriority
 MainWindow = gui.main_window.MainWindow
 BackgroundWorker = background_worker.BackgroundWorker
 LocalStorage = local_storage.LocalStorage
@@ -251,21 +250,10 @@ class EpsonBurnerApp:
                 except (ValueError, AttributeError):
                     status_enum = JobStatus.PENDING
 
-                # Convert priority
-                try:
-                    priority_enum = (
-                        JobPriority(job_record.priority)
-                        if job_record.priority
-                        else JobPriority.NORMAL
-                    )
-                except (ValueError, AttributeError):
-                    priority_enum = JobPriority.NORMAL
-
                 # Create BurnJob object
                 job = BurnJob(
                     id=job_record.id,
                     iso_info=iso_info,
-                    priority=priority_enum,
                     status=status_enum,
                     created_at=job_record.created_at or datetime.now(),
                     updated_at=job_record.updated_at or datetime.now(),
@@ -286,7 +274,7 @@ class EpsonBurnerApp:
                     JobStatus.COMPLETED,
                     JobStatus.FAILED,
                 ]:
-                    self.job_queue._insert_job_by_priority(job.id)
+                    self.job_queue.job_queue.append(job.id)
 
                 # if job.status == JobStatus.BURNING:
                 #     self.job_queue._queue_for_burning(job)

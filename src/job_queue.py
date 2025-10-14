@@ -34,22 +34,12 @@ class JobStatus(Enum):
     CANCELLED = "cancelled"
 
 
-class JobPriority(Enum):
-    """Job priority enumeration."""
-
-    LOW = 1
-    NORMAL = 2
-    HIGH = 3
-    URGENT = 4
-
-
 @dataclass
 class BurnJob:
     """Represents a disc burning job."""
 
     id: str
     iso_info: Dict[str, Any]
-    priority: JobPriority = JobPriority.NORMAL
     status: JobStatus = JobStatus.PENDING
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
@@ -98,7 +88,7 @@ class JobQueue:
 
         # Job storage
         self.jobs: Dict[str, BurnJob] = {}
-        self.job_queue: List[str] = []  # Queue of job IDs by priority
+        self.job_queue: List[str] = []  # Queue of job IDs (FIFO order)
 
         # Threading
         self.lock = threading.RLock()
@@ -130,12 +120,11 @@ class JobQueue:
             except Exception as e:
                 self.logger.error(f"Error in job update callback: {e}")
 
-    def add_job(self, iso_info: Dict[str, Any], priority: JobPriority = JobPriority.NORMAL) -> str:
+    def add_job(self, iso_info: Dict[str, Any]) -> str:
         """Add a new job to the queue.
 
         Args:
             iso_info: ISO information from API
-            priority: Job priority
 
         Returns:
             Job ID
@@ -143,34 +132,17 @@ class JobQueue:
         job_id = str(uuid.uuid4())
 
         with self.lock:
-            job = BurnJob(id=job_id, iso_info=iso_info, priority=priority)
+            job = BurnJob(id=job_id, iso_info=iso_info)
 
             self.jobs[job_id] = job
 
-            # Add to queue based on priority
-            self._insert_job_by_priority(job_id)
+            # Add to queue (FIFO order)
+            self.job_queue.append(job_id)
 
             self.logger.info(f"Added job {job_id} for ISO {iso_info.get('id', 'unknown')}")
             self._notify_job_update(job)
 
         return job_id
-
-    def _insert_job_by_priority(self, job_id: str):
-        """Insert job into queue based on priority."""
-        job = self.jobs[job_id]
-        priority_value = job.priority.value
-
-        # Find insertion point
-        insert_pos = 0
-        for i, existing_job_id in enumerate(self.job_queue):
-            existing_job = self.jobs[existing_job_id]
-            if existing_job.priority.value < priority_value:
-                insert_pos = i + 1
-            else:
-                insert_pos = i
-                break
-
-        self.job_queue.insert(insert_pos, job_id)
 
     def get_next_job(self) -> Optional[BurnJob]:
         """Get the next job to process."""
@@ -448,8 +420,8 @@ class JobQueue:
             job.error_message = None
             job.progress = 0.0
 
-            # Re-add to queue
-            self._insert_job_by_priority(job_id)
+            # Re-add to queue (at the end for retry)
+            self.job_queue.append(job_id)
 
             self.logger.info(f"Retrying job {job_id} (attempt {job.retry_count})")
             self._notify_job_update(job)
