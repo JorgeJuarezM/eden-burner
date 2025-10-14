@@ -16,12 +16,17 @@ import logging
 import os
 import sys
 from datetime import datetime
-from typing import Any, Dict
 
-from PyQt5.QtCore import Qt, QTimer, pyqtSignal
+from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (QAction, QApplication, QMenu, QMessageBox, QStyle,
-                             QSystemTrayIcon)
+from PyQt5.QtWidgets import (
+    QAction,
+    QApplication,
+    QMenu,
+    QMessageBox,
+    QStyle,
+    QSystemTrayIcon,
+)
 
 import background_worker
 import gui.main_window

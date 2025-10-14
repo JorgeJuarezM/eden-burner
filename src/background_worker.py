@@ -7,15 +7,14 @@ import json
 import logging
 import threading
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, Optional
 
 import schedule
 
 from config import Config
 from graphql_client import SyncGraphQLClient
-from iso_downloader import ISODownloadManager
-from job_queue import BurnJob, JobQueue, JobStatus
+from job_queue import JobQueue, JobStatus
 from local_storage import LocalStorage
 
 
@@ -175,20 +174,6 @@ class BackgroundWorker:
             pass
         except Exception as e:
             self.logger.error(f"Error checking job stage progression: {e}")
-
-    def _process_specific_job(self, job_id: str):
-        """Process a specific job if it's ready for next stage."""
-        try:
-            job = self.job_queue.get_job(job_id)
-            if job and job.status in [
-                JobStatus.DOWNLOADED,
-                JobStatus.JDF_READY,
-                JobStatus.QUEUED_FOR_BURNING,
-            ]:
-                self.logger.debug(f"Processing job {job_id} for next stage")
-                self.job_queue.start_job_processing(job)
-        except Exception as e:
-            self.logger.error(f"Error processing specific job {job_id}: {e}")
 
     def check_for_new_isos(self) -> bool:
         """Check for new ISO files from API.

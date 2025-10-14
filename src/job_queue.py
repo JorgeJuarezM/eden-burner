@@ -3,13 +3,12 @@ Job Queue Management for EPSON PP-100 Disc Burner Application
 """
 
 import logging
-import random
 import shutil
 import threading
 import time
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
@@ -227,7 +226,7 @@ class JobQueue:
                 self._start_jdf_generation(job)
             elif job.status == JobStatus.JDF_READY:
                 self._queue_for_burning(job)
-            elif job.status == JobStatus.QUEUED_FOR_BURNING:
+            elif job.status in [JobStatus.QUEUED_FOR_BURNING, JobStatus.BURNING]:
                 self._start_burning(job)
 
         except Exception as e:
@@ -306,17 +305,28 @@ class JobQueue:
         job.update_status(JobStatus.QUEUED_FOR_BURNING)
         self._notify_job_update(job)
 
-        # In a real implementation, this would communicate with the robot
-        # For now, we'll simulate the burning process
-        # burn_thread = threading.Thread(target=self._burn_worker, args=(job,), daemon=True)
-        # burn_thread.start()
-        # self._burn_worker(job)
-
     def _start_burning(self, job: BurnJob):
         """Start burning process."""
         job.update_status(JobStatus.BURNING)
         job.progress = 0.0
         self._notify_job_update(job)
+
+        # In a real implementation, this would communicate with the robot
+        # For now, we'll simulate the burning process
+        burn_thread = threading.Thread(target=self._burn_loop, args=(job,), daemon=True)
+        burn_thread.start()
+
+    def _burn_loop(self, job: BurnJob):
+        """Loop for burning simulation."""
+        try:
+            while job.status == JobStatus.BURNING:
+                time.sleep(1)
+                job.progress += 1
+                self._notify_job_update(job)
+
+        except Exception as e:
+            job.update_status(JobStatus.FAILED, str(e))
+            self._notify_job_update(job)
 
     def _burn_worker(self, job: BurnJob):
         """Worker function for burning simulation."""

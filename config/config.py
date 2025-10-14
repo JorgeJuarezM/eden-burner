@@ -2,7 +2,6 @@
 Configuration management for EPSON PP-100 Disc Burner Application
 """
 
-import os
 from pathlib import Path
 
 import yaml

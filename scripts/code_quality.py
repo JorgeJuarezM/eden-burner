@@ -5,10 +5,11 @@ Code Quality Tools for EPSON PP-100 Disc Burner Application
 This script provides automated code formatting, linting, and import cleaning.
 """
 
-import os
 import subprocess
 import sys
 from pathlib import Path
+
+CODE_PATHS = ["src/", "config/", "gui/", "tools/", "scripts/"]
 
 
 def run_command(cmd, description="", cwd=None):
@@ -80,12 +81,12 @@ def format_code():
 
     success = True
 
-    # Format with Black
-    if not run_command(["black", "."], "Black code formatting"):
+    # Sort imports with isort
+    if not run_command(["isort", "--profile", "black", *CODE_PATHS], "Import sorting"):
         success = False
 
-    # Sort imports with isort
-    if not run_command(["isort", "."], "Import sorting"):
+    # Format with Black
+    if not run_command(["black", *CODE_PATHS], "Black code formatting"):
         success = False
 
     return success
@@ -102,12 +103,12 @@ def lint_code():
     success = True
 
     # Lint with flake8
-    if not run_command(["flake8", "."], "Flake8 linting"):
+    if not run_command(["flake8", *CODE_PATHS], "Flake8 linting"):
         success = False
 
     # Type check with mypy (optional)
     try:
-        run_command(["mypy", "src/", "config/", "gui/", "tools/"], "MyPy type checking")
+        run_command(["mypy", *CODE_PATHS], "MyPy type checking")
     except:
         print("⚠️  MyPy type checking had issues (this is optional)")
 
@@ -133,7 +134,7 @@ def clean_imports():
                     "--remove-unused-variables",
                     "--remove-all-unused-imports",
                     "--recursive",
-                    ".",
+                    *CODE_PATHS,
                 ],
                 "Autoflake unused import removal",
             )

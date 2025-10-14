@@ -2,27 +2,33 @@
 PyQt GUI for EPSON PP-100 Disc Burner Application
 """
 
-import os
-import sys
-from datetime import datetime, timedelta
-from pathlib import Path
-from typing import Dict, List, Optional
+from typing import List, Optional
 
-from PyQt5.QtCore import (Q_ARG, QMetaObject, Qt, QThread, QTimer, pyqtSignal,
-                          pyqtSlot)
-from PyQt5.QtGui import QColor, QFont, QIcon, QPalette
-from PyQt5.QtWidgets import (QAction, QApplication, QCheckBox, QComboBox,
-                             QFormLayout, QGroupBox, QHBoxLayout, QHeaderView,
-                             QLabel, QLineEdit, QMainWindow, QMenu, QMenuBar,
-                             QMessageBox, QProgressBar, QPushButton,
-                             QSizePolicy, QSpinBox, QSplitter, QStatusBar,
-                             QStyle, QSystemTrayIcon, QTableWidget,
-                             QTableWidgetItem, QTabWidget, QTextEdit,
-                             QVBoxLayout, QWidget)
+from PyQt5.QtCore import Q_ARG, QMetaObject, Qt, QTimer, pyqtSignal, pyqtSlot
+from PyQt5.QtGui import QColor, QFont
+from PyQt5.QtWidgets import (
+    QAction,
+    QComboBox,
+    QDialog,
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QMainWindow,
+    QMessageBox,
+    QProgressBar,
+    QPushButton,
+    QStatusBar,
+    QTableWidget,
+    QTableWidgetItem,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
 
 from config import Config
 from job_queue import BurnJob, JobPriority, JobQueue, JobStatus
-from local_storage import LocalStorage
 
 
 class JobTableWidget(QTableWidget):
@@ -219,15 +225,47 @@ class JobTableWidget(QTableWidget):
         return None
 
 
-class JobDetailsWidget(QWidget):
-    """Widget for displaying detailed job information."""
+class JobDetailsDialog(QDialog):
+    """Dialog for displaying detailed job information."""
 
-    def __init__(self, parent=None):
+    def __init__(self, job: BurnJob, parent=None):
         super().__init__(parent)
+        self.job = job
+        self.job_id = job.id
         self.setup_ui()
+        self.update_job_details()
+
+        # Connect to parent for updates if available
+        if parent:
+            # Connect to job update signal from parent
+            parent.job_updated.connect(self.on_job_updated_from_parent)
 
     def setup_ui(self):
-        """Setup the UI components."""
+        """Setup the dialog UI."""
+        self.setWindowTitle(f"Detalles del Trabajo - {self.job.id[:16]}...")
+        self.setMinimumSize(600, 500)
+        self.setStyleSheet("""
+            QDialog {
+                background-color: #2d2d2d;
+            }
+            QLabel {
+                color: #ffffff;
+            }
+            QGroupBox {
+                color: #ffffff;
+                border: 2px solid #555555;
+                border-radius: 5px;
+                margin-top: 1ex;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 10px 0 10px;
+                color: #ffffff;
+                background-color: #2d2d2d;
+            }
+        """)
+
         layout = QVBoxLayout(self)
 
         # Job info group
@@ -255,6 +293,9 @@ class JobDetailsWidget(QWidget):
         self.progress_label = QLabel("--")
         info_layout.addRow("Progreso:", self.progress_label)
 
+        self.priority_label = QLabel("--")
+        info_layout.addRow("Prioridad:", self.priority_label)
+
         self.created_label = QLabel("--")
         info_layout.addRow("Creado:", self.created_label)
 
@@ -269,6 +310,10 @@ class JobDetailsWidget(QWidget):
         self.progress_bar.setRange(0, 100)
         self.progress_bar.setValue(0)
         layout.addWidget(self.progress_bar)
+
+        # Error message group (if any)
+        self.error_group = None
+        self.error_text = None
 
         # History group
         history_group = QGroupBox("Historial")
@@ -286,37 +331,41 @@ class JobDetailsWidget(QWidget):
         button_layout = QHBoxLayout()
 
         self.retry_button = QPushButton("Reintentar")
-        self.retry_button.setEnabled(False)
-        self.retry_button.clicked.connect(self.on_retry_clicked)
+        self.retry_button.setEnabled(self.job.status == JobStatus.FAILED)
         button_layout.addWidget(self.retry_button)
 
         self.cancel_button = QPushButton("Cancelar")
-        self.cancel_button.setEnabled(False)
-        self.cancel_button.clicked.connect(self.on_cancel_clicked)
+        self.cancel_button.setEnabled(
+            self.job.status not in [JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED]
+        )
         button_layout.addWidget(self.cancel_button)
 
         button_layout.addStretch()
+
+        close_button = QPushButton("Cerrar")
+        close_button.clicked.connect(self.accept)
+        button_layout.addWidget(close_button)
+
         layout.addLayout(button_layout)
 
-        layout.addStretch()
+    def on_job_updated_from_parent(self, job: BurnJob):
+        """Handle job updates from parent window."""
+        if job.id == self.job_id:
+            self.job = job
+            self.update_job_details()
 
-    def update_job_details(self, job: Optional[BurnJob]):
-        """Update the widget with job details.
-
-        Args:
-            job: Job to display or None to clear
-        """
-        if job is None:
-            self.clear_details()
-            return
+    def update_job_details(self, job: Optional[BurnJob] = None):
+        """Update the dialog with job details."""
+        if job:
+            self.job = job
 
         # Update labels
-        self.job_id_label.setText(job.id[:16] + "..." if len(job.id) > 16 else job.id)
-        self.status_label.setText(job.status.value.title())
-        self.filename_label.setText(job.iso_info.get("filename", "Unknown"))
+        self.job_id_label.setText(self.job.id[:16] + "..." if len(self.job.id) > 16 else self.job.id)
+        self.status_label.setText(self.job.status.value.title())
+        self.filename_label.setText(self.job.iso_info.get("filename", "Unknown"))
 
         # Patient information
-        study_info = job.iso_info.get("study", {})
+        study_info = self.job.iso_info.get("study", {})
         patient_info = study_info.get("patient", {})
         patient_name = patient_info.get("fullName", "Desconocido")
         patient_id = patient_info.get("identifier", "N/A")
@@ -324,60 +373,75 @@ class JobDetailsWidget(QWidget):
 
         # Study information
         study_desc = study_info.get("dicomDescription", "Sin descripción")
-        study_datetime = study_info.get("dicomDateTime", "N/A")
         self.study_label.setText(f"{study_desc[:50]}..." if len(study_desc) > 50 else study_desc)
 
-        self.progress_label.setText(f"{job.progress:.1f}%")
-        self.created_label.setText(job.created_at.strftime("%Y-%m-%d %H:%M:%S"))
-        self.updated_label.setText(job.updated_at.strftime("%Y-%m-%d %H:%M:%S"))
+        # Priority
+        priority_text = {
+            JobPriority.LOW: "Baja",
+            JobPriority.NORMAL: "Normal",
+            JobPriority.HIGH: "Alta",
+            JobPriority.URGENT: "Urgente",
+        }
+        self.priority_label.setText(priority_text.get(self.job.priority, "Normal"))
+
+        self.progress_label.setText(f"{self.job.progress:.1f}%")
+        self.created_label.setText(self.job.created_at.strftime("%Y-%m-%d %H:%M:%S"))
+        self.updated_label.setText(self.job.updated_at.strftime("%Y-%m-%d %H:%M:%S"))
 
         # Update progress bar
-        self.progress_bar.setValue(int(job.progress))
+        self.progress_bar.setValue(int(self.job.progress))
 
         # Color code progress bar
-        if job.status == JobStatus.COMPLETED:
+        if self.job.status == JobStatus.COMPLETED:
             self.progress_bar.setStyleSheet("QProgressBar::chunk { background-color: #90EE90; }")
-        elif job.status == JobStatus.FAILED:
+        elif self.job.status == JobStatus.FAILED:
             self.progress_bar.setStyleSheet("QProgressBar::chunk { background-color: #FFB6C1; }")
         else:
             self.progress_bar.setStyleSheet("QProgressBar::chunk { background-color: #ADD8E6; }")
 
         # Update button states
-        self.retry_button.setEnabled(job.status == JobStatus.FAILED)
+        self.retry_button.setEnabled(self.job.status == JobStatus.FAILED)
         self.cancel_button.setEnabled(
-            job.status not in [JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED]
+            self.job.status not in [JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED]
         )
 
-        # Update history (placeholder for now)
+        # Update error message section
+        self.update_error_section()
+
+        # Update history
         self.history_text.clear()
-        self.history_text.append(f"Trabajo creado: {job.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
-        if job.error_message:
-            self.history_text.append(f"Error: {job.error_message}")
+        self.history_text.append(f"Trabajo creado: {self.job.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
+        if self.job.error_message:
+            self.history_text.append(f"Error: {self.job.error_message}")
 
-    def clear_details(self):
-        """Clear all job details."""
-        self.job_id_label.setText("--")
-        self.status_label.setText("--")
-        self.filename_label.setText("--")
-        self.patient_label.setText("--")
-        self.study_label.setText("--")
-        self.progress_label.setText("--")
-        self.created_label.setText("--")
-        self.updated_label.setText("--")
-        self.progress_bar.setValue(0)
-        self.retry_button.setEnabled(False)
-        self.cancel_button.setEnabled(False)
-        self.history_text.clear()
+    def update_error_section(self):
+        """Update the error message section."""
+        # Remove existing error group if present
+        if self.error_group:
+            self.error_group.setParent(None)
+            self.error_group.deleteLater()
+            self.error_group = None
+            self.error_text = None
 
-    def on_retry_clicked(self):
-        """Handle retry button click."""
-        # Emit signal for parent to handle
-        pass
+        # Add error group if there's an error message
+        if self.job.error_message:
+            error_group = QGroupBox("Mensaje de Error")
+            error_layout = QVBoxLayout()
 
-    def on_cancel_clicked(self):
-        """Handle cancel button click."""
-        # Emit signal for parent to handle
-        pass
+            error_text = QTextEdit()
+            error_text.setMaximumHeight(100)
+            error_text.setReadOnly(True)
+            error_text.setText(self.job.error_message)
+            error_layout.addWidget(error_text)
+
+            error_group.setLayout(error_layout)
+
+            # Insert error group before history group
+            layout = self.layout()
+            layout.insertWidget(layout.count() - 2, error_group)  # Insert before buttons
+
+            self.error_group = error_group
+            self.error_text = error_text
 
 
 class MainWindow(QMainWindow):
@@ -392,7 +456,6 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.config = config
         self.job_queue = job_queue
-        self.selected_job_id = None
 
         self.setup_ui()
         self.setup_connections()
@@ -426,26 +489,16 @@ class MainWindow(QMainWindow):
         self.setup_menu_bar()
 
     def create_main_content(self):
-        """Create the main content area with table and optional sidebar."""
-        # Main horizontal layout
-        main_layout = QHBoxLayout()
+        """Create the main content area with job table."""
+        # Create central widget with job table
+        central_widget = QWidget()
+        layout = QVBoxLayout(central_widget)
 
-        # Left side - Job table (takes most space)
-        left_panel = self.create_job_list_panel()
-        main_layout.addWidget(left_panel, 1)  # Stretch factor 1
+        # Job table panel takes full space
+        job_panel = self.create_job_list_panel()
+        layout.addWidget(job_panel)
 
-        # Right side - Sidebar for job details (initially hidden)
-        self.details_sidebar = self.create_details_sidebar()
-        self.details_sidebar.setVisible(False)  # Initially hidden
-        self.details_sidebar.setMaximumWidth(400)
-        self.details_sidebar.setMinimumWidth(300)
-        main_layout.addWidget(self.details_sidebar, 0)  # Stretch factor 0 (fixed size)
-
-        # Create container widget
-        container = QWidget()
-        container.setLayout(main_layout)
-
-        return container
+        return central_widget
 
     def create_job_list_panel(self):
         """Create the job list panel."""
@@ -499,93 +552,6 @@ class MainWindow(QMainWindow):
 
         return panel
 
-    def mousePressEvent(self, event):
-        """Handle mouse press events to hide sidebar when clicking outside."""
-        if self.details_sidebar.isVisible():
-            # Check if click is outside the sidebar area
-            sidebar_rect = self.details_sidebar.geometry()
-            if not sidebar_rect.contains(event.pos()):
-                self.hide_details_sidebar()
-
-        super().mousePressEvent(event)
-
-    def create_details_sidebar(self):
-        sidebar = QWidget()
-        sidebar.setStyleSheet(
-            """
-            QWidget {
-                background-color: #2d2d2d;
-                border-left: 2px solid #555555;
-            }
-        """
-        )
-
-        layout = QVBoxLayout(sidebar)
-
-        # Header with title and close button
-        header_layout = QHBoxLayout()
-
-        title_label = QLabel("Detalles del Trabajo")
-        title_label.setFont(QFont("Arial", 12, QFont.Bold))
-        title_label.setStyleSheet("color: #ffffff; padding: 5px;")
-        header_layout.addWidget(title_label)
-
-        header_layout.addStretch()
-
-        # Close button
-        self.close_sidebar_btn = QPushButton("✕")
-        self.close_sidebar_btn.setFixedSize(30, 30)
-        self.close_sidebar_btn.setStyleSheet(
-            """
-            QPushButton {
-                background-color: #555555;
-                color: #ffffff;
-                border: none;
-                border-radius: 15px;
-                font-size: 14px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #777777;
-            }
-        """
-        )
-        self.close_sidebar_btn.clicked.connect(self.hide_details_sidebar)
-        header_layout.addWidget(self.close_sidebar_btn)
-
-        layout.addLayout(header_layout)
-
-        # Job details widget
-        self.job_details = JobDetailsWidget()
-        layout.addWidget(self.job_details)
-
-        return sidebar
-
-    def on_job_double_clicked(self, item):
-        """Handle double click on job item."""
-        row = item.row()
-        job_id = self.job_table.get_selected_job_id()
-
-        if job_id:
-            job = self.job_queue.get_job(job_id)
-            if job:
-                self.show_details_sidebar(job)
-
-    def show_details_sidebar(self, job):
-        """Show the details sidebar with job information."""
-        self.job_details.update_job_details(job)
-        self.details_sidebar.setVisible(True)
-        self.selected_job_id = job.id
-
-        # Animate sidebar appearance (optional)
-        self.details_sidebar.setMaximumWidth(400)
-
-    def hide_details_sidebar(self):
-        """Hide the details sidebar."""
-        self.details_sidebar.setVisible(False)
-        self.job_details.clear_details()
-        self.selected_job_id = None
-
     def setup_menu_bar(self):
         """Setup the menu bar."""
         menubar = self.menuBar()
@@ -627,10 +593,6 @@ class MainWindow(QMainWindow):
         self.job_updated.emit(job)
         self.refresh_job_display()
 
-        # Update sidebar if showing this job
-        if self.selected_job_id == job.id and self.details_sidebar.isVisible():
-            self.job_details.update_job_details(job)
-
     def setup_timers(self):
         """Setup update timers."""
         # Timer for refreshing data
@@ -645,15 +607,7 @@ class MainWindow(QMainWindow):
 
     def on_job_selection_changed(self):
         """Handle job selection change in table."""
-        job_id = self.job_table.get_selected_job_id()
-        if job_id:
-            job = self.job_queue.get_job(job_id)
-            if job:
-                self.job_details.update_job_details(job)
-                self.selected_job_id = job_id
-        else:
-            self.job_details.clear_details()
-            self.selected_job_id = None
+        # Selection handling removed since sidebar is no longer used
 
     def on_filter_changed(self):
         """Handle filter change."""
@@ -663,6 +617,33 @@ class MainWindow(QMainWindow):
         """Refresh all displayed data."""
         self.refresh_job_display()
         self.update_status_bar()
+
+    def on_job_double_clicked(self, item):
+        """Handle double click on job item."""
+        if item is None:
+            return
+
+        try:
+            row = item.row()
+            job_id_item = self.job_table.item(row, 0)
+
+            if job_id_item:
+                job_id = job_id_item.toolTip()  # Get full job ID from tooltip
+
+                if job_id:
+                    job = self.job_queue.get_job(job_id)
+                    if job:
+                        # Open job details dialog
+                        dialog = JobDetailsDialog(job, self)
+                        dialog.exec_()
+                    else:
+                        QMessageBox.warning(
+                            self,
+                            "Trabajo no encontrado",
+                            f"No se pudo encontrar el trabajo con ID: {job_id}"
+                        )
+        except Exception as e:
+            QMessageBox.warning(self, "Error", f"Error al procesar doble clic: {e}")
 
     def refresh_job_display(self):
         """Refresh the job table display."""

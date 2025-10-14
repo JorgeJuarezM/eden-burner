@@ -2,11 +2,8 @@
 ISO Download Manager with progress tracking
 """
 
-import asyncio
 import logging
-import os
 import time
-from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 from config import Config

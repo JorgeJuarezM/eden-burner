@@ -5,7 +5,6 @@ Creates an NSIS installer script and package for Windows distribution
 """
 
 import os
-import sys
 
 
 def create_nsis_installer():
@@ -140,7 +139,6 @@ def create_windows_package():
     print("📦 Creating Windows ZIP package...")
 
     import shutil
-    import zipfile
 
     # Create Windows distribution directory
     windows_dist = "dist_windows"
