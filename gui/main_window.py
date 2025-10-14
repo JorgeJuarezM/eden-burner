@@ -2,7 +2,6 @@
 PyQt GUI for EPSON PP-100 Disc Burner Application - Main Window
 """
 
-
 from PyQt5.QtCore import QTimer, pyqtSignal
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (
@@ -25,25 +24,16 @@ from .job_details_dialog import JobDetailsDialog
 from .job_table_widget import JobTableWidget
 
 
-class MainWindow(QMainWindow):
-    """Main application window."""
-
-    # Signals
-    job_updated = pyqtSignal(object)  # BurnJob
-    job_completed = pyqtSignal(str)  # job_id
-    job_failed = pyqtSignal(str)  # job_id
+class MainWindowUI(QMainWindow):
+    """Main window UI class - handles only PyQt design and widget creation."""
 
     def __init__(self, config: Config, job_queue: JobQueue):
         super().__init__()
         self.config = config
         self.job_queue = job_queue
 
+        # Initialize UI only
         self.setup_ui()
-        self.setup_connections()
-        self.setup_timers()
-
-        # Load initial data
-        self.refresh_data()
 
     def setup_ui(self):
         """Setup the main window UI."""
@@ -64,7 +54,6 @@ class MainWindow(QMainWindow):
         # Status bar
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
-        self.update_status_bar()
 
         # Menu bar
         self.setup_menu_bar()
@@ -101,7 +90,6 @@ class MainWindow(QMainWindow):
         self.status_filter.addItem("Quemando", "burning")
         self.status_filter.addItem("Completados", "completed")
         self.status_filter.addItem("Fallidos", "failed")
-        self.status_filter.currentTextChanged.connect(self.on_filter_changed)
         filter_layout.addWidget(QLabel("Filtrar:"))
         filter_layout.addWidget(self.status_filter)
 
@@ -110,7 +98,6 @@ class MainWindow(QMainWindow):
 
         # Job table - no height limit to use full available space
         self.job_table = JobTableWidget()
-        self.job_table.itemDoubleClicked.connect(self.on_job_double_clicked)
         layout.addWidget(self.job_table)
 
         # Queue status
@@ -121,11 +108,9 @@ class MainWindow(QMainWindow):
         button_layout = QHBoxLayout()
 
         self.refresh_button = QPushButton("Actualizar")
-        self.refresh_button.clicked.connect(self.refresh_data)
         button_layout.addWidget(self.refresh_button)
 
         self.clear_completed_button = QPushButton("Limpiar Completados")
-        self.clear_completed_button.clicked.connect(self.clear_completed_jobs)
         button_layout.addWidget(self.clear_completed_button)
 
         button_layout.addStretch()
@@ -163,6 +148,41 @@ class MainWindow(QMainWindow):
         about_action = QAction("Acerca de", self)
         about_action.triggered.connect(self.show_about)
         help_menu.addAction(about_action)
+
+    def connect_menu_actions(self):
+        """Connect menu actions to their corresponding methods."""
+        # Menu actions are already connected in setup_menu_bar
+        # This method is here for potential future menu action connections
+        pass
+
+
+class MainWindowLogic(MainWindowUI):
+    """Main window logic class - inherits UI and adds business logic."""
+
+    # Signals
+    job_updated = pyqtSignal(object)  # BurnJob
+    job_completed = pyqtSignal(str)  # job_id
+    job_failed = pyqtSignal(str)  # job_id
+
+    def __init__(self, config: Config, job_queue: JobQueue):
+        # Initialize the UI base class first
+        super().__init__(config, job_queue)
+
+        # Then add business logic
+        self.setup_connections()
+        self.setup_timers()
+
+        # Load initial data
+        self.refresh_data()
+
+        # Connect UI signals to logic methods
+        self.status_filter.currentTextChanged.connect(self.on_filter_changed)
+        self.job_table.itemDoubleClicked.connect(self.on_job_double_clicked)
+        self.refresh_button.clicked.connect(self.refresh_data)
+        self.clear_completed_button.clicked.connect(self.clear_completed_jobs)
+
+        # Connect menu actions
+        self.connect_menu_actions()
 
     def setup_connections(self):
         """Setup signal connections."""
@@ -330,3 +350,7 @@ class MainWindow(QMainWindow):
 
         except Exception as e:
             QMessageBox.warning(self, "Error", f"Error limpiando trabajos: {e}")
+
+
+# MainWindowLogic is the complete window class that combines UI and Logic
+MainWindow = MainWindowLogic

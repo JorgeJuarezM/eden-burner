@@ -2,6 +2,6 @@
 GUI Module for EPSON PP-100 Disc Burner Application
 """
 
-from .main_window import JobDetailsDialog, JobTableWidget, MainWindow
+from .main_window import MainWindow, MainWindowLogic, MainWindowUI
 
-__all__ = ["MainWindow", "JobTableWidget", "JobDetailsDialog"]
+__all__ = ["MainWindow", "MainWindowLogic", "MainWindowUI"]
