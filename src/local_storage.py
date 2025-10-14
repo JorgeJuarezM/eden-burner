@@ -22,7 +22,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker
 
 from config import Config
-from job_queue import BurnJob
+from src.job_queue import BurnJob
 
 Base = declarative_base()
 
@@ -188,6 +188,8 @@ class LocalStorage:
 
         # Create database engine
         db_url = f"sqlite:///{self.config.database_file}"
+
+        self.logger.info(f"Using database: {db_url}")
         self.engine = create_engine(db_url, echo=False)
 
         # Create tables (will be no-op if they already exist)

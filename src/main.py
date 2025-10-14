@@ -28,19 +28,11 @@ from PyQt5.QtWidgets import (
     QSystemTrayIcon,
 )
 
-import background_worker
-import gui.main_window
-import job_queue
-import local_storage
 from config import Config
-
-# Import classes directly
-JobQueue = job_queue.JobQueue
-BurnJob = job_queue.BurnJob
-JobStatus = job_queue.JobStatus
-MainWindow = gui.main_window.MainWindow
-BackgroundWorker = background_worker.BackgroundWorker
-LocalStorage = local_storage.LocalStorage
+from gui.main_window import MainWindow
+from src.background_worker import BackgroundWorker
+from src.job_queue import BurnJob, JobQueue, JobStatus
+from src.local_storage import LocalStorage
 
 
 class EpsonBurnerApp:

@@ -14,8 +14,8 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 from config import Config
-from iso_downloader import ISODownloadManager
-from jdf_generator import JDFGenerator
+from src.iso_downloader import ISODownloadManager
+from src.jdf_generator import JDFGenerator
 
 
 class JobStatus(Enum):

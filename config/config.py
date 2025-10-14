@@ -81,7 +81,7 @@ class Config:
             "database": {"file": str(app_dir / "database/burner_jobs.db"), "backup_count": 5},
             "logging": {
                 "level": "INFO",
-                "file": str(app_dir / "logs/burner.log"),
+                "file": str(app_dir / "burner.log"),
                 "max_size": 10 * 1024 * 1024,  # 10MB
                 "backup_count": 5,
             },

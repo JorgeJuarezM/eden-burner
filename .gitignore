@@ -154,3 +154,4 @@ temp/
 # Temporary files
 *.tmp
 *.temp
+*.spec
