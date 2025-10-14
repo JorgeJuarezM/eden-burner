@@ -28,7 +28,7 @@ from PyQt5.QtWidgets import (
 )
 
 from config import Config
-from job_queue import BurnJob, JobPriority, JobQueue, JobStatus
+from job_queue import BurnJob, JobQueue, JobStatus
 
 
 class JobTableWidget(QTableWidget):
@@ -231,7 +231,8 @@ class JobDetailsDialog(QDialog):
         """Setup the dialog UI."""
         self.setWindowTitle(f"Detalles del Trabajo - {self.job.id[:16]}...")
         self.setMinimumSize(600, 500)
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             QDialog {
                 background-color: #2d2d2d;
             }
@@ -251,7 +252,8 @@ class JobDetailsDialog(QDialog):
                 color: #ffffff;
                 background-color: #2d2d2d;
             }
-        """)
+        """
+        )
 
         layout = QVBoxLayout(self)
 
@@ -344,7 +346,9 @@ class JobDetailsDialog(QDialog):
             self.job = job
 
         # Update labels
-        self.job_id_label.setText(self.job.id[:16] + "..." if len(self.job.id) > 16 else self.job.id)
+        self.job_id_label.setText(
+            self.job.id[:16] + "..." if len(self.job.id) > 16 else self.job.id
+        )
         self.status_label.setText(self.job.status.value.title())
         self.filename_label.setText(self.job.iso_info.get("filename", "Unknown"))
 
@@ -385,7 +389,9 @@ class JobDetailsDialog(QDialog):
 
         # Update history
         self.history_text.clear()
-        self.history_text.append(f"Trabajo creado: {self.job.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
+        self.history_text.append(
+            f"Trabajo creado: {self.job.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
+        )
         if self.job.error_message:
             self.history_text.append(f"Error: {self.job.error_message}")
 
@@ -615,7 +621,7 @@ class MainWindow(QMainWindow):
                         QMessageBox.warning(
                             self,
                             "Trabajo no encontrado",
-                            f"No se pudo encontrar el trabajo con ID: {job_id}"
+                            f"No se pudo encontrar el trabajo con ID: {job_id}",
                         )
         except Exception as e:
             QMessageBox.warning(self, "Error", f"Error al procesar doble clic: {e}")
