@@ -1,0 +1,59 @@
+# Configuración para la aplicación EPSON PP-100 Disc Burner
+# Este archivo contiene información sensible (claves API) por lo que está ignorado por git
+# Copie este archivo como config.yaml y configure sus valores
+
+# Configuración de API GraphQL
+api:
+  graphql_endpoint: "http://localhost:8000/graphql-middleware/"  # Cambiar por tu endpoint real
+  api_key: "89bb41a2a6090688c0ce2219a652ef677ed20c84"  # Agregar tu clave API si es necesaria
+  timeout: 30
+  retry_attempts: 3
+
+# Carpetas para almacenamiento de archivos
+folders:
+  downloads: "/home/jorge/Code/eden-burner/downloads"   # Carpeta para ISOs descargados
+  jdf_files: "/home/jorge/Code/eden-burner/jdf_files"   # Carpeta para archivos JDF generados
+  completed: "/home/jorge/Code/eden-burner/completed"   # Carpeta para trabajos completados
+  failed: "/home/jorge/Code/eden-burner/failed"         # Carpeta para trabajos fallidos
+  temp: "/home/jorge/Code/eden-burner/temp"             # Carpeta temporal
+
+# Configuración del robot EPSON PP-100
+robot:
+  name: "EPSON_PP_100"
+  jdf_template: "/home/jorge/Code/eden-burner/templates/jdf_template.jdf"
+  label_file: "/home/jorge/Code/eden-burner/templates/default.tdd"  # Archivo .tdd para la carátula del disco
+  burn_speed: "8x"               # Velocidad de quemado (4x, 8x, 16x, etc.)
+  verify_after_burn: true        # Verificar discos después de quemar
+  auto_eject: false              # Expulsar automáticamente después de completar
+  robot_uuid: "d2cac3ce-9293-48b4-8d47-9c1577731508"  # UUID único del robot
+
+# Configuración de trabajos
+jobs:
+  max_concurrent: 3              # Número máximo de trabajos simultáneos
+  check_interval: 10             # Intervalo de verificación en segundos
+  retry_failed: true             # Reintentar trabajos fallidos automáticamente
+
+# Configuración de logging
+logging:
+  level: "INFO"                  # DEBUG, INFO, WARNING, ERROR
+  file: "epson-burner.log"       # Archivo de log
+  max_size: 10485760            # Tamaño máximo del archivo (10MB)
+  backup_count: 5                # Número de archivos de respaldo
+
+# Configuración específica de desarrollo
+development:
+  debug_mode: false              # Habilitar modo debug detallado
+  auto_reload: false             # Recargar automáticamente módulos (para desarrollo)
+  test_mode: false               # Modo de pruebas (deshabilita operaciones reales)
+  log_level: "INFO"              # Nivel de logging para desarrollo
+
+database:
+  file: "/home/jorge/Code/eden-burner/database/burner_jobs.db"
+  backup_count: 5
+
+gui:
+  refresh_interval: 5000        # Intervalo de actualización en milisegundos
+  show_notifications: true      # Mostrar notificaciones
+  theme: "default"              # Tema de la interfaz
+  window_title: "EPSON PP-100 Disc Burner"  # Título de la ventana
+  notifications_enabled: true   # Habilitar notificaciones

@@ -22,22 +22,15 @@ class JDFGenerator:
         Args:
             config: Application configuration
         """
+        from src.local_storage import LocalStorage
+
         self.config = config
         self.logger = logging.getLogger(__name__)
-
-        # JDF namespaces
-        self.namespaces = {
-            "jdf": "http://www.CIP4.org/JDFSchema_1_1",
-            "xsi": "http://www.w3.org/2001/XMLSchema-instance",
-        }
+        self.storage = LocalStorage(config)
 
     def create_burn_job_jdf(
         self,
-        iso_path: str,
-        job_id: str = None,
-        burn_speed: str = None,
-        verify: bool = None,
-        copies: int = 1,
+        job_id: str,
     ) -> str:
         """Create a JDF file for disc burning job.
 
@@ -51,62 +44,109 @@ class JDFGenerator:
         Returns:
             Path to generated JDF file
         """
-        if job_id is None:
-            job_id = str(uuid.uuid4())
-
-        if burn_speed is None:
-            burn_speed = self.config.burn_speed
-
-        if verify is None:
-            verify = self.config.verify_after_burn
-
         # Ensure JDF folder exists
         self.config.ensure_folders_exist()
 
+        job_data = self.storage.get_job(job_id)
+
         # Create JDF filename
-        iso_filename = Path(iso_path).stem
-        jdf_filename = f"{job_id}_{iso_filename}.jdf"
+        jdf_filename = f"{job_data.id}.jdf"
         jdf_path = self.config.jdf_folder / jdf_filename
 
         try:
-            # Create JDF XML structure
-            jdf_root = self._create_jdf_root(job_id)
+            from jinja2 import Template
+            template_path = self.config.jdf_template
+            with open(template_path, "r") as f:
+                template_content = f.read()
+            template = Template(template_content)
+            # Extract patient and study information from iso_info
+            study_info = job_data.iso_info.get('study', {})
+            patient_info = study_info.get('patient', {})
+            patient_name = patient_info.get('fullName', 'Unknown Patient')
 
-            # Add job description
-            job_desc = ET.SubElement(jdf_root, "Description")
-            job_desc.set("Name", f"Disc Burn Job - {iso_filename}")
-            job_desc.set("DescriptiveName", f"Burning {copies} copie(s) of {iso_filename}")
-
-            # Add audit information
-            self._add_audit_info(jdf_root)
-
-            # Add resource pool
-            resource_pool = ET.SubElement(jdf_root, "ResourcePool")
-
-            # Add component resource (the disc)
-            component_resource = self._create_component_resource(resource_pool)
-
-            # Add digital asset resource (the ISO file)
-            digital_asset = self._create_digital_asset_resource(resource_pool, iso_path)
-
-            # Add burning parameters
-            burning_params = self._create_burning_parameters(
-                resource_pool, burn_speed, verify, copies
+            jdf_content = template.render(
+                disc_type="DVD",
+                image=job_data.iso_path,
+                volume_label=patient_name,
+                label=self.config.label_file,
+                replace_fields="path/to/data_file.data",
             )
 
-            # Add process
-            process = self._create_burning_process(
-                jdf_root, component_resource, digital_asset, burning_params
-            )
+            with open(jdf_path, "w") as f:
+                f.write(jdf_content)
 
-            # Write JDF file with pretty formatting
-            self._write_jdf_file(jdf_root, jdf_path)
+            # Generate label file (.tdd) for disc cover
+            try:
+                label_path = self.create_label_file(job_id)
+                self.logger.info(f"Generated label file: {label_path}")
+            except Exception as e:
+                self.logger.warning(f"Failed to generate label file: {e}")
+                label_path = None
 
             self.logger.info(f"Generated JDF file: {jdf_path}")
             return str(jdf_path)
 
         except Exception as e:
             self.logger.error(f"Error creating JDF file: {e}")
+            raise
+
+    def create_label_file(self, job_id: str) -> str:
+        """Create a label file (.tdd) for disc cover printing from template.
+
+        Args:
+            job_id: Unique job identifier
+
+        Returns:
+            Path to generated label file
+        """
+        # Ensure label folder exists (same as JDF folder for now)
+        self.config.ensure_folders_exist()
+
+        job_data = self.storage.get_job(job_id)
+
+        # Create label filename
+        label_filename = f"{job_data.id}.tdd"
+        label_path = self.config.jdf_folder / label_filename
+
+        try:
+            from jinja2 import Template
+
+            # Read label template
+            template_path = self.config.label_file
+            with open(template_path, "r", encoding="utf-8") as f:
+                template_content = f.read()
+
+            # Extract patient and study information from iso_info
+            study_info = job_data.iso_info.get('study', {})
+            patient_info = study_info.get('patient', {})
+            patient_name = patient_info.get('fullName', 'Unknown Patient')
+            study_description = study_info.get('description', '')
+
+            # Prepare template variables from job data
+            template_vars = {
+                'job_id': job_id,
+                'volume_label': patient_name,
+                'label': f"JOB_{job_id}",
+                'disc_type': 'DVD',
+                'study_patient_name': patient_name,
+                'study_date': job_data.created_at.strftime('%Y-%m-%d') if job_data.created_at else "",
+                'study_description': study_description,
+                'current_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            }
+
+            # Render template with job data
+            template = Template(template_content)
+            label_content = template.render(**template_vars)
+
+            # Write label file
+            with open(label_path, "w", encoding="utf-8") as f:
+                f.write(label_content)
+
+            self.logger.info(f"Generated label file: {label_path}")
+            return str(label_path)
+
+        except Exception as e:
+            self.logger.error(f"Error creating label file: {e}")
             raise
 
     def _create_jdf_root(self, job_id: str) -> ET.Element:

@@ -1,0 +1,43 @@
+# Archivo de plantilla para carátula de disco (.tdd)
+# Este archivo contiene la información de diseño para imprimir en el disco
+# Formato: Archivo de diseño de etiquetas para EPSON PP-100
+
+# Información básica del disco
+DISC_TITLE={{volume_label}}
+DISC_LABEL={{label}}
+DISC_TYPE={{disc_type}}
+
+# Configuración de impresión
+PRINT_QUALITY=HIGH
+PRINT_MODE=COLOR
+BACKGROUND_COLOR=WHITE
+
+# Elementos de diseño
+TEXT_ELEMENT_1={{study_patient_name}}
+TEXT_ELEMENT_2={{study_date}}
+TEXT_ELEMENT_3={{study_description}}
+
+# Configuración de posición (coordenadas en mm desde el centro)
+TEXT_1_X=0
+TEXT_1_Y=10
+TEXT_1_FONT=ARIAL
+TEXT_1_SIZE=12
+TEXT_1_COLOR=BLACK
+
+TEXT_2_X=0
+TEXT_2_Y=-5
+TEXT_2_FONT=ARIAL
+TEXT_2_SIZE=10
+TEXT_2_COLOR=BLACK
+
+TEXT_3_X=0
+TEXT_3_Y=-15
+TEXT_3_FONT=ARIAL
+TEXT_3_SIZE=8
+TEXT_3_COLOR=GRAY
+
+# Imagen o logo (si aplica)
+# LOGO_FILE=/path/to/logo.png
+# LOGO_X=0
+# LOGO_Y=0
+# LOGO_SIZE=20

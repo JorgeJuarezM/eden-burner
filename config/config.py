@@ -61,7 +61,8 @@ class Config:
             },
             "robot": {
                 "name": "EPSON_PP_100",
-                "jdf_template": "default.jdf",
+                "jdf_template": str(app_dir / "templates/jdf_template.jdf"),
+                "label_file": str(app_dir / "templates/default.tdd"),
                 "burn_speed": "8x",
                 "verify_after_burn": True,
                 "auto_eject": False,
@@ -153,6 +154,11 @@ class Config:
     def jdf_template(self):
         """JDF template file name."""
         return self.config_data["robot"]["jdf_template"]
+
+    @property
+    def label_file(self):
+        """Label file (.tdd) for disc cover printing."""
+        return self.config_data["robot"]["label_file"]
 
     @property
     def burn_speed(self):
