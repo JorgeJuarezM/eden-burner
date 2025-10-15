@@ -290,15 +290,15 @@ class JobQueue:
         """Loop for burning simulation."""
         try:
             while job.status == JobStatus.BURNING:
-                time.sleep(1)
-                job.progress += 1
+                self._check_burn_status(job)
                 self._notify_job_update(job)
+                time.sleep(1)
 
         except Exception as e:
             job.update_status(JobStatus.FAILED, str(e))
             self._notify_job_update(job)
 
-    def _burn_worker(self, job: BurnJob):
+    def _check_burn_status(self, job: BurnJob):
         """Worker function for burning simulation."""
         try:
             # Check if ISO file exists
