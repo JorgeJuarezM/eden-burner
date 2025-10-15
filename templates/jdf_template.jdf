@@ -1,8 +1,23 @@
+# Plantilla JDF para robot EPSON PP-100
+# Este archivo se genera automáticamente con información del paciente y estudio
+
+# Tipo de disco (CD/DVD) - se determina automáticamente según el tamaño del archivo
 DISC_TYPE={{disc_type}}
+
+# Sistema de archivos para el disco
 FORMAT=JOLIET
+
+# Ruta al archivo ISO que se va a quemar
 IMAGE={{image}}
+
+# Etiqueta del volumen del disco (nombre del paciente)
 VOLUME_LABEL={{volume_label}}
+
+# Ruta al archivo de etiqueta de disco (.tdd)
 LABEL={{label}}
+
+# Campo de reemplazo para datos adicionales (archivo .data)
 REPLACE_FIELD={{replace_fields}}
-PUBLISHER=PP-100III
+
+# Número de copias a quemar (normalmente 1)
 COPIES=1

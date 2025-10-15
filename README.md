@@ -84,6 +84,9 @@ python3 main.py --test-config
 - **🎨 Interfaz moderna**: GUI responsiva con información DICOM
 - **⚙️ Configuración flexible**: Archivo YAML personalizable
 - **🗄️ Persistencia**: Base de datos SQLite con respaldo automático
+- **📝 Plantillas personalizables**: Generación automática de JDF, etiquetas y archivos de datos
+- **🏷️ Sistema de etiquetado**: Carátulas personalizadas para discos con información del paciente
+- **📊 Archivos de datos**: Información estructurada de cada trabajo para auditoría
 
 ## 🔧 Configuración
 
@@ -99,17 +102,62 @@ robot:
   robot_uuid: "uuid-unico-del-robot"
   burn_speed: "8x"
   verify_after_burn: true
+  jdf_template: "templates/jdf_template.jdf"
+  label_file: "templates/default.tdd"
+  data_template: "templates/template.data"
 
 jobs:
   max_concurrent: 3
   check_interval: 30
 ```
 
+## 📝 Sistema de Plantillas
+
+La aplicación utiliza plantillas personalizables para generar archivos JDF, etiquetas de disco y archivos de datos:
+
+### Plantillas Disponibles
+
+- **`templates/jdf_template.jdf`**: Plantilla para archivos JDF del robot
+- **`templates/default.tdd`**: Plantilla para carátulas de disco
+- **`templates/template.data`**: Plantilla para archivos de datos estructurados
+
+### Variables de Plantilla
+
+Las plantillas soportan las siguientes variables usando sintaxis `{{variable}}`:
+
+#### Información del Paciente
+- `{{patient_name}}` - Nombre completo del paciente
+- `{{patient_id}}` - ID del paciente
+- `{{study_date}}` - Fecha del estudio
+- `{{study_description}}` - Descripción del estudio
+
+#### Información del Trabajo
+- `{{job_id}}` - ID único del trabajo
+- `{{volume_label}}` - Etiqueta del volumen
+- `{{disc_type}}` - Tipo de disco (CD/DVD)
+- `{{current_date}}` - Fecha y hora actual
+
+#### Configuración Técnica
+- `{{burn_speed}}` - Velocidad de quemado
+- `{{verify_after_burn}}` - Verificación después de quemar
+- `{{robot_name}}` - Nombre del robot
+- `{{robot_uuid}}` - UUID del robot
+
+#### Archivos Generados
+- `{{iso_path}}` - Ruta al archivo ISO
+- `{{jdf_path}}` - Ruta al archivo JDF
+- `{{label_path}}` - Ruta al archivo de etiqueta
+
+### Personalización de Plantillas
+
+Las plantillas pueden personalizarse editando los archivos correspondientes en la carpeta `templates/`. Cada plantilla se procesa automáticamente durante la generación de trabajos.
+
 ## 📚 Documentación Adicional
 
 - [Guía de Desarrollo](docs/DEVELOPMENT_README.md)
 - [Guía de Construcción](docs/BUILD_README.md)
 - [Guía de Distribución](docs/DISTRIBUTION_README.md)
+- [Guía de Plantillas](docs/TEMPLATES_README.md)
 
 ## 🛠️ Desarrollo
 
