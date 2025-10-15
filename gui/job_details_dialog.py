@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QMessageBox,
     QProgressBar,
     QPushButton,
     QTextEdit,
@@ -264,11 +265,17 @@ class JobDetailsDialogLogic(JobDetailsDialogUI):
         if self.job.disc_type == "CD":
             self.disc_type_label.setStyleSheet("color: #0066cc; font-weight: bold;")  # Blue for CD
         elif self.job.disc_type == "DVD":
-            self.disc_type_label.setStyleSheet("color: #006600; font-weight: bold;")  # Green for DVD
+            self.disc_type_label.setStyleSheet(
+                "color: #006600; font-weight: bold;"
+            )  # Green for DVD
         elif self.job.disc_type == "Invalid":
-            self.disc_type_label.setStyleSheet("color: #cc0000; font-weight: bold;")  # Red for invalid
+            self.disc_type_label.setStyleSheet(
+                "color: #cc0000; font-weight: bold;"
+            )  # Red for invalid
         else:
-            self.disc_type_label.setStyleSheet("color: #666666; font-weight: bold;")  # Gray for unknown
+            self.disc_type_label.setStyleSheet(
+                "color: #666666; font-weight: bold;"
+            )  # Gray for unknown
 
         # Patient information
         study_info = self.job.iso_info.get("study", {})
@@ -303,7 +310,7 @@ class JobDetailsDialogLogic(JobDetailsDialogUI):
             max_retries = self.parent_window.config.max_retries
 
         self.retry_button.setEnabled(
-            self.job.status in [JobStatus.FAILED, JobStatus.COMPLETED]
+            self.job.status in [JobStatus.FAILED, JobStatus.COMPLETED, JobStatus.CANCELLED]
             and self.job.retry_count < max_retries
         )
         self.cancel_button.setEnabled(

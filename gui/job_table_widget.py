@@ -181,7 +181,9 @@ class JobTableWidgetLogic(JobTableWidgetUI):
             else:
                 disc_type_item.setBackground(QColor(211, 211, 211))  # Light gray for unknown
 
-            disc_type_item.setToolTip(f"Tipo de disco: {disc_type}" if disc_type else "Tipo de disco aún no detectado")
+            disc_type_item.setToolTip(
+                f"Tipo de disco: {disc_type}" if disc_type else "Tipo de disco aún no detectado"
+            )
             disc_type_item.setForeground(QColor(0, 0, 0))  # Black text for better contrast
             self.setItem(row, 2, disc_type_item)
 

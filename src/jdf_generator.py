@@ -124,7 +124,7 @@ class JDFGenerator:
             # Generate data file (.data) for additional information
             data_path = self._create_data_file()
             iso_size = self.get_file_size(self.job_data.iso_path)
-            disc_type = self.get_disc_type_from_file_size(iso_size)
+            self.get_disc_type_from_file_size(iso_size)
 
             # Read JDF template
             template_content = self._read_file_template(self.config.jdf_template)
@@ -132,7 +132,7 @@ class JDFGenerator:
 
             patient_name = self.job_data.study_patient_name
             jdf_content = template.render(
-                disc_type=disc_type,
+                disc_type=self.job_data.disc_type,
                 image=self.job_data.iso_path,
                 volume_label=patient_name,
                 label=self.config.label_file,
@@ -147,26 +147,3 @@ class JDFGenerator:
         except Exception as e:
             self.logger.error(f"Error creating JDF file: {e}")
             raise
-
-    def get_disc_type_from_file_size(self, file_size: int) -> str:
-        """Get the type of disc for a job.
-        * 4.7GB is the maximum size for a DVD
-        * 700MB is the maximum size for a CD
-        * > 4.7GB is an invalid size
-
-        Args:
-            file_size: Size of the file in bytes
-
-        Returns:
-            Type of disc
-        """
-        if file_size >= 4.7 * 1024 * 1024 * 1024:
-            return "Invalid"
-        elif file_size > 700 * 1024 * 1024:
-            return "DVD"
-        else:
-            return "CD"
-
-    def get_file_size(self, path: str) -> int:
-        """Get the size of a file in bytes."""
-        return os.path.getsize(path)
