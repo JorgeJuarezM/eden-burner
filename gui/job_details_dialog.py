@@ -14,7 +14,9 @@ from PyQt5.QtWidgets import (
     QMessageBox,
     QProgressBar,
     QPushButton,
+    QTextEdit,
     QVBoxLayout,
+    QWidget,
 )
 
 from src.job_queue import BurnJob, JobStatus
@@ -165,9 +167,44 @@ class JobDetailsDialogUI(QDialog):
         self.progress_bar.setValue(0)
         layout.addWidget(self.progress_bar)
 
-        # Error message group (if any)
-        self.error_group = None
-        self.error_text = None
+        # Error message section (always present)
+        self.error_group = QGroupBox("Mensaje de Error")
+        self.error_group.setVisible(False)  # Hidden by default
+
+        error_layout = QVBoxLayout()
+        self.error_text = QTextEdit()
+        self.error_text.setMaximumHeight(100)
+        self.error_text.setReadOnly(True)
+        self.error_text.setText("")
+        self.error_text.setStyleSheet("""
+            QTextEdit {
+                background-color: #1a1a1a;
+                color: #ff6b6b;
+                border: 1px solid #ff6b6b;
+                border-radius: 4px;
+                padding: 8px;
+                font-family: monospace;
+            }
+        """)
+        error_layout.addWidget(self.error_text)
+
+        self.error_group.setLayout(error_layout)
+        self.error_group.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                border: 2px solid #ff6b6b;
+                border-radius: 5px;
+                margin-top: 1ex;
+                color: #ff6b6b;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 5px 0 5px;
+                color: #ff6b6b;
+            }
+        """)
+        layout.addWidget(self.error_group)
 
         # Buttons
         button_layout = QHBoxLayout()
@@ -344,6 +381,20 @@ class JobDetailsDialogLogic(JobDetailsDialogUI):
         self.cancel_button.setEnabled(
             self.job.status not in [JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED]
         )
+
+        # Update error message section
+        self.update_error_section()
+
+    def update_error_section(self):
+        """Update the error message section visibility and content."""
+        if self.job.error_message:
+            # Show error section and update content
+            self.error_group.setVisible(True)
+            self.error_text.setText(self.job.error_message)
+        else:
+            # Hide error section when no error
+            self.error_group.setVisible(False)
+            self.error_text.setText("")
 
 
 # JobDetailsDialogLogic is the complete dialog class that combines UI and Logic
