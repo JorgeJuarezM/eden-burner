@@ -36,7 +36,7 @@ class MainWindowUI(QMainWindow):
 
     def setup_ui(self):
         """Setup the main window UI."""
-        self.setWindowTitle(self.config.window_title)
+        self.setWindowTitle("EPSON PP-100 Disc Burner")
         self.setFixedSize(1024, 768)
 
         # Create central widget
