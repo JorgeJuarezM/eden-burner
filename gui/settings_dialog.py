@@ -39,12 +39,49 @@ class SettingsDialog(QDialog):
         self.setup_ui()
         self.load_current_settings()
 
+        self.setStyleSheet(
+            """
+                * {
+                    background-color: black;
+                }
+            """
+        )
+
     def setup_ui(self):
         """Setup the user interface."""
         layout = QVBoxLayout(self)
 
         # Create tab widget
         self.tab_widget = QTabWidget()
+        self.tab_widget.setStyleSheet(
+            """
+            QTabWidget::pane {
+                border: none;
+            }
+            QTabBar::tab {
+                background-color: black; /* Default tab background */
+                color: white;
+                border: 1px solid white;
+                padding: 10px;
+            }
+            QTabBar::tab:selected {
+                background-color: darkgray; /* Selected tab background */
+            }
+            QTabBar::tab:hover {
+                background-color: #212121; /* Tab background on hover */
+            }
+
+            QLineEdit,
+            QComboBox,
+            QSpinBox {
+                padding: 5px;
+                border: 1px solid #212121;
+            }
+            QGroupBox {
+                padding: 10px;
+            }
+            """
+        )
 
         # Create tabs
         self.create_general_tab()
@@ -104,7 +141,14 @@ class SettingsDialog(QDialog):
     def create_general_tab(self):
         """Create General settings tab."""
         tab = QWidget()
+        tab.setStyleSheet(
+            """
+            margin: 5px;
+            """
+        )
+
         layout = QFormLayout(tab)
+        layout.setSpacing(20)
 
         # API Endpoint
         self.api_endpoint_edit = QLineEdit()

@@ -29,13 +29,14 @@ import os
 import platform
 import subprocess
 import sys
+from pathlib import Path
 
 
 def get_icon_path():
     """Get the appropriate icon path for the current platform."""
     current_platform = platform.system().lower()
     script_dir = os.path.dirname(__file__)
-    assets_dir = os.path.join(script_dir, "../assets")
+    assets_dir = Path(script_dir).parent / "assets"
 
     # Define icon files for each platform
     icon_files = {
@@ -55,6 +56,7 @@ def get_icon_path():
     for icon_file in platform_icons:
         icon_path = os.path.join(assets_dir, icon_file)
         if os.path.exists(icon_path):
+            print(f"Icon found: {icon_path}")
             return icon_path
 
     print(f"Warning: No suitable icon file found in {assets_dir}")
