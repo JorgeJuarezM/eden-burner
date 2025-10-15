@@ -311,7 +311,7 @@ class JobQueue:
                 job.iso_path = iso_path
 
                 # Detect disc type based on file size
-                job.disc_type = job.detect_disc_type(iso_path)
+                job.disc_type = job.detect_disc_type(iso_path, self)
 
                 # Check if job was cancelled before updating status
                 if job.status != JobStatus.CANCELLED:

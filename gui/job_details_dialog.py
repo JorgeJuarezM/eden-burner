@@ -78,7 +78,6 @@ class JobDetailsDialogUI(QDialog):
                 border: 1px solid #333333;
                 border-radius: 2px;
                 background-color: #1a1a1a;
-                text-align: center;
                 color: #ffffff;
                 font-weight: bold;
                 font-size: 11px;

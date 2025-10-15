@@ -202,14 +202,12 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                 progress_bar.setStyleSheet(
                     """
                     QProgressBar {
-                        text-align: center;
-                        color: #FFFFFF;
-                        font-weight: bold;
-                        font-size: 11px;
                         border: 1px solid #4CAF50;
                         border-radius: 2px;
                         background-color: #2E7D32;
-                        padding: 2px;
+                        color: #FFFFFF;
+                        font-weight: bold;
+                        font-size: 11px;
                     }
                     QProgressBar::chunk {
                         background-color: #4CAF50;
@@ -223,14 +221,12 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                 progress_bar.setStyleSheet(
                     """
                     QProgressBar {
-                        text-align: center;
-                        color: #FFFFFF;
-                        font-weight: bold;
-                        font-size: 11px;
                         border: 1px solid #F44336;
                         border-radius: 2px;
                         background-color: #C62828;
-                        padding: 2px;
+                        color: #FFFFFF;
+                        font-weight: bold;
+                        font-size: 11px;
                     }
                     QProgressBar::chunk {
                         background-color: #F44336;
@@ -243,14 +239,12 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                 progress_bar.setStyleSheet(
                     """
                     QProgressBar {
-                        text-align: center;
-                        color: #FFFFFF;
-                        font-weight: bold;
-                        font-size: 11px;
                         border: 1px solid #42A5F5;
                         border-radius: 2px;
                         background-color: #1976D2;
-                        padding: 2px;
+                        color: #FFFFFF;
+                        font-weight: bold;
+                        font-size: 11px;
                     }
                     QProgressBar::chunk {
                         background-color: #42A5F5;
@@ -264,12 +258,11 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                 progress_bar.setStyleSheet(
                     """
                     QProgressBar {
-                        text-align: center;
-                        color: #FFFFFF;
-                        font-weight: bold;
                         border: 2px solid #8BC34A;
                         border-radius: 8px;
                         background-color: #33691E;
+                        color: #FFFFFF;
+                        font-weight: bold;
                         font-size: 12px;
                     }
                     QProgressBar::chunk {
@@ -283,14 +276,12 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                 progress_bar.setStyleSheet(
                     """
                     QProgressBar {
-                        text-align: center;
-                        color: #FFFFFF;
-                        font-weight: bold;
-                        font-size: 11px;
                         border: 1px solid #2196F3;
                         border-radius: 2px;
                         background-color: #1565C0;
-                        padding: 2px;
+                        color: #FFFFFF;
+                        font-weight: bold;
+                        font-size: 11px;
                     }
                     QProgressBar::chunk {
                         background-color: #2196F3;
@@ -303,14 +294,12 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                 progress_bar.setStyleSheet(
                     """
                     QProgressBar {
-                        text-align: center;
-                        color: #FFFFFF;
-                        font-weight: bold;
-                        font-size: 11px;
                         border: 1px solid #9C27B0;
                         border-radius: 2px;
                         background-color: #6A1B9A;
-                        padding: 2px;
+                        color: #FFFFFF;
+                        font-weight: bold;
+                        font-size: 11px;
                     }
                     QProgressBar::chunk {
                         background-color: #9C27B0;
@@ -324,14 +313,12 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                 progress_bar.setStyleSheet(
                     """
                     QProgressBar {
-                        text-align: center;
-                        color: #FFFFFF;
-                        font-weight: bold;
-                        font-size: 11px;
                         border: 1px solid #9E9E9E;
                         border-radius: 2px;
                         background-color: #424242;
-                        padding: 2px;
+                        color: #FFFFFF;
+                        font-weight: bold;
+                        font-size: 11px;
                     }
                     QProgressBar::chunk {
                         background-color: #9E9E9E;
@@ -345,12 +332,11 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                 progress_bar.setStyleSheet(
                     """
                     QProgressBar {
-                        text-align: center;
-                        color: #FFFFFF;
-                        font-weight: bold;
                         border: 2px solid #9E9E9E;
                         border-radius: 8px;
                         background-color: #424242;
+                        color: #FFFFFF;
+                        font-weight: bold;
                         font-size: 12px;
                     }
                     QProgressBar::chunk {
@@ -365,7 +351,9 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                 progress_bar.setStyleSheet(
                     """
                     QProgressBar {
-                        text-align: center;
+                        color: #FFFFFF;
+                        font-weight: bold;
+                        font-size: 11px;
                     """
                 )
 
