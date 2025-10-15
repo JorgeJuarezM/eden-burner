@@ -318,7 +318,28 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                     }
                 """
                 )
-            else:  # PENDING or other status
+            elif job.status == JobStatus.CANCELLED:
+                progress_bar.setValue(100)  # Ensure full progress for cancelled
+                progress_bar.setFormat("✗ Cancelado")
+                progress_bar.setStyleSheet(
+                    """
+                    QProgressBar {
+                        text-align: center;
+                        color: #FFFFFF;
+                        font-weight: bold;
+                        font-size: 11px;
+                        border: 1px solid #9E9E9E;
+                        border-radius: 2px;
+                        background-color: #424242;
+                        padding: 2px;
+                    }
+                    QProgressBar::chunk {
+                        background-color: #9E9E9E;
+                        border-radius: 1px;
+                    }
+                """
+                )
+            elif job.status == JobStatus.PENDING:
                 progress_bar.setValue(0)  # No progress for pending
                 progress_bar.setFormat("⏳ Pendiente")
                 progress_bar.setStyleSheet(
@@ -337,6 +358,15 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                         border-radius: 6px;
                     }
                 """
+                )
+            else:
+                progress_bar.setValue(int(job.progress))
+                progress_bar.setFormat(f"{int(job.progress)}%")
+                progress_bar.setStyleSheet(
+                    """
+                    QProgressBar {
+                        text-align: center;
+                    """
                 )
 
             self.setCellWidget(row, 3, progress_bar)

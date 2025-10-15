@@ -106,7 +106,6 @@ class BurnJob:
         if job_queue and self.status in [
             JobStatus.COMPLETED,
             JobStatus.FAILED,
-            JobStatus.CANCELLED,
         ]:
             self.update_status_to_api(job_queue)
 
@@ -118,7 +117,6 @@ class BurnJob:
         status_mapping = {
             JobStatus.COMPLETED: "COMPLETED",
             JobStatus.FAILED: "FAILED",
-            JobStatus.CANCELLED: "COMPLETED",
         }
 
         api_status = status_mapping.get(self.status)
@@ -465,14 +463,17 @@ class JobQueue:
             if job.status in [JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED]:
                 return False
 
-            job.update_status(JobStatus.CANCELLED, "Cancelled by user", job_queue=self)
+            # Check current status before changing it
+            was_downloading = job.status == JobStatus.DOWNLOADING
+
+            job.update_status(JobStatus.CANCELLED, "Cancelled by  2", job_queue=self)
 
             # Remove from queue if present
             if job_id in self.job_queue:
                 self.job_queue.remove(job_id)
 
-            # Cancel download if active
-            if job.status == JobStatus.DOWNLOADING:
+            # Cancel active operations based on previous status
+            if was_downloading:
                 self.download_manager.cancel_download(job.iso_info.get("id"))
 
             self.logger.info(f"Cancelled job {job_id}")
@@ -494,13 +495,9 @@ class JobQueue:
 
             job = self.jobs[job_id]
 
-            if not job.can_retry(self.config.max_retries):
-                return False
-
             # Clean up existing files to start fresh
             self._cleanup_job_files(job)
 
-            job.increment_retry()
             job.update_status(JobStatus.PENDING)
             job.error_message = None
             job.progress = 0.0

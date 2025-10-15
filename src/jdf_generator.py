@@ -123,8 +123,6 @@ class JDFGenerator:
         try:
             # Generate data file (.data) for additional information
             data_path = self._create_data_file()
-            iso_size = self.get_file_size(self.job_data.iso_path)
-            self.get_disc_type_from_file_size(iso_size)
 
             # Read JDF template
             template_content = self._read_file_template(self.config.jdf_template)

@@ -14,7 +14,6 @@ from PyQt5.QtWidgets import (
     QMessageBox,
     QProgressBar,
     QPushButton,
-    QTextEdit,
     QVBoxLayout,
 )
 
@@ -209,6 +208,40 @@ class JobDetailsDialogLogic(JobDetailsDialogUI):
         # Connect retry button
         self.retry_button.clicked.connect(self.on_retry_clicked)
 
+        # Connect cancel button
+        self.cancel_button.clicked.connect(self.on_cancel_clicked)
+
+    def on_cancel_clicked(self):
+        """Handle cancel button click."""
+        if not self.parent_window:
+            return
+
+        # Get job queue from parent window
+        job_queue = getattr(self.parent_window, "job_queue", None)
+        if not job_queue:
+            return
+
+        # Cancel the job
+        success = job_queue.cancel_job(self.job.id)
+
+        if success:
+            # Update dialog with new job state
+            self.update_job_details()
+            # Show confirmation message
+            QMessageBox.information(
+                self,
+                "Trabajo Cancelado",
+                f"El trabajo {self.job.id[:8]}... ha sido cancelado exitosamente.",
+            )
+            # Close dialog since job is now cancelled
+            self.accept()
+        else:
+            QMessageBox.warning(
+                self,
+                "Cancelación Fallida",
+                "No se pudo cancelar el trabajo. Puede que ya esté completado o en un estado que no permite cancelación.",
+            )
+
     def on_retry_clicked(self):
         """Handle retry button click."""
         if not self.parent_window:
@@ -228,15 +261,10 @@ class JobDetailsDialogLogic(JobDetailsDialogUI):
             # Close dialog since job is now pending again
             self.accept()
         else:
-            # Get max retries from config for error message
-            max_retries = 2  # default
-            if hasattr(self.parent_window, "config"):
-                max_retries = self.parent_window.config.max_retries
-
             QMessageBox.warning(
                 self,
                 "Reintento Fallido",
-                f"No se pudo reintentar el trabajo. Ya ha excedido el número máximo de reintentos ({max_retries}).",
+                "No se pudo reintentar el trabajo.",
             )
 
     def on_job_updated_from_parent(self, job: BurnJob):
@@ -316,38 +344,6 @@ class JobDetailsDialogLogic(JobDetailsDialogUI):
         self.cancel_button.setEnabled(
             self.job.status not in [JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED]
         )
-
-        # Update error message section
-        self.update_error_section()
-
-    def update_error_section(self):
-        """Update the error message section."""
-        # Remove existing error group if present
-        if self.error_group:
-            self.error_group.setParent(None)
-            self.error_group.deleteLater()
-            self.error_group = None
-            self.error_text = None
-
-        # Add error group if there's an error message
-        if self.job.error_message:
-            error_group = QGroupBox("Mensaje de Error")
-            error_layout = QVBoxLayout()
-
-            error_text = QTextEdit()
-            error_text.setMaximumHeight(100)
-            error_text.setReadOnly(True)
-            error_text.setText(self.job.error_message)
-            error_layout.addWidget(error_text)
-
-            error_group.setLayout(error_layout)
-
-            # Insert error group before history group
-            layout = self.layout()
-            layout.insertWidget(layout.count() - 2, error_group)  # Insert before buttons
-
-            self.error_group = error_group
-            self.error_text = error_text
 
 
 # JobDetailsDialogLogic is the complete dialog class that combines UI and Logic
