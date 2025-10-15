@@ -567,6 +567,24 @@ class JobQueue:
                 Path(job.jdf_path).unlink()
                 self.logger.debug(f"Removed JDF file: {job.jdf_path}")
 
+            # Remove done file if it exists
+            done_file = Path(job.jdf_path).with_suffix(".DON")
+            if done_file.exists():
+                done_file.unlink()
+                self.logger.debug(f"Removed done file: {done_file}")
+
+            # Remove progress file if it exists
+            progress_file = Path(job.jdf_path).with_suffix(".INP")
+            if progress_file.exists():
+                progress_file.unlink()
+                self.logger.debug(f"Removed progress file: {progress_file}")
+
+            # Remove error file if it exists
+            error_file = Path(job.jdf_path).with_suffix(".ERR")
+            if error_file.exists():
+                error_file.unlink()
+                self.logger.debug(f"Removed error file: {error_file}")
+
         except Exception as e:
             self.logger.warning(f"Error cleaning up files for job {job.id}: {e}")
 
