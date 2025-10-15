@@ -67,14 +67,6 @@ class JDFGenerator:
             with open(jdf_path, "w") as f:
                 f.write(jdf_content)
 
-            # Generate label file (.tdd) for disc cover
-            try:
-                label_path = self.create_label_file(job_id)
-                self.logger.info(f"Generated label file: {label_path}")
-            except Exception as e:
-                self.logger.warning(f"Failed to generate label file: {e}")
-                label_path = None
-
             self.logger.info(f"Generated JDF file: {jdf_path}")
             return str(jdf_path)
 
