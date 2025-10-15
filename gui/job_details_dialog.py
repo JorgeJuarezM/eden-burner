@@ -180,7 +180,7 @@ class JobDetailsDialogLogic(JobDetailsDialogUI):
         self.patient_label.setText(f"{patient_name} (ID: {patient_id})")
 
         # Study information
-        study_desc = study_info.get("dicomDescription", "Sin descripción")
+        study_desc = study_info.get("dicomDescription") or "Sin descripción"
         self.study_label.setText(f"{study_desc[:50]}..." if len(study_desc) > 50 else study_desc)
 
         self.progress_label.setText(f"{self.job.progress:.1f}%")

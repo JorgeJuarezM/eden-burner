@@ -22,7 +22,9 @@
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}",
             "python": "${workspaceFolder}/venv/bin/python3",
-            "args": ["--background"],
+            "args": [
+                "--background"
+            ],
             "env": {
                 "PYTHONPATH": "${workspaceFolder}",
                 "EPSON_DEBUG": "1"
@@ -37,7 +39,6 @@
             "cwd": "${workspaceFolder}",
             "python": "${workspaceFolder}/venv/bin/python3",
             "env": {
-                "QT_QPA_PLATFORM": "wayland",
                 "PYTHONPATH": "${workspaceFolder}",
                 "EPSON_DEBUG": "1",
                 "DISPLAY": "${env:DISPLAY}",
