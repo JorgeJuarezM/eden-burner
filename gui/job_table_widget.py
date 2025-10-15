@@ -24,6 +24,7 @@ class JobTableWidgetUI(QTableWidget):
         headers = [
             "ID",
             "Paciente",
+            "Tipo",
             "Estado",
             "Creado",
         ]
@@ -118,13 +119,14 @@ class JobTableWidgetUI(QTableWidget):
         header = self.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)  # Patient
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)  # Progress
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)  # Progress
 
         # Set minimum column widths
         self.setColumnWidth(0, 50)  # ID
         self.setColumnWidth(1, 50)  # Patient
-        self.setColumnWidth(2, 200)  # Progress
-        self.setColumnWidth(3, 50)  # Created
+        self.setColumnWidth(2, 50)  # Type
+        self.setColumnWidth(3, 200)  # Progress
+        self.setColumnWidth(4, 50)  # Created
 
 
 class JobTableWidgetLogic(JobTableWidgetUI):
@@ -164,6 +166,24 @@ class JobTableWidgetLogic(JobTableWidgetUI):
             patient_item.setToolTip(patient_name)
             patient_item.setForeground(QColor(255, 255, 255))  # White text
             self.setItem(row, 1, patient_item)
+
+            # Disc type
+            disc_type = job.disc_type or ""
+            disc_type_item = QTableWidgetItem(disc_type)
+
+            # Color code disc type
+            if disc_type == "CD":
+                disc_type_item.setBackground(QColor(173, 216, 230))  # Light blue for CD
+            elif disc_type == "DVD":
+                disc_type_item.setBackground(QColor(144, 238, 144))  # Light green for DVD
+            elif disc_type == "Invalid":
+                disc_type_item.setBackground(QColor(255, 182, 193))  # Light pink for invalid
+            else:
+                disc_type_item.setBackground(QColor(211, 211, 211))  # Light gray for unknown
+
+            disc_type_item.setToolTip(f"Tipo de disco: {disc_type}" if disc_type else "Tipo de disco aún no detectado")
+            disc_type_item.setForeground(QColor(0, 0, 0))  # Black text for better contrast
+            self.setItem(row, 2, disc_type_item)
 
             # Progress bar with custom text (compact design)
             progress_bar = QProgressBar()
@@ -317,12 +337,12 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                 """
                 )
 
-            self.setCellWidget(row, 2, progress_bar)
+            self.setCellWidget(row, 3, progress_bar)
 
             # Created time
             created_item = QTableWidgetItem(job.created_at.strftime("%Y-%m-%d %H:%M"))
             created_item.setForeground(QColor(255, 255, 255))  # White text
-            self.setItem(row, 3, created_item)
+            self.setItem(row, 4, created_item)
 
     def get_selected_job_id(self) -> Optional[str]:
         """Get the ID of the currently selected job.

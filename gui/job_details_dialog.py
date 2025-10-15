@@ -136,6 +136,9 @@ class JobDetailsDialogUI(QDialog):
         self.filename_label = QLabel("--")
         info_layout.addRow("Archivo ISO:", self.filename_label)
 
+        self.disc_type_label = QLabel("--")
+        info_layout.addRow("Tipo de Disco:", self.disc_type_label)
+
         # Patient information
         self.patient_label = QLabel("--")
         info_layout.addRow("Paciente:", self.patient_label)
@@ -252,6 +255,20 @@ class JobDetailsDialogLogic(JobDetailsDialogUI):
 
         self.status_label.setText(self.job.status.value.title())
         self.filename_label.setText(self.job.iso_info.get("filename", "Unknown"))
+
+        # Disc type
+        disc_type_text = self.job.disc_type if self.job.disc_type else "No detectado"
+        self.disc_type_label.setText(disc_type_text)
+
+        # Color code disc type in details dialog
+        if self.job.disc_type == "CD":
+            self.disc_type_label.setStyleSheet("color: #0066cc; font-weight: bold;")  # Blue for CD
+        elif self.job.disc_type == "DVD":
+            self.disc_type_label.setStyleSheet("color: #006600; font-weight: bold;")  # Green for DVD
+        elif self.job.disc_type == "Invalid":
+            self.disc_type_label.setStyleSheet("color: #cc0000; font-weight: bold;")  # Red for invalid
+        else:
+            self.disc_type_label.setStyleSheet("color: #666666; font-weight: bold;")  # Gray for unknown
 
         # Patient information
         study_info = self.job.iso_info.get("study", {})

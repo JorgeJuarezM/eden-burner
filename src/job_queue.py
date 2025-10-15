@@ -61,6 +61,33 @@ class BurnJob:
     # Notification tracking
     notification_sent: bool = False
 
+    # Disc type detection
+    disc_type: Optional[str] = None  # "CD" or "DVD" or None if unknown
+
+    def detect_disc_type(self, file_path: str) -> str:
+        """Detect disc type based on file size.
+
+        Args:
+            file_path: Path to the ISO file
+
+        Returns:
+            "CD" for files under 700MB, "DVD" for files between 700MB and 4.5GB,
+            "Invalid" for files over 4.5GB, "Unknown" for errors
+        """
+        try:
+            file_size = Path(file_path).stat().st_size
+            size_mb = file_size / (1024 * 1024)  # Convert to MB
+            size_gb = file_size / (1024 * 1024 * 1024)  # Convert to GB
+
+            if size_mb < 700:
+                return "CD"
+            elif size_gb <= 4.5:
+                return "DVD"
+            else:
+                return "Invalid"
+        except Exception:
+            return "Unknown"
+
     def update_status(
         self,
         status: JobStatus,
@@ -274,6 +301,10 @@ class JobQueue:
 
             if iso_path:
                 job.iso_path = iso_path
+
+                # Detect disc type based on file size
+                job.disc_type = job.detect_disc_type(iso_path)
+
                 job.update_status(JobStatus.DOWNLOADED)
                 self.logger.info(f"Downloaded ISO for job {job.id}")
             else:

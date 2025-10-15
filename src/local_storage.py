@@ -53,6 +53,9 @@ class BurnJobRecord(Base):
     # Retry tracking
     retry_count = Column(Integer, default=0)
 
+    # Disc type detection
+    disc_type = Column(String)  # "CD", "DVD", or None
+
     # Robot interaction
     robot_job_id = Column(String)
     estimated_completion = Column(DateTime)
@@ -82,6 +85,7 @@ class BurnJobRecord(Base):
             "progress": self.progress,
             "error_message": self.error_message,
             "retry_count": self.retry_count,
+            "disc_type": self.disc_type,
             "robot_job_id": self.robot_job_id,
             "estimated_completion": (
                 self.estimated_completion.isoformat() if self.estimated_completion else None
@@ -294,6 +298,7 @@ class LocalStorage:
                 job_record.iso_path = job.iso_path
                 job_record.jdf_path = job.jdf_path
                 job_record.error_message = job.error_message
+                job_record.disc_type = job.disc_type
                 job_record.updated_at = datetime.utcnow()
 
                 session.commit()

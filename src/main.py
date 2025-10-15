@@ -256,6 +256,7 @@ class EpsonBurnerApp:
                     progress=job_record.progress or 0.0,
                     error_message=job_record.error_message,
                     retry_count=job_record.retry_count or 0,
+                    disc_type=job_record.disc_type,
                     robot_job_id=job_record.robot_job_id,
                     estimated_completion=job_record.estimated_completion,
                 )
