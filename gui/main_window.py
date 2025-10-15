@@ -3,9 +3,10 @@ PyQt GUI for EPSON PP-100 Disc Burner Application - Main Window
 """
 
 from PyQt5.QtCore import QTimer, pyqtSignal
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QPixmap
 from PyQt5.QtWidgets import (
     QAction,
+    QButtonGroup,
     QComboBox,
     QHBoxLayout,
     QLabel,
@@ -39,54 +40,54 @@ class MainWindowUI(QMainWindow):
         self.setWindowTitle("EPSON PP-100 Disc Burner")
         self.setFixedSize(1024, 768)
 
-        # Apply dark theme styles
+        # Apply Eden-themed dark styles (black and white theme)
         self.setStyleSheet("""
             QMainWindow {
-                background-color: #2b2b2b;
+                background-color: #000000;
                 color: #ffffff;
             }
             QWidget {
-                background-color: #2b2b2b;
+                background-color: #000000;
                 color: #ffffff;
             }
             QMenuBar {
-                background-color: #3c3c3c;
+                background-color: #1a1a1a;
                 color: #ffffff;
-                border-bottom: 1px solid #555555;
+                border-bottom: 1px solid #333333;
             }
             QMenuBar::item {
                 background-color: transparent;
                 padding: 4px 8px;
             }
             QMenuBar::item:selected {
-                background-color: #4a4a4a;
+                background-color: #333333;
             }
             QMenu {
-                background-color: #3c3c3c;
+                background-color: #1a1a1a;
                 color: #ffffff;
-                border: 1px solid #555555;
+                border: 1px solid #333333;
             }
             QMenu::item {
                 padding: 4px 20px;
             }
             QMenu::item:selected {
-                background-color: #4a4a4a;
+                background-color: #333333;
             }
             QStatusBar {
-                background-color: #3c3c3c;
+                background-color: #1a1a1a;
                 color: #ffffff;
-                border-top: 1px solid #555555;
+                border-top: 1px solid #333333;
             }
             QComboBox {
-                background-color: #3c3c3c;
+                background-color: #1a1a1a;
                 color: #ffffff;
-                border: 1px solid #555555;
+                border: 1px solid #333333;
                 border-radius: 4px;
                 padding: 4px 8px;
             }
             QComboBox::drop-down {
                 border: none;
-                background-color: #4a4a4a;
+                background-color: #333333;
             }
             QComboBox::down-arrow {
                 image: none;
@@ -96,13 +97,13 @@ class MainWindowUI(QMainWindow):
                 margin-right: 5px;
             }
             QComboBox QAbstractItemView {
-                background-color: #3c3c3c;
+                background-color: #1a1a1a;
                 color: #ffffff;
-                border: 1px solid #555555;
-                selection-background-color: #4a4a4a;
+                border: 1px solid #333333;
+                selection-background-color: #333333;
             }
             QPushButton {
-                background-color: #4a4a4a;
+                background-color: #333333;
                 color: #ffffff;
                 border: 1px solid #555555;
                 border-radius: 4px;
@@ -110,19 +111,19 @@ class MainWindowUI(QMainWindow):
                 font-weight: bold;
             }
             QPushButton:hover {
-                background-color: #5a5a5a;
+                background-color: #444444;
             }
             QPushButton:pressed {
-                background-color: #3a3a3a;
+                background-color: #222222;
             }
             QPushButton:disabled {
-                background-color: #2a2a2a;
+                background-color: #111111;
                 color: #666666;
-                border-color: #333333;
+                border-color: #222222;
             }
             QGroupBox {
                 color: #ffffff;
-                border: 2px solid #555555;
+                border: 2px solid #333333;
                 border-radius: 5px;
                 margin-top: 1ex;
                 font-weight: bold;
@@ -132,7 +133,7 @@ class MainWindowUI(QMainWindow):
                 left: 10px;
                 padding: 0 10px 0 10px;
                 color: #ffffff;
-                background-color: #2b2b2b;
+                background-color: #000000;
             }
         """)
 
@@ -155,42 +156,107 @@ class MainWindowUI(QMainWindow):
         self.setup_menu_bar()
 
     def create_main_content(self):
-        """Create the main content area with job table."""
-        # Create central widget with job table
+        """Create the main content area with header and job table."""
+        # Create central widget with header and job table
         central_widget = QWidget()
         layout = QVBoxLayout(central_widget)
+        layout.setContentsMargins(8, 8, 8, 8)  # Smaller margins
+        layout.setSpacing(8)  # Reduced spacing
+        
+        # Add header with logo and title
+        header_panel = self.create_header_panel()
+        layout.addWidget(header_panel)
 
-        # Job table panel takes full space
+        # Job table panel takes remaining space
         job_panel = self.create_job_list_panel()
         layout.addWidget(job_panel)
 
         return central_widget
 
+    def create_header_panel(self):
+        """Create the header panel with logo and title."""
+        panel = QWidget()
+        layout = QHBoxLayout(panel)
+        layout.setContentsMargins(0, 0, 0, 0)  # No margins in header
+        layout.setSpacing(12)  # Small spacing between elements
+        
+        # Logo on the left (small and compact)
+        logo_label = QLabel()
+        logo_pixmap = QPixmap("assets/logo.png")
+        
+        # Crop the logo minimally to preserve most of the image
+        original_size = logo_pixmap.size()
+        crop_margin = int(original_size.width() * 0.08)  # 8% margin on each side
+        
+        cropped_pixmap = logo_pixmap.copy(
+            crop_margin, 
+            crop_margin, 
+            original_size.width() - 2 * crop_margin, 
+            original_size.height() - 2 * crop_margin
+        )
+        
+        # Scale down to a compact size
+        scaled_pixmap = cropped_pixmap.scaled(48, 48, aspectRatioMode=1, transformMode=1)
+        logo_label.setPixmap(scaled_pixmap)
+        
+        # Add subtle styling to logo container
+        logo_label.setStyleSheet("""
+            QLabel {
+                background-color: transparent;
+                padding: 4px;
+                border-radius: 4px;
+            }
+        """)
+        
+        layout.addWidget(logo_label)
+        
+        # Title to the right of the logo
+        title_label = QLabel("EPSON PP-100 Disc Burner")
+        title_label.setStyleSheet("""
+            QLabel {
+                color: #ffffff;
+                font-size: 18px;
+                font-weight: bold;
+                padding: 8px 0px;
+            }
+        """)
+        
+        layout.addWidget(title_label)
+        layout.addStretch()  # Push everything to the left
+        
+        return panel
+
     def create_job_list_panel(self):
-        """Create the job list panel."""
+        """Create the job list panel with improved design."""
         panel = QWidget()
         layout = QVBoxLayout(panel)
+        layout.setContentsMargins(0, 0, 0, 0)  # No margins
+        layout.setSpacing(8)  # Reduced spacing
 
-        # Panel title
+        # Title row with subtitle and filter buttons
+        title_row_layout = QHBoxLayout()
+        title_row_layout.setContentsMargins(0, 0, 0, 0)
+        title_row_layout.setSpacing(8)
+
+        # Compact panel title
         title_label = QLabel("Trabajos de Quemado")
-        title_label.setFont(QFont("Arial", 14, QFont.Bold))
-        layout.addWidget(title_label)
-
-        # Filter controls
-        filter_layout = QHBoxLayout()
-
-        self.status_filter = QComboBox()
-        self.status_filter.addItem("Todos", "all")
-        self.status_filter.addItem("Pendientes", "pending")
-        self.status_filter.addItem("Descargando", "downloading")
-        self.status_filter.addItem("Quemando", "burning")
-        self.status_filter.addItem("Completados", "completed")
-        self.status_filter.addItem("Fallidos", "failed")
-        filter_layout.addWidget(QLabel("Filtrar:"))
-        filter_layout.addWidget(self.status_filter)
-
-        filter_layout.addStretch()
-        layout.addLayout(filter_layout)
+        title_label.setStyleSheet("""
+            QLabel {
+                color: #ffffff;
+                font-size: 14px;
+                font-weight: bold;
+                padding: 4px 0px;
+            }
+        """)
+        title_row_layout.addWidget(title_label)
+        
+        # Spacer to push filter buttons to the right
+        title_row_layout.addStretch()
+        
+        # Filter buttons with toggle effect
+        self.create_filter_buttons(title_row_layout)
+        
+        layout.addLayout(title_row_layout)
 
         # Job table - no height limit to use full available space
         self.job_table = JobTableWidget()
@@ -213,6 +279,65 @@ class MainWindowUI(QMainWindow):
         layout.addLayout(button_layout)
 
         return panel
+
+    def create_filter_buttons(self, layout):
+        """Create filter buttons with toggle effect."""
+        # Create button group for exclusive selection
+        self.filter_button_group = QButtonGroup()
+        self.filter_button_group.setExclusive(True)
+        
+        # Filter options
+        filter_options = [
+            ("Todos", "all", "🔍"),
+            ("Pendientes", "pending", "⏳"),
+            ("Descargando", "downloading", "📥"),
+            ("Quemando", "burning", "🔥"),
+            ("Completados", "completed", "✅"),
+            ("Fallidos", "failed", "❌")
+        ]
+        
+        for text, value, icon in filter_options:
+            button = QPushButton(f"{icon} {text}")
+            button.setCheckable(True)
+            button.setProperty("filter_value", value)
+            
+            # Default styling
+            button.setStyleSheet("""
+                QPushButton {
+                    background-color: #333333;
+                    color: #ffffff;
+                    border: 1px solid #555555;
+                    border-radius: 4px;
+                    padding: 6px 12px;
+                    font-size: 11px;
+                    font-weight: bold;
+                    margin: 0px 2px;
+                }
+                QPushButton:hover {
+                    background-color: #444444;
+                    border-color: #666666;
+                }
+                QPushButton:checked {
+                    background-color: #1976D2;
+                    border-color: #1976D2;
+                    color: #ffffff;
+                }
+                QPushButton:checked:hover {
+                    background-color: #1565C0;
+                }
+            """)
+            
+            # Connect signal
+            button.clicked.connect(lambda checked, v=value: self.on_filter_changed(v))
+            
+            # Add to button group
+            self.filter_button_group.addButton(button)
+            layout.addWidget(button)
+            
+            # Set "Todos" as default selected
+            if value == "all":
+                button.setChecked(True)
+                self.current_filter = "all"
 
     def setup_menu_bar(self):
         """Setup the menu bar."""
@@ -271,7 +396,6 @@ class MainWindowLogic(MainWindowUI):
         self.refresh_data()
 
         # Connect UI signals to logic methods
-        self.status_filter.currentTextChanged.connect(self.on_filter_changed)
         self.job_table.itemDoubleClicked.connect(self.on_job_double_clicked)
         self.refresh_button.clicked.connect(self.refresh_data)
         self.clear_completed_button.clicked.connect(self.clear_completed_jobs)
@@ -301,8 +425,9 @@ class MainWindowLogic(MainWindowUI):
         self.status_timer.timeout.connect(self.update_status_bar)
         self.status_timer.start(5000)  # Every 5 seconds
 
-    def on_filter_changed(self):
+    def on_filter_changed(self, filter_value):
         """Handle filter change."""
+        self.current_filter = filter_value
         self.refresh_job_display()
 
     def refresh_data(self):
@@ -339,7 +464,7 @@ class MainWindowLogic(MainWindowUI):
 
     def refresh_job_display(self):
         """Refresh the job table display."""
-        filter_status = self.status_filter.currentData()
+        filter_status = getattr(self, 'current_filter', 'all')
 
         if filter_status == "all":
             jobs = self.job_queue.get_all_jobs()

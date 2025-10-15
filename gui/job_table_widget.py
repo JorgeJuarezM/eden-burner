@@ -36,51 +36,57 @@ class JobTableWidgetUI(QTableWidget):
         self.setSelectionBehavior(QTableWidget.SelectRows)
         self.setEditTriggers(QTableWidget.NoEditTriggers)
 
-        # Enhanced dark theme styles for table
+        # Compact Eden-themed dark styles for table (black and white theme)
         self.setStyleSheet(
             """
             QTableWidget {
-                gridline-color: #555555;
+                gridline-color: #333333;
                 selection-background-color: #1976D2;
                 selection-color: #FFFFFF;
-                background-color: #2b2b2b;
+                background-color: #000000;
                 color: #ffffff;
-                border: 1px solid #555555;
-                border-radius: 5px;
+                border: 1px solid #333333;
+                border-radius: 4px;
+                margin: 0px;
             }
             QTableWidget::item {
-                padding: 8px;
-                border-bottom: 1px solid #3c3c3c;
-            }
-            QTableWidget::item:selected {
-                background-color: #1976D2;
-                color: #ffffff;
+                padding: 6px 8px;
+                border-bottom: 1px solid #1a1a1a;
             }
             QTableWidget::item:alternate {
-                background-color: #333333;
+                background-color: #111111;
+            }
+            QTableWidget::item:selected {
+                background-color: #1976D2 !important;
+                color: #ffffff !important;
+            }
+            QTableWidget::item:alternate:selected {
+                background-color: #1976D2 !important;
+                color: #ffffff !important;
             }
             QHeaderView::section {
-                background-color: #3c3c3c;
+                background-color: #1a1a1a;
                 color: #ffffff;
-                padding: 8px;
-                border: 1px solid #555555;
+                padding: 6px 8px;
+                border: 1px solid #333333;
                 font-weight: bold;
+                font-size: 12px;
             }
             QHeaderView::section:hover {
-                background-color: #4a4a4a;
+                background-color: #333333;
             }
             QScrollBar:vertical {
-                background-color: #3c3c3c;
-                width: 12px;
-                border-radius: 6px;
+                background-color: #1a1a1a;
+                width: 10px;
+                border-radius: 5px;
             }
             QScrollBar::handle:vertical {
-                background-color: #555555;
-                border-radius: 6px;
+                background-color: #333333;
+                border-radius: 5px;
                 min-height: 20px;
             }
             QScrollBar::handle:vertical:hover {
-                background-color: #666666;
+                background-color: #444444;
             }
             QScrollBar::add-line:vertical,
             QScrollBar::sub-line:vertical {
@@ -88,17 +94,17 @@ class JobTableWidgetUI(QTableWidget):
                 background: none;
             }
             QScrollBar:horizontal {
-                background-color: #3c3c3c;
-                height: 12px;
-                border-radius: 6px;
+                background-color: #1a1a1a;
+                height: 10px;
+                border-radius: 5px;
             }
             QScrollBar::handle:horizontal {
-                background-color: #555555;
-                border-radius: 6px;
+                background-color: #333333;
+                border-radius: 5px;
                 min-width: 20px;
             }
             QScrollBar::handle:horizontal:hover {
-                background-color: #666666;
+                background-color: #444444;
             }
             QScrollBar::add-line:horizontal,
             QScrollBar::sub-line:horizontal {
@@ -159,12 +165,13 @@ class JobTableWidgetLogic(JobTableWidgetUI):
             patient_item.setForeground(QColor(255, 255, 255))  # White text
             self.setItem(row, 1, patient_item)
 
-            # Progress bar with custom text
+            # Progress bar with custom text (compact design)
             progress_bar = QProgressBar()
             progress_bar.setRange(0, 100)
             progress_bar.setValue(int(job.progress))
             progress_bar.setTextDirection(QProgressBar.Direction.TopToBottom)
             progress_bar.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            progress_bar.setFixedHeight(20)  # Compact height
 
             # Set custom text based on status with enhanced dark theme colors
             if job.status == JobStatus.COMPLETED:
@@ -176,14 +183,15 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                         text-align: center;
                         color: #FFFFFF;
                         font-weight: bold;
-                        border: 2px solid #4CAF50;
-                        border-radius: 8px;
-                        background-color: #1B5E20;
-                        font-size: 12px;
+                        font-size: 11px;
+                        border: 1px solid #4CAF50;
+                        border-radius: 2px;
+                        background-color: #2E7D32;
+                        padding: 2px;
                     }
                     QProgressBar::chunk {
                         background-color: #4CAF50;
-                        border-radius: 6px;
+                        border-radius: 1px;
                     }
                 """
                 )
@@ -196,14 +204,15 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                         text-align: center;
                         color: #FFFFFF;
                         font-weight: bold;
-                        border: 2px solid #F44336;
-                        border-radius: 8px;
-                        background-color: #B71C1C;
-                        font-size: 12px;
+                        font-size: 11px;
+                        border: 1px solid #F44336;
+                        border-radius: 2px;
+                        background-color: #C62828;
+                        padding: 2px;
                     }
                     QProgressBar::chunk {
                         background-color: #F44336;
-                        border-radius: 6px;
+                        border-radius: 1px;
                     }
                 """
                 )
@@ -215,14 +224,15 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                         text-align: center;
                         color: #FFFFFF;
                         font-weight: bold;
-                        border: 2px solid #FF9800;
-                        border-radius: 8px;
-                        background-color: #E65100;
-                        font-size: 12px;
+                        font-size: 11px;
+                        border: 1px solid #FF9800;
+                        border-radius: 2px;
+                        background-color: #F57C00;
+                        padding: 2px;
                     }
                     QProgressBar::chunk {
                         background-color: #FF9800;
-                        border-radius: 6px;
+                        border-radius: 1px;
                     }
                 """
                 )
@@ -254,14 +264,15 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                         text-align: center;
                         color: #FFFFFF;
                         font-weight: bold;
-                        border: 2px solid #2196F3;
-                        border-radius: 8px;
-                        background-color: #0D47A1;
-                        font-size: 12px;
+                        font-size: 11px;
+                        border: 1px solid #2196F3;
+                        border-radius: 2px;
+                        background-color: #1565C0;
+                        padding: 2px;
                     }
                     QProgressBar::chunk {
                         background-color: #2196F3;
-                        border-radius: 6px;
+                        border-radius: 1px;
                     }
                 """
                 )
@@ -273,14 +284,15 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                         text-align: center;
                         color: #FFFFFF;
                         font-weight: bold;
-                        border: 2px solid #9C27B0;
-                        border-radius: 8px;
-                        background-color: #4A148C;
-                        font-size: 12px;
+                        font-size: 11px;
+                        border: 1px solid #9C27B0;
+                        border-radius: 2px;
+                        background-color: #6A1B9A;
+                        padding: 2px;
                     }
                     QProgressBar::chunk {
                         background-color: #9C27B0;
-                        border-radius: 6px;
+                        border-radius: 1px;
                     }
                 """
                 )
