@@ -46,6 +46,10 @@ clean-db:
 	rm -dfr build/
 	rm -dfr jdf_files/*.*
 
+
+run:
+	QT_QPA_PLATFORM=wayland python main.py
+
 # ============================================================================
 # AYUDA Y DOCUMENTACIÓN
 # ============================================================================
