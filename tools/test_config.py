@@ -26,7 +26,6 @@ def test_config():
 
         # Test robot_uuid access
         print(f"Robot UUID: {config.robot_uuid}")
-        print(f"Robot Name: {config.robot_name}")
         print(f"API Endpoint: {config.graphql_endpoint}")
         print(f"Max Concurrent Jobs: {config.max_concurrent_jobs}")
 

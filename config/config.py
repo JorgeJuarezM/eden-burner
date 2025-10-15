@@ -76,13 +76,9 @@ class Config:
                 "temp": str(config_dir / "temp"),
             },
             "robot": {
-                "name": "EPSON_PP_100",
                 "jdf_template": str(config_dir / "templates/jdf_template.jdf"),
                 "label_file": str(config_dir / "templates/default.tdd"),
                 "data_template": str(config_dir / "templates/template.data"),
-                "burn_speed": "8x",
-                "verify_after_burn": True,
-                "auto_eject": False,
                 "robot_uuid": "00000000-0000-0000-0000-000000000000",
             },
             "jobs": {
@@ -92,10 +88,8 @@ class Config:
                 "max_retries": 2,
             },
             "gui": {
-                "window_title": "EPSON PP-100 Disc Burner",
                 "refresh_interval": 5000,  # milliseconds
                 "show_notifications": True,
-                "theme": "default",
             },
             "database": {"file": str(config_dir / "database/burner_jobs.db"), "backup_count": 5},
             "logging": {
@@ -163,11 +157,6 @@ class Config:
         return self.config_data["robot"]["robot_uuid"]
 
     @property
-    def robot_name(self):
-        """Robot name identifier."""
-        return self.config_data["robot"]["name"]
-
-    @property
     def jdf_template(self):
         """JDF template file name."""
         return self.config_data["robot"]["jdf_template"]
@@ -181,21 +170,6 @@ class Config:
     def data_template(self):
         """Data template file for additional disc information."""
         return self.config_data["robot"]["data_template"]
-
-    @property
-    def burn_speed(self):
-        """Default burn speed."""
-        return self.config_data["robot"]["burn_speed"]
-
-    @property
-    def verify_after_burn(self):
-        """Whether to verify discs after burning."""
-        return self.config_data["robot"]["verify_after_burn"]
-
-    @property
-    def auto_eject(self):
-        """Whether to auto-eject discs after completion."""
-        return self.config_data["robot"]["auto_eject"]
 
     # Job Configuration
     @property
@@ -219,11 +193,6 @@ class Config:
         return self.config_data["jobs"]["max_retries"]
 
     # GUI Configuration
-    @property
-    def window_title(self):
-        """Main window title."""
-        return self.config_data["gui"]["window_title"]
-
     @property
     def gui_refresh_interval(self):
         """GUI refresh interval in milliseconds."""

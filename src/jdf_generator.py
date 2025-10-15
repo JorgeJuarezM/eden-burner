@@ -36,7 +36,7 @@ class JDFGenerator:
         """
         if not template_path:
             raise ValueError("Template path is required")
-            
+
         if not os.path.exists(template_path):
             raise FileNotFoundError(f"Template file not found: {template_path}")
 
@@ -108,8 +108,6 @@ class JDFGenerator:
         Args:
             iso_path: Path to the ISO file to burn
             job_id: Unique job identifier (generated if None)
-            burn_speed: Burn speed (e.g., '8x', '16x')
-            verify: Whether to verify after burning
             copies: Number of copies to burn
 
         Returns:

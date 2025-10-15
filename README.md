@@ -100,8 +100,6 @@ api:
 
 robot:
   robot_uuid: "uuid-unico-del-robot"
-  burn_speed: "8x"
-  verify_after_burn: true
   jdf_template: "templates/jdf_template.jdf"
   label_file: "templates/default.tdd"
   data_template: "templates/template.data"
@@ -138,9 +136,6 @@ Las plantillas soportan las siguientes variables usando sintaxis `{{variable}}`:
 - `{{current_date}}` - Fecha y hora actual
 
 #### Configuración Técnica
-- `{{burn_speed}}` - Velocidad de quemado
-- `{{verify_after_burn}}` - Verificación después de quemar
-- `{{robot_name}}` - Nombre del robot
 - `{{robot_uuid}}` - UUID del robot
 
 #### Archivos Generados

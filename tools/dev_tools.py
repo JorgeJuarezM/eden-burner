@@ -42,7 +42,6 @@ def test_configuration():
         print(f"📁 Downloads folder: {config.downloads_folder}")
         print(f"📁 JDF folder: {config.jdf_folder}")
         print(f"🔗 API endpoint: {config.graphql_endpoint}")
-        print(f"🤖 Robot name: {config.robot_name}")
 
         # Validate configuration
         errors = config.validate_config()
@@ -137,11 +136,7 @@ folders:
 
 # Configuración del robot (desarrollo)
 robot:
-  name: "EPSON_PP_100_DEV"
   jdf_template: "default.jdf"
-  burn_speed: "4x"
-  verify_after_burn: false  # Deshabilitado para desarrollo rápido
-  auto_eject: false
 
 # Configuración de trabajos (desarrollo)
 jobs:
@@ -160,7 +155,6 @@ logging:
 # Configuración de interfaz gráfica (desarrollo)
 gui:
   refresh_interval: 1  # Actualización rápida para desarrollo
-  theme: "default"
   show_notifications: true
 
 # Configuración específica de desarrollo

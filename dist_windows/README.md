@@ -60,8 +60,7 @@ folders:
   failed: "failed"            # Trabajos fallidos
 
 robot:
-  burn_speed: "8x"            # Velocidad de quemado
-  verify_after_burn: true     # Verificar después de quemar
+  jdf_template: "default.jdf"  # Plantilla JDF
 ```
 
 ### Parámetros importantes

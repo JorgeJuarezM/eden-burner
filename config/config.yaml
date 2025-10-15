@@ -19,13 +19,9 @@ folders:
 
 # Configuración del robot EPSON PP-100
 robot:
-  name: "EPSON_PP_100"
   jdf_template: "/home/jorge/Code/eden-burner/templates/jdf_template.jdf"
   label_file: "/home/jorge/Code/eden-burner/templates/default.tdd"  # Archivo .tdd para la carátula del disco
   data_template: "/home/jorge/Code/eden-burner/templates/template.data"  # Archivo .data para información adicional del disco
-  burn_speed: "8x"               # Velocidad de quemado (4x, 8x, 16x, etc.)
-  verify_after_burn: true        # Verificar discos después de quemar
-  auto_eject: false              # Expulsar automáticamente después de completar
   robot_uuid: "d2cac3ce-9293-48b4-8d47-9c1577731508"  # UUID único del robot
 
 # Configuración de trabajos
@@ -55,6 +51,4 @@ database:
 gui:
   refresh_interval: 5000        # Intervalo de actualización en milisegundos
   show_notifications: true      # Mostrar notificaciones
-  theme: "default"              # Tema de la interfaz
-  window_title: "EPSON PP-100 Disc Burner"  # Título de la ventana
   notifications_enabled: true   # Habilitar notificaciones

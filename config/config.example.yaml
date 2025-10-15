@@ -19,11 +19,7 @@ folders:
 
 # Configuración del robot EPSON PP-100
 robot:
-  name: "EPSON_PP_100"
   jdf_template: "default.jdf"
-  burn_speed: "8x"               # Velocidad de quemado (4x, 8x, 16x, etc.)
-  verify_after_burn: true        # Verificar discos después de quemar
-  auto_eject: false              # Expulsar automáticamente después de completar
   robot_uuid: "00000000-0000-0000-0000-000000000000"  # UUID único del robot
 
 # Configuración de trabajos

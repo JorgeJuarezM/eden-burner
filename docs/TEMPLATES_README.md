@@ -34,9 +34,6 @@ Todas las plantillas tienen acceso a las siguientes variables:
 - `{{current_date}}` - Fecha y hora actual de generación
 
 ### Configuración Técnica
-- `{{burn_speed}}` - Velocidad de quemado configurada
-- `{{verify_after_burn}}` - Si se verifica después de quemar (true/false)
-- `{{robot_name}}` - Nombre del robot EPSON
 - `{{robot_uuid}}` - UUID único del robot
 
 ### Rutas de Archivos
@@ -58,7 +55,6 @@ IMAGE={{iso_path}}
 VOLUME_LABEL={{volume_label}}
 LABEL={{label_path}}
 REPLACE_FIELD={{data_path}}
-PUBLISHER={{robot_name}}
 COPIES=1
 ```
 
@@ -101,8 +97,6 @@ PatientName={{patient_name}}
 StudyDate={{study_date}}
 StudyDescription={{study_description}}
 DiscID={{job_id}}
-BurnSpeed={{burn_speed}}
-RobotName={{robot_name}}
 ISOPath={{iso_path}}
 CreationDate={{current_date}}
 ```
@@ -152,7 +146,6 @@ IMAGE={{iso_path}}
 VOLUME_LABEL={{patient_name}} - {{study_date}}
 LABEL={{label_path}}
 REPLACE_FIELD={{data_path}}
-PUBLISHER={{robot_name}}
 COPIES=1
 
 # Información del paciente
