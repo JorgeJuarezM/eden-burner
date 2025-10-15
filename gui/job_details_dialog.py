@@ -109,18 +109,6 @@ class JobDetailsDialogUI(QDialog):
         self.error_group = None
         self.error_text = None
 
-        # History group
-        history_group = QGroupBox("Historial")
-        history_layout = QVBoxLayout()
-
-        self.history_text = QTextEdit()
-        self.history_text.setMaximumHeight(150)
-        self.history_text.setReadOnly(True)
-        history_layout.addWidget(self.history_text)
-
-        history_group.setLayout(history_layout)
-        layout.addWidget(history_group)
-
         # Buttons
         button_layout = QHBoxLayout()
 
@@ -206,14 +194,6 @@ class JobDetailsDialogLogic(JobDetailsDialogUI):
 
         # Update error message section
         self.update_error_section()
-
-        # Update history
-        self.history_text.clear()
-        self.history_text.append(
-            f"Trabajo creado: {self.job.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
-        )
-        if self.job.error_message:
-            self.history_text.append(f"Error: {self.job.error_message}")
 
     def update_error_section(self):
         """Update the error message section."""

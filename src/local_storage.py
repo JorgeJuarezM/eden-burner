@@ -146,30 +146,6 @@ class BurnJobRecord(Base):
         )
 
 
-class JobHistoryRecord(Base):
-    """Database model for job history records."""
-
-    __tablename__ = "job_history"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    job_id = Column(String, nullable=False)
-    status = Column(String, nullable=False)
-    timestamp = Column(DateTime, default=datetime.utcnow)
-    message = Column(Text)
-    error = Column(Boolean, default=False)
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert record to dictionary."""
-        return {
-            "id": self.id,
-            "job_id": self.job_id,
-            "status": self.status,
-            "timestamp": self.timestamp.isoformat() if self.timestamp else None,
-            "message": self.message,
-            "error": self.error,
-        }
-
-
 class LocalStorage:
     """Local database storage manager."""
 
@@ -325,7 +301,7 @@ class LocalStorage:
                 return True
 
         except SQLAlchemyError as e:
-            self.logger.error(f"Error updating job status {job_id}: {e}")
+            self.logger.error(f"Error updating job status {job.id}: {e}")
             return False
 
     def delete_job(self, job_id: str) -> bool:
@@ -343,9 +319,6 @@ class LocalStorage:
                 if not job:
                     return False
 
-                # Also delete history records
-                session.query(JobHistoryRecord).filter_by(job_id=job_id).delete()
-
                 session.delete(job)
                 session.commit()
                 return True
@@ -353,54 +326,6 @@ class LocalStorage:
         except SQLAlchemyError as e:
             self.logger.error(f"Error deleting job {job_id}: {e}")
             return False
-
-    def add_history_record(
-        self, job_id: str, status: str, message: str = None, error: bool = False
-    ) -> bool:
-        """Add a history record for a job.
-
-        Args:
-            job_id: Job ID
-            status: Job status
-            message: Optional message
-            error: Whether this is an error record
-
-        Returns:
-            True if added successfully
-        """
-        try:
-            with self.get_session() as session:
-                history = JobHistoryRecord(
-                    job_id=job_id, status=status, message=message, error=error
-                )
-                session.add(history)
-                session.commit()
-                return True
-
-        except SQLAlchemyError as e:
-            self.logger.error(f"Error adding history record for job {job_id}: {e}")
-            return False
-
-    def get_job_history(self, job_id: str) -> List[JobHistoryRecord]:
-        """Get history records for a job.
-
-        Args:
-            job_id: Job ID
-
-        Returns:
-            List of history records
-        """
-        try:
-            with self.get_session() as session:
-                return (
-                    session.query(JobHistoryRecord)
-                    .filter_by(job_id=job_id)
-                    .order_by(JobHistoryRecord.timestamp)
-                    .all()
-                )
-        except SQLAlchemyError as e:
-            self.logger.error(f"Error getting history for job {job_id}: {e}")
-            return []
 
     def cleanup_old_jobs(self, max_age_days: int = 30) -> int:
         """Clean up old completed and failed jobs.
@@ -416,17 +341,6 @@ class LocalStorage:
             cutoff_date = cutoff_date.replace(day=cutoff_date.day - max_age_days)
 
             with self.get_session() as session:
-                # Delete old history records first
-                deleted_history = (
-                    session.query(JobHistoryRecord)
-                    .join(BurnJobRecord)
-                    .filter(
-                        BurnJobRecord.updated_at < cutoff_date,
-                        BurnJobRecord.status.in_(["completed", "failed"]),
-                    )
-                    .delete(synchronize_session=False)
-                )
-
                 # Delete old jobs
                 deleted_jobs = (
                     session.query(BurnJobRecord)
@@ -439,9 +353,7 @@ class LocalStorage:
 
                 session.commit()
 
-                self.logger.info(
-                    f"Cleaned up {deleted_jobs} old jobs and {deleted_history} history records"
-                )
+                self.logger.info(f"Cleaned up {deleted_jobs} old jobs")
                 return deleted_jobs
 
         except SQLAlchemyError as e:
@@ -460,14 +372,12 @@ class LocalStorage:
                 pending_jobs = session.query(BurnJobRecord).filter_by(status="pending").count()
                 completed_jobs = session.query(BurnJobRecord).filter_by(status="completed").count()
                 failed_jobs = session.query(BurnJobRecord).filter_by(status="failed").count()
-                total_history = session.query(JobHistoryRecord).count()
 
                 return {
                     "total_jobs": total_jobs,
                     "pending_jobs": pending_jobs,
                     "completed_jobs": completed_jobs,
                     "failed_jobs": failed_jobs,
-                    "total_history_records": total_history,
                     "database_size_mb": self._get_database_size(),
                 }
 
