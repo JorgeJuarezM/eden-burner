@@ -225,13 +225,13 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                         color: #FFFFFF;
                         font-weight: bold;
                         font-size: 11px;
-                        border: 1px solid #FF9800;
+                        border: 1px solid #42A5F5;
                         border-radius: 2px;
-                        background-color: #F57C00;
+                        background-color: #1976D2;
                         padding: 2px;
                     }
                     QProgressBar::chunk {
-                        background-color: #FF9800;
+                        background-color: #42A5F5;
                         border-radius: 1px;
                     }
                 """
