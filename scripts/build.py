@@ -137,13 +137,13 @@ def build_simple():
     icon_path = get_icon_path()
 
     # Build PyInstaller command based on platform
-    cmd = [python_exe, "-m", "PyInstaller"]
+    cmd = [python_exe, "-m", "PyInstaller", "--onedir"]
 
     # Output format options
     if is_windows:
-        cmd.extend(["--onefile", "--windowed"])
+        cmd.extend(["--windowed"])
     else:
-        cmd.extend(["--onedir", "--noconsole"])
+        cmd.extend(["--noconsole"])
 
     # Application name
     cmd.extend(["--name=Eden Burner"])

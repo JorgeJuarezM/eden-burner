@@ -3,7 +3,7 @@ Configuration management for EPSON PP-100 Disc Burner Application
 """
 
 from pathlib import Path
-
+import os
 import yaml
 
 
@@ -18,12 +18,27 @@ class Config:
         """
         if config_file is None:
             # Look for config in application directory
-            app_dir = Path(__file__).parent
-            config_file = app_dir / "config.yaml"
+            config_dir = self.get_app_config_folder()
+            config_file = config_dir / "config.yaml"
             print(f"Using default config file: {config_file}")
 
         self.config_file = Path(config_file)
         self.config_data = self.load_config()
+
+        if not self.config_file.exists():
+            self.save_config()
+
+    def get_app_config_folder(self) -> Path:
+        """Get the configuration folder for the application."""
+        app_name = "eden-epson-burner"
+        home = Path.home()
+        if os.name == "nt":  # Windows
+            config_folder = home / "AppData" / "Roaming" / app_name
+        elif os.name == "posix":  # macOS and Linux
+            config_folder = home / f".{app_name}"
+        else:
+            raise OSError("Unsupported operating system")
+        return config_folder
 
     def load_config(self):
         """Load configuration from file or create default."""
@@ -43,7 +58,7 @@ class Config:
 
     def get_default_config(self):
         """Get default configuration values."""
-        app_dir = Path(__file__).parent.parent  # Go up one level to project root
+        config_dir = self.get_app_config_folder()
 
         return {
             "api": {
@@ -53,17 +68,17 @@ class Config:
                 "retry_attempts": 3,
             },
             "folders": {
-                "downloads": str(app_dir / "downloads"),
-                "jdf_files": str(app_dir / "jdf_files"),
-                "completed": str(app_dir / "completed"),
-                "failed": str(app_dir / "failed"),
-                "temp": str(app_dir / "temp"),
+                "downloads": str(config_dir / "downloads"),
+                "jdf_files": str(config_dir / "jdf_files"),
+                "completed": str(config_dir / "completed"),
+                "failed": str(config_dir / "failed"),
+                "temp": str(config_dir / "temp"),
             },
             "robot": {
                 "name": "EPSON_PP_100",
-                "jdf_template": str(app_dir / "templates/jdf_template.jdf"),
-                "label_file": str(app_dir / "templates/default.tdd"),
-                "data_template": str(app_dir / "templates/template.data"),
+                "jdf_template": str(config_dir / "templates/jdf_template.jdf"),
+                "label_file": str(config_dir / "templates/default.tdd"),
+                "data_template": str(config_dir / "templates/template.data"),
                 "burn_speed": "8x",
                 "verify_after_burn": True,
                 "auto_eject": False,
@@ -81,10 +96,10 @@ class Config:
                 "show_notifications": True,
                 "theme": "default",
             },
-            "database": {"file": str(app_dir / "database/burner_jobs.db"), "backup_count": 5},
+            "database": {"file": str(config_dir / "database/burner_jobs.db"), "backup_count": 5},
             "logging": {
                 "level": "INFO",
-                "file": str(app_dir / "burner.log"),
+                "file": str(config_dir / "burner.log"),
                 "max_size": 10 * 1024 * 1024,  # 10MB
                 "backup_count": 5,
             },
