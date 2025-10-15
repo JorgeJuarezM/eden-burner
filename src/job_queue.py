@@ -259,10 +259,7 @@ class JobQueue:
 
         try:
             jdf_path = self.jdf_generator.create_burn_job_jdf(
-                job.iso_path,
                 job.id,
-                burn_speed=self.config.burn_speed,
-                verify=self.config.verify_after_burn,
             )
 
             job.jdf_path = jdf_path

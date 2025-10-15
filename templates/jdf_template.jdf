@@ -1,0 +1,8 @@
+DISC_TYPE={{disc_type}}
+FORMAT=JOLIET
+IMAGE={{image}}
+VOLUME_LABEL={{volume_label}}
+LABEL={{label}}
+REPLACE_FIELD={{replace_fields}}
+PUBLISHER=PP-100III
+COPIES=1
