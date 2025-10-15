@@ -16,7 +16,6 @@ from PyQt5.QtWidgets import (
     QPushButton,
     QTextEdit,
     QVBoxLayout,
-    QWidget,
 )
 
 from src.job_queue import BurnJob, JobStatus
@@ -175,7 +174,8 @@ class JobDetailsDialogUI(QDialog):
         self.error_text.setMaximumHeight(100)
         self.error_text.setReadOnly(True)
         self.error_text.setText("")
-        self.error_text.setStyleSheet("""
+        self.error_text.setStyleSheet(
+            """
             QTextEdit {
                 background-color: #1a1a1a;
                 color: #ff6b6b;
@@ -184,11 +184,13 @@ class JobDetailsDialogUI(QDialog):
                 padding: 8px;
                 font-family: monospace;
             }
-        """)
+        """
+        )
         error_layout.addWidget(self.error_text)
 
         self.error_group.setLayout(error_layout)
-        self.error_group.setStyleSheet("""
+        self.error_group.setStyleSheet(
+            """
             QGroupBox {
                 font-weight: bold;
                 border: 2px solid #ff6b6b;
@@ -202,7 +204,8 @@ class JobDetailsDialogUI(QDialog):
                 padding: 0 5px 0 5px;
                 color: #ff6b6b;
             }
-        """)
+        """
+        )
         layout.addWidget(self.error_group)
 
         # Buttons

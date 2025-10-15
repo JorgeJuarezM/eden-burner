@@ -373,7 +373,9 @@ class JobQueue:
         except Exception as e:
             # Check if job was cancelled before marking as failed
             if job.status != JobStatus.CANCELLED:
-                job.update_status(JobStatus.FAILED, f"JDF generation failed: {str(e)}", job_queue=self)
+                job.update_status(
+                    JobStatus.FAILED, f"JDF generation failed: {str(e)}", job_queue=self
+                )
                 self.logger.error(f"Failed to generate JDF for job {job.id}: {e}")
         finally:
             self._notify_job_update(job)

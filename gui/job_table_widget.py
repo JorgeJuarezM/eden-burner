@@ -199,22 +199,22 @@ class JobTableWidgetLogic(JobTableWidgetUI):
             if job.status == JobStatus.COMPLETED:
                 progress_bar.setValue(100)  # Ensure full progress for completed
                 progress_bar.setFormat("✓ Completado")
-                progress_bar.setStyleSheet(
-                    """
-                    QProgressBar {
-                        border: 1px solid #4CAF50;
-                        border-radius: 2px;
-                        background-color: #2E7D32;
-                        color: #FFFFFF;
-                        font-weight: bold;
-                        font-size: 11px;
-                    }
-                    QProgressBar::chunk {
-                        background-color: #4CAF50;
-                        border-radius: 1px;
-                    }
-                """
-                )
+                # progress_bar.setStyleSheet(
+                #     """
+                #     QProgressBar {
+                #         border: 1px solid #4CAF50;
+                #         border-radius: 2px;
+                #         background-color: #2E7D32;
+                #         color: #FFFFFF;
+                #         font-weight: bold;
+                #         font-size: 11px;
+                #     }
+                #     QProgressBar::chunk {
+                #         background-color: #4CAF50;
+                #         border-radius: 1px;
+                #     }
+                # """
+                # )
             elif job.status == JobStatus.FAILED:
                 progress_bar.setValue(100)  # Ensure full progress for failed
                 progress_bar.setFormat("✗ Fallido")
@@ -250,7 +250,7 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                         background-color: #42A5F5;
                         border-radius: 1px;
                     }
-                """
+                    """
                 )
             elif job.status == JobStatus.DOWNLOADED:
                 progress_bar.setValue(100)  # Ensure full progress for downloaded
@@ -287,7 +287,7 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                         background-color: #2196F3;
                         border-radius: 1px;
                     }
-                """
+                    """
                 )
             elif job.status == JobStatus.VERIFYING:
                 progress_bar.setFormat(f"🔍 Verificando {int(job.progress)}%")
@@ -354,6 +354,11 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                         color: #FFFFFF;
                         font-weight: bold;
                         font-size: 11px;
+                    }
+                    QProgressBar::chunk {
+                        background-color: #9E9E9E;
+                        border-radius: 1px;
+                    }
                     """
                 )
 
