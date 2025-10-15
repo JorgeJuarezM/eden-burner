@@ -290,14 +290,6 @@ class MainWindowLogic(MainWindowUI):
         event.ignore()
         self.hide()
 
-        # Show message to user
-        QMessageBox.information(
-            self,
-            "Aplicación minimizada",
-            "La aplicación continúa ejecutándose en segundo plano.\n"
-            "Use el ícono de la bandeja del sistema para restaurarla.",
-        )
-
     def show_settings(self):
         """Show settings dialog."""
         # TODO: Implement settings dialog

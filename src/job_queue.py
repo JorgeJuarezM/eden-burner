@@ -98,7 +98,6 @@ class JobQueue:
 
         # Components
         self.download_manager = ISODownloadManager(config)
-        self.jdf_generator = JDFGenerator(config)
 
         # Setup progress callbacks
         self.download_manager.add_progress_callback(self._on_download_progress)
@@ -258,9 +257,8 @@ class JobQueue:
         self._notify_job_update(job)
 
         try:
-            jdf_path = self.jdf_generator.create_burn_job_jdf(
-                job.id,
-            )
+            jdf_generator = JDFGenerator(self.config, job.id)
+            jdf_path = jdf_generator.create_burn_job_jdf()
 
             job.jdf_path = jdf_path
             job.update_status(JobStatus.JDF_READY)

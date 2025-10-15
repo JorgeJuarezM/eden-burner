@@ -358,18 +358,6 @@ class EpsonBurnerApp:
 
     def quit_application(self):
         """Quit the application completely."""
-        # Confirm quit
-        reply = QMessageBox.question(
-            None,  # Use None since main window might not exist yet
-            "Confirmar salida",
-            "¿Está seguro de que desea salir?\nEsto detendrá todos los trabajos en progreso.",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No,
-        )
-
-        if reply != QMessageBox.Yes:
-            return
-
         try:
             # Stop background worker
             self.background_worker.stop()
