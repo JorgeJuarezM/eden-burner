@@ -25,7 +25,6 @@ class JobTableWidgetUI(QTableWidget):
             "ID",
             "Paciente",
             "Estado",
-            "Progreso",
             "Creado",
         ]
 
@@ -47,21 +46,6 @@ class JobTableWidgetUI(QTableWidget):
                 background-color: #424242;
                 color: #FFFFFF;
             }
-            QTableWidget::item {
-                color: #FFFFFF;
-            }
-            QTableWidget::item:alternate {
-                background-color: #484848;
-            }
-            QTableWidget::item:selected {
-                background-color: #1976D2;
-                color: #FFFFFF;
-            }
-            QHeaderView::section {
-                background-color: #333333;
-                color: #FFFFFF;
-                border: 1px solid #555555;
-            }
         """
         )
 
@@ -69,13 +53,13 @@ class JobTableWidgetUI(QTableWidget):
         header = self.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)  # Patient
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)  # Progress
 
         # Set minimum column widths
         self.setColumnWidth(0, 50)  # ID
         self.setColumnWidth(1, 50)  # Patient
-        self.setColumnWidth(2, 50)  # Status
-        self.setColumnWidth(3, 50)  # Progress
-        self.setColumnWidth(4, 50)  # Created
+        self.setColumnWidth(2, 200)  # Progress
+        self.setColumnWidth(3, 50)  # Created
 
 
 class JobTableWidgetLogic(JobTableWidgetUI):
@@ -116,56 +100,112 @@ class JobTableWidgetLogic(JobTableWidgetUI):
             patient_item.setForeground(QColor(255, 255, 255))  # White text
             self.setItem(row, 1, patient_item)
 
-            # Status with color coding
-            status_item = QTableWidgetItem(job.status.value.title())
-            status_item.setToolTip(f"Estado: {job.status.value}")
-
-            # Color code by status with better contrast
-            if job.status.value == JobStatus.COMPLETED.value:
-                status_item.setBackground(QColor(76, 175, 80))  # Green 600
-                status_item.setForeground(QColor(255, 255, 255))  # White text
-            elif job.status.value == JobStatus.FAILED.value:
-                status_item.setBackground(QColor(244, 67, 54))  # Red 600
-                status_item.setForeground(QColor(255, 255, 255))  # White text
-            elif job.status.value in [JobStatus.BURNING.value, JobStatus.VERIFYING.value]:
-                status_item.setBackground(QColor(33, 150, 243))  # Blue 600
-                status_item.setForeground(QColor(255, 255, 255))  # White text
-            elif job.status.value == JobStatus.DOWNLOADING.value:
-                status_item.setBackground(QColor(255, 193, 7))  # Amber 600
-                status_item.setForeground(QColor(0, 0, 0))  # Black text for better contrast
-            elif job.status.value == JobStatus.DOWNLOADED.value:
-                status_item.setBackground(
-                    QColor(139, 195, 74)
-                )  # Light green (different from completed)
-                status_item.setForeground(QColor(0, 0, 0))  # Black text for better contrast
-            else:
-                # Default/PENDING status - light background, black text
-                status_item.setBackground(QColor(224, 224, 224))  # Light gray background
-                status_item.setForeground(QColor(0, 0, 0))  # Black text
-
-            self.setItem(row, 2, status_item)
-
-            # Progress bar
+            # Progress bar with custom text
             progress_bar = QProgressBar()
             progress_bar.setRange(0, 100)
             progress_bar.setValue(int(job.progress))
             progress_bar.setTextDirection(QProgressBar.Direction.TopToBottom)
             progress_bar.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-            # Custom styling for progress bar
+            # Set custom text based on status
             if job.status == JobStatus.COMPLETED:
-                progress_bar.setStyleSheet("QProgressBar::chunk { background-color: #57c24f; }")
+                progress_bar.setFormat("✓ Completado")
+                progress_bar.setStyleSheet(
+                    """
+                    QProgressBar {
+                        text-align: center;
+                        color: #2E7D32;
+                    }
+                    QProgressBar::chunk {
+                        background-color: #4CAF50;
+                    }
+                """
+                )
             elif job.status == JobStatus.FAILED:
-                progress_bar.setStyleSheet("QProgressBar::chunk { background-color: #FFB6C1; }")
-            else:
-                progress_bar.setStyleSheet("QProgressBar::chunk { background-color: #57c24f; }")
+                progress_bar.setFormat("✗ Fallido")
+                progress_bar.setStyleSheet(
+                    """
+                    QProgressBar {
+                        text-align: center;
+                        color: #DEDEDE;
+                    }
+                    QProgressBar::chunk {
+                        background-color: #FF4D6D;
+                    }
+                """
+                )
+            elif job.status == JobStatus.DOWNLOADING:
+                progress_bar.setFormat(f"📥 Descargando {int(job.progress)}%")
+                progress_bar.setStyleSheet(
+                    """
+                    QProgressBar {
+                        text-align: center;
+                        color: #DEDEDE;
+                    }
+                    QProgressBar::chunk {
+                        background-color: #1EC8E0;
+                    }
+                """
+                )
+            elif job.status == JobStatus.DOWNLOADED:
+                progress_bar.setFormat("📁 Descargado")
+                progress_bar.setStyleSheet(
+                    """
+                    QProgressBar {
+                        text-align: center;
+                        color: #558B2F;
+                    }
+                    QProgressBar::chunk {
+                        background-color: #8BC34A;
+                    }
+                """
+                )
+            elif job.status == JobStatus.BURNING:
+                progress_bar.setFormat(f"🔥 Quemando {int(job.progress)}%")
+                progress_bar.setStyleSheet(
+                    """
+                    QProgressBar {
+                        text-align: center;
+                        color: #1565C0;
+                    }
+                    QProgressBar::chunk {
+                        background-color: #2196F3;
+                    }
+                """
+                )
+            elif job.status == JobStatus.VERIFYING:
+                progress_bar.setFormat(f"🔍 Verificando {int(job.progress)}%")
+                progress_bar.setStyleSheet(
+                    """
+                    QProgressBar {
+                        text-align: center;
+                        color: #6A1B9A;
+                    }
+                    QProgressBar::chunk {
+                        background-color: #9C27B0;
+                    }
+                """
+                )
+            else:  # PENDING or other status
+                progress_bar.setFormat("⏳ Pendiente")
+                progress_bar.setStyleSheet(
+                    """
+                    QProgressBar {
+                        text-align: center;
+                        color: #424242;
+                    }
+                    QProgressBar::chunk {
+                        background-color: #9E9E9E;
+                    }
+                """
+                )
 
-            self.setCellWidget(row, 3, progress_bar)
+            self.setCellWidget(row, 2, progress_bar)
 
             # Created time
             created_item = QTableWidgetItem(job.created_at.strftime("%Y-%m-%d %H:%M"))
             created_item.setForeground(QColor(255, 255, 255))  # White text
-            self.setItem(row, 4, created_item)
+            self.setItem(row, 3, created_item)
 
     def get_selected_job_id(self) -> Optional[str]:
         """Get the ID of the currently selected job.
