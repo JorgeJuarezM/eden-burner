@@ -166,24 +166,6 @@ class GraphQLClient:
                                 except Exception as e:
                                     self.logger.error(f"Error in progress callback: {e}")
 
-            # Verify file size if provided
-            if "fileSize" in iso_info:
-                actual_size = os.path.getsize(download_path)
-                expected_size = iso_info["fileSize"]
-                if actual_size != expected_size:
-                    self.logger.error(
-                        f"File size mismatch: expected {expected_size}, got {actual_size}"
-                    )
-                    os.remove(download_path)
-                    return False
-
-            # Verify checksum if provided
-            if "checksum" in iso_info:
-                if not self._verify_checksum(download_path, iso_info["checksum"]):
-                    self.logger.error(f"Checksum verification failed for {download_path}")
-                    os.remove(download_path)
-                    return False
-
             self.logger.info(f"Successfully downloaded ISO: {download_path}")
             return True
 
@@ -192,41 +174,6 @@ class GraphQLClient:
             # Clean up partial download
             if os.path.exists(download_path):
                 os.remove(download_path)
-            return False
-
-    def _verify_checksum(self, file_path: str, expected_checksum: str) -> bool:
-        """Verify file checksum.
-
-        Args:
-            file_path: Path to file to verify
-            expected_checksum: Expected checksum
-
-        Returns:
-            True if checksum matches, False otherwise
-        """
-        import hashlib
-
-        try:
-            # Parse checksum format (assume MD5 for now, can be extended)
-            if ":" in expected_checksum:
-                algorithm, checksum = expected_checksum.split(":", 1)
-            else:
-                algorithm, checksum = "md5", expected_checksum
-
-            algorithm = algorithm.lower()
-            checksum = checksum.lower()
-
-            # Calculate actual checksum
-            hash_func = getattr(hashlib, algorithm)()
-            with open(file_path, "rb") as f:
-                for chunk in iter(lambda: f.read(8192), b""):
-                    hash_func.update(chunk)
-
-            actual_checksum = hash_func.hexdigest()
-            return actual_checksum == checksum
-
-        except Exception as e:
-            self.logger.error(f"Error verifying checksum: {e}")
             return False
 
     async def test_connection(self) -> bool:

@@ -42,7 +42,8 @@
                 "PYTHONPATH": "${workspaceFolder}",
                 "EPSON_DEBUG": "1",
                 "DISPLAY": "${env:DISPLAY}",
-                "QT_MAC_WANTS_LAYER": "1"
+                "QT_MAC_WANTS_LAYER": "1",
+                "QT_QPA_PLATFORM": "wayland"
             }
         },
         {

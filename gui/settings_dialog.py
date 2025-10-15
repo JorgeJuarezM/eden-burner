@@ -2,12 +2,23 @@
 Settings dialog for EPSON PP-100 Disc Burner Application
 """
 
-from PyQt5.QtCore import Qt, QDir
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QTabWidget, QWidget,
-    QLabel, QLineEdit, QSpinBox, QCheckBox, QPushButton,
-    QFileDialog, QMessageBox, QFormLayout, QGroupBox,
-    QComboBox, QScrollArea
+    QCheckBox,
+    QComboBox,
+    QDialog,
+    QFileDialog,
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLineEdit,
+    QMessageBox,
+    QPushButton,
+    QScrollArea,
+    QSpinBox,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
 )
 
 from config import Config
@@ -50,7 +61,8 @@ class SettingsDialog(QDialog):
 
         self.save_button = QPushButton("Guardar")
         self.save_button.clicked.connect(self.save_settings)
-        self.save_button.setStyleSheet("""
+        self.save_button.setStyleSheet(
+            """
             QPushButton {
                 background-color: #4CAF50;
                 color: white;
@@ -62,11 +74,13 @@ class SettingsDialog(QDialog):
             QPushButton:hover {
                 background-color: #45a049;
             }
-        """)
+        """
+        )
 
         self.cancel_button = QPushButton("Cancelar")
         self.cancel_button.clicked.connect(self.reject)
-        self.cancel_button.setStyleSheet("""
+        self.cancel_button.setStyleSheet(
+            """
             QPushButton {
                 background-color: #f44336;
                 color: white;
@@ -78,7 +92,8 @@ class SettingsDialog(QDialog):
             QPushButton:hover {
                 background-color: #da190b;
             }
-        """)
+        """
+        )
 
         buttons_layout.addStretch()
         buttons_layout.addWidget(self.save_button)
@@ -104,7 +119,9 @@ class SettingsDialog(QDialog):
 
         # API Timeout
         self.api_timeout_combo = QComboBox()
-        self.api_timeout_combo.addItems(["30 segundos", "60 segundos", "90 segundos", "120 segundos"])
+        self.api_timeout_combo.addItems(
+            ["30 segundos", "60 segundos", "90 segundos", "120 segundos"]
+        )
         layout.addRow("API Timeout:", self.api_timeout_combo)
 
         # Robot UUID
@@ -223,7 +240,9 @@ class SettingsDialog(QDialog):
         self.jdf_template_edit = QLineEdit()
         self.jdf_template_edit.setPlaceholderText("Seleccione archivo plantilla JDF")
         jdf_template_button = QPushButton("...")
-        jdf_template_button.clicked.connect(lambda: self.select_file(self.jdf_template_edit, "JDF Files (*.jdf)"))
+        jdf_template_button.clicked.connect(
+            lambda: self.select_file(self.jdf_template_edit, "JDF Files (*.jdf)")
+        )
         jdf_template_layout.addWidget(self.jdf_template_edit)
         jdf_template_layout.addWidget(jdf_template_button)
 
@@ -245,7 +264,9 @@ class SettingsDialog(QDialog):
         self.data_template_edit = QLineEdit()
         self.data_template_edit.setPlaceholderText("Seleccione archivo plantilla de datos")
         data_button = QPushButton("...")
-        data_button.clicked.connect(lambda: self.select_file(self.data_template_edit, "All Files (*)"))
+        data_button.clicked.connect(
+            lambda: self.select_file(self.data_template_edit, "All Files (*)")
+        )
         data_layout.addWidget(self.data_template_edit)
         data_layout.addWidget(data_button)
 
@@ -270,7 +291,9 @@ class SettingsDialog(QDialog):
 
         # Check interval
         self.check_interval_combo = QComboBox()
-        self.check_interval_combo.addItems(["10 segundos", "30 segundos", "1 minuto", "5 minutos", "10 minutos"])
+        self.check_interval_combo.addItems(
+            ["10 segundos", "30 segundos", "1 minuto", "5 minutos", "10 minutos"]
+        )
         layout.addRow("Intervalo de Verificación:", self.check_interval_combo)
 
         # Retry failed jobs
@@ -294,7 +317,9 @@ class SettingsDialog(QDialog):
 
         # Refresh interval
         self.refresh_interval_combo = QComboBox()
-        self.refresh_interval_combo.addItems(["1 segundo", "2 segundos", "5 segundos", "10 segundos"])
+        self.refresh_interval_combo.addItems(
+            ["1 segundo", "2 segundos", "5 segundos", "10 segundos"]
+        )
         gui_layout.addRow("Intervalo de Actualización GUI:", self.refresh_interval_combo)
 
         # Show notifications
@@ -318,7 +343,9 @@ class SettingsDialog(QDialog):
         self.log_file_edit = QLineEdit()
         self.log_file_edit.setPlaceholderText("Seleccione archivo de log")
         log_file_button = QPushButton("...")
-        log_file_button.clicked.connect(lambda: self.select_file(self.log_file_edit, "Log Files (*.log);;All Files (*)"))
+        log_file_button.clicked.connect(
+            lambda: self.select_file(self.log_file_edit, "Log Files (*.log);;All Files (*)")
+        )
         log_file_layout.addWidget(self.log_file_edit)
         log_file_layout.addWidget(log_file_button)
 
@@ -347,7 +374,9 @@ class SettingsDialog(QDialog):
         self.database_file_edit = QLineEdit()
         self.database_file_edit.setPlaceholderText("Seleccione archivo de base de datos")
         db_button = QPushButton("...")
-        db_button.clicked.connect(lambda: self.select_file(self.database_file_edit, "SQLite Files (*.db);;All Files (*)"))
+        db_button.clicked.connect(
+            lambda: self.select_file(self.database_file_edit, "SQLite Files (*.db);;All Files (*)")
+        )
         db_layout.addWidget(self.database_file_edit)
         db_layout.addWidget(db_button)
 
@@ -421,7 +450,9 @@ class SettingsDialog(QDialog):
         self.show_notifications_check.setChecked(self.config.show_notifications)
         self.log_level_combo.setCurrentText(self.config.config_data["logging"]["level"])
         self.log_file_edit.setText(self.config.config_data["logging"]["file"])
-        self.log_max_size_spin.setValue(self.config.config_data["logging"]["max_size"] // (1024 * 1024))
+        self.log_max_size_spin.setValue(
+            self.config.config_data["logging"]["max_size"] // (1024 * 1024)
+        )
 
         # Database tab
         self.database_file_edit.setText(str(self.config.database_file))
@@ -437,7 +468,9 @@ class SettingsDialog(QDialog):
     def select_file(self, edit_widget, file_filter):
         """Open file selection dialog."""
         current_path = edit_widget.text() or str(Path.home())
-        file_path, _ = QFileDialog.getOpenFileName(self, "Seleccionar Archivo", current_path, file_filter)
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Seleccionar Archivo", current_path, file_filter
+        )
         if file_path:
             edit_widget.setText(file_path)
 
@@ -451,9 +484,11 @@ class SettingsDialog(QDialog):
             # Convert combobox index to seconds
             timeout_options = [30, 60, 90, 120]
             selected_index = self.api_timeout_combo.currentIndex()
-            self.config.api_timeout = timeout_options[selected_index] if selected_index >= 0 else 30
+            self.config.config_data["api"]["timeout"] = (
+                timeout_options[selected_index] if selected_index >= 0 else 30
+            )
 
-            self.config.robot_uuid = self.robot_uuid_edit.text().strip()
+            self.config.config_data["robot"]["robot_uuid"] = self.robot_uuid_edit.text().strip()
 
             # Folders tab
             self.config.config_data["folders"]["downloads"] = self.downloads_edit.text().strip()
@@ -465,7 +500,9 @@ class SettingsDialog(QDialog):
             # Robot tab
             self.config.config_data["robot"]["jdf_template"] = self.jdf_template_edit.text().strip()
             self.config.config_data["robot"]["label_file"] = self.label_edit.text().strip()
-            self.config.config_data["robot"]["data_template"] = self.data_template_edit.text().strip()
+            self.config.config_data["robot"][
+                "data_template"
+            ] = self.data_template_edit.text().strip()
 
             # Jobs tab
             self.config.config_data["jobs"]["max_concurrent"] = self.max_concurrent_spin.value()
@@ -473,7 +510,9 @@ class SettingsDialog(QDialog):
             # Convert combobox index to seconds for check interval
             check_interval_options = [10, 30, 60, 300, 600]  # seconds
             check_selected_index = self.check_interval_combo.currentIndex()
-            self.config.config_data["jobs"]["check_interval"] = check_interval_options[check_selected_index] if check_selected_index >= 0 else 10
+            self.config.config_data["jobs"]["check_interval"] = (
+                check_interval_options[check_selected_index] if check_selected_index >= 0 else 10
+            )
 
             self.config.config_data["jobs"]["retry_failed"] = self.retry_failed_check.isChecked()
             self.config.config_data["jobs"]["max_retries"] = self.max_retries_spin.value()
@@ -482,12 +521,20 @@ class SettingsDialog(QDialog):
             # Convert combobox index to milliseconds for refresh interval
             refresh_interval_options = [1000, 2000, 5000, 10000]  # milliseconds
             refresh_selected_index = self.refresh_interval_combo.currentIndex()
-            self.config.config_data["gui"]["refresh_interval"] = refresh_interval_options[refresh_selected_index] if refresh_selected_index >= 0 else 1000
+            self.config.config_data["gui"]["refresh_interval"] = (
+                refresh_interval_options[refresh_selected_index]
+                if refresh_selected_index >= 0
+                else 1000
+            )
 
-            self.config.config_data["gui"]["show_notifications"] = self.show_notifications_check.isChecked()
+            self.config.config_data["gui"][
+                "show_notifications"
+            ] = self.show_notifications_check.isChecked()
             self.config.config_data["logging"]["level"] = self.log_level_combo.currentText()
             self.config.config_data["logging"]["file"] = self.log_file_edit.text().strip()
-            self.config.config_data["logging"]["max_size"] = self.log_max_size_spin.value() * 1024 * 1024
+            self.config.config_data["logging"]["max_size"] = (
+                self.log_max_size_spin.value() * 1024 * 1024
+            )
 
             # Database tab
             self.config.config_data["database"]["file"] = self.database_file_edit.text().strip()
@@ -496,14 +543,14 @@ class SettingsDialog(QDialog):
             # Save configuration
             self.config.save_config()
 
-            QMessageBox.information(self, "Configuración Guardada",
-                                  "La configuración se ha guardado exitosamente.")
+            QMessageBox.information(
+                self, "Configuración Guardada", "La configuración se ha guardado exitosamente."
+            )
 
             self.accept()
 
         except Exception as e:
-            QMessageBox.critical(self, "Error",
-                               f"Error al guardar la configuración:\n{str(e)}")
+            QMessageBox.critical(self, "Error", f"Error al guardar la configuración:\n{str(e)}")
 
     def get_modified_settings_summary(self):
         """Get summary of modified settings."""
@@ -527,7 +574,9 @@ class SettingsDialog(QDialog):
         # Check check interval (convert combobox index to seconds)
         check_interval_options = [10, 30, 60, 300, 600]
         check_selected_index = self.check_interval_combo.currentIndex()
-        current_check_value = check_interval_options[check_selected_index] if check_selected_index >= 0 else 10
+        current_check_value = (
+            check_interval_options[check_selected_index] if check_selected_index >= 0 else 10
+        )
 
         if current_check_value != self.config.check_interval:
             summary.append(f"Intervalo de Verificación: {current_check_value}s")
@@ -535,7 +584,11 @@ class SettingsDialog(QDialog):
         # Check refresh interval (convert combobox index to milliseconds)
         refresh_interval_options = [1000, 2000, 5000, 10000]
         refresh_selected_index = self.refresh_interval_combo.currentIndex()
-        current_refresh_value = refresh_interval_options[refresh_selected_index] if refresh_selected_index >= 0 else 1000
+        current_refresh_value = (
+            refresh_interval_options[refresh_selected_index]
+            if refresh_selected_index >= 0
+            else 1000
+        )
 
         if current_refresh_value != self.config.gui_refresh_interval:
             summary.append(f"Intervalo de Actualización GUI: {current_refresh_value}ms")

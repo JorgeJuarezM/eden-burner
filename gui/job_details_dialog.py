@@ -191,6 +191,9 @@ class JobDetailsDialogLogic(JobDetailsDialogUI):
         # Initialize the UI base class first
         super().__init__(job, parent)
 
+        # Store reference to parent for job queue access
+        self.parent_window = parent
+
         # Then add business logic and initial data
         self.update_job_details()
 
@@ -198,6 +201,39 @@ class JobDetailsDialogLogic(JobDetailsDialogUI):
         if parent:
             # Connect to job update signal from parent
             parent.job_updated.connect(self.on_job_updated_from_parent)
+
+        # Connect retry button
+        self.retry_button.clicked.connect(self.on_retry_clicked)
+
+    def on_retry_clicked(self):
+        """Handle retry button click."""
+        if not self.parent_window:
+            return
+
+        # Get job queue from parent window
+        job_queue = getattr(self.parent_window, "job_queue", None)
+        if not job_queue:
+            return
+
+        # Retry the job
+        success = job_queue.retry_job(self.job.id)
+
+        if success:
+            # Update dialog with new job state
+            self.update_job_details()
+            # Close dialog since job is now pending again
+            self.accept()
+        else:
+            # Get max retries from config for error message
+            max_retries = 2  # default
+            if hasattr(self.parent_window, "config"):
+                max_retries = self.parent_window.config.max_retries
+
+            QMessageBox.warning(
+                self,
+                "Reintento Fallido",
+                f"No se pudo reintentar el trabajo. Ya ha excedido el número máximo de reintentos ({max_retries}).",
+            )
 
     def on_job_updated_from_parent(self, job: BurnJob):
         """Handle job updates from parent window."""
@@ -244,7 +280,15 @@ class JobDetailsDialogLogic(JobDetailsDialogUI):
             self.progress_bar.setStyleSheet("QProgressBar::chunk { background-color: #ADD8E6; }")
 
         # Update button states
-        self.retry_button.setEnabled(self.job.status == JobStatus.FAILED)
+        # Get max retries from parent window's config if available
+        max_retries = 2  # default
+        if self.parent_window and hasattr(self.parent_window, "config"):
+            max_retries = self.parent_window.config.max_retries
+
+        self.retry_button.setEnabled(
+            self.job.status in [JobStatus.FAILED, JobStatus.COMPLETED]
+            and self.job.retry_count < max_retries
+        )
         self.cancel_button.setEnabled(
             self.job.status not in [JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED]
         )

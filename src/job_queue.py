@@ -115,7 +115,10 @@ class BurnJob:
 
     def can_retry(self, max_retries: int) -> bool:
         """Check if job can be retried."""
-        return self.retry_count < max_retries and self.status == JobStatus.FAILED
+        return self.retry_count < max_retries and self.status in [
+            JobStatus.FAILED,
+            JobStatus.COMPLETED,
+        ]
 
     def increment_retry(self):
         """Increment retry count."""
@@ -446,7 +449,7 @@ class JobQueue:
             return True
 
     def retry_job(self, job_id: str) -> bool:
-        """Retry a failed job.
+        """Retry a failed or completed job.
 
         Args:
             job_id: Job ID to retry
@@ -463,10 +466,18 @@ class JobQueue:
             if not job.can_retry(self.config.max_retries):
                 return False
 
+            # Clean up existing files to start fresh
+            self._cleanup_job_files(job)
+
             job.increment_retry()
             job.update_status(JobStatus.PENDING)
             job.error_message = None
             job.progress = 0.0
+            job.notification_sent = False
+
+            # Clear file paths so they get regenerated
+            job.iso_path = None
+            job.jdf_path = None
 
             # Re-add to queue (at the end for retry)
             self.job_queue.append(job_id)
@@ -474,6 +485,22 @@ class JobQueue:
             self.logger.info(f"Retrying job {job_id} (attempt {job.retry_count})")
             self._notify_job_update(job)
             return True
+
+    def _cleanup_job_files(self, job: BurnJob):
+        """Clean up job files before retry."""
+        try:
+            # Remove ISO file if it exists
+            if job.iso_path and Path(job.iso_path).exists():
+                Path(job.iso_path).unlink()
+                self.logger.debug(f"Removed ISO file: {job.iso_path}")
+
+            # Remove JDF file if it exists
+            if job.jdf_path and Path(job.jdf_path).exists():
+                Path(job.jdf_path).unlink()
+                self.logger.debug(f"Removed JDF file: {job.jdf_path}")
+
+        except Exception as e:
+            self.logger.warning(f"Error cleaning up files for job {job.id}: {e}")
 
     def get_job(self, job_id: str) -> Optional[BurnJob]:
         """Get a specific job by ID."""
