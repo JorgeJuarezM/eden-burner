@@ -13,9 +13,9 @@ from typing import Any, Dict, Optional
 import schedule
 
 from config import Config
-from src.graphql_client import SyncGraphQLClient
-from src.job_queue import JobQueue, JobStatus
-from src.local_storage import LocalStorage
+from app.graphql_client import SyncGraphQLClient
+from app.job_queue import JobQueue, JobStatus
+from app.local_storage import LocalStorage
 
 
 class BackgroundWorker:

@@ -21,7 +21,7 @@ from config import Config
 from gui.job_details_dialog import JobDetailsDialog
 from gui.job_table_widget import JobTableWidget
 from gui.settings_dialog import SettingsDialog
-from src.job_queue import BurnJob, JobQueue, JobStatus
+from app.job_queue import BurnJob, JobQueue, JobStatus
 
 
 class MainWindowUI(QMainWindow):

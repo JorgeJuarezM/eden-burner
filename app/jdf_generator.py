@@ -19,7 +19,7 @@ class JDFGenerator:
         Args:
             config: Application configuration
         """
-        from src.local_storage import LocalStorage
+        from app.local_storage import LocalStorage
 
         self.config = config
         self.logger = logging.getLogger(__name__)
