@@ -36,15 +36,74 @@ class JobTableWidgetUI(QTableWidget):
         self.setSelectionBehavior(QTableWidget.SelectRows)
         self.setEditTriggers(QTableWidget.NoEditTriggers)
 
-        # Set better colors for alternating rows and selection with white text
+        # Enhanced dark theme styles for table
         self.setStyleSheet(
             """
             QTableWidget {
                 gridline-color: #555555;
                 selection-background-color: #1976D2;
                 selection-color: #FFFFFF;
-                background-color: #424242;
-                color: #FFFFFF;
+                background-color: #2b2b2b;
+                color: #ffffff;
+                border: 1px solid #555555;
+                border-radius: 5px;
+            }
+            QTableWidget::item {
+                padding: 8px;
+                border-bottom: 1px solid #3c3c3c;
+            }
+            QTableWidget::item:selected {
+                background-color: #1976D2;
+                color: #ffffff;
+            }
+            QTableWidget::item:alternate {
+                background-color: #333333;
+            }
+            QHeaderView::section {
+                background-color: #3c3c3c;
+                color: #ffffff;
+                padding: 8px;
+                border: 1px solid #555555;
+                font-weight: bold;
+            }
+            QHeaderView::section:hover {
+                background-color: #4a4a4a;
+            }
+            QScrollBar:vertical {
+                background-color: #3c3c3c;
+                width: 12px;
+                border-radius: 6px;
+            }
+            QScrollBar::handle:vertical {
+                background-color: #555555;
+                border-radius: 6px;
+                min-height: 20px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background-color: #666666;
+            }
+            QScrollBar::add-line:vertical,
+            QScrollBar::sub-line:vertical {
+                border: none;
+                background: none;
+            }
+            QScrollBar:horizontal {
+                background-color: #3c3c3c;
+                height: 12px;
+                border-radius: 6px;
+            }
+            QScrollBar::handle:horizontal {
+                background-color: #555555;
+                border-radius: 6px;
+                min-width: 20px;
+            }
+            QScrollBar::handle:horizontal:hover {
+                background-color: #666666;
+            }
+            QScrollBar::add-line:horizontal,
+            QScrollBar::sub-line:horizontal {
+                border: none;
+                background: none;
             }
         """
         )
@@ -107,30 +166,44 @@ class JobTableWidgetLogic(JobTableWidgetUI):
             progress_bar.setTextDirection(QProgressBar.Direction.TopToBottom)
             progress_bar.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-            # Set custom text based on status
+            # Set custom text based on status with enhanced dark theme colors
             if job.status == JobStatus.COMPLETED:
+                progress_bar.setValue(100)  # Ensure full progress for completed
                 progress_bar.setFormat("✓ Completado")
                 progress_bar.setStyleSheet(
                     """
                     QProgressBar {
                         text-align: center;
-                        color: #2E7D32;
+                        color: #FFFFFF;
+                        font-weight: bold;
+                        border: 2px solid #4CAF50;
+                        border-radius: 8px;
+                        background-color: #1B5E20;
+                        font-size: 12px;
                     }
                     QProgressBar::chunk {
                         background-color: #4CAF50;
+                        border-radius: 6px;
                     }
                 """
                 )
             elif job.status == JobStatus.FAILED:
+                progress_bar.setValue(100)  # Ensure full progress for failed
                 progress_bar.setFormat("✗ Fallido")
                 progress_bar.setStyleSheet(
                     """
                     QProgressBar {
                         text-align: center;
-                        color: #DEDEDE;
+                        color: #FFFFFF;
+                        font-weight: bold;
+                        border: 2px solid #F44336;
+                        border-radius: 8px;
+                        background-color: #B71C1C;
+                        font-size: 12px;
                     }
                     QProgressBar::chunk {
-                        background-color: #FF4D6D;
+                        background-color: #F44336;
+                        border-radius: 6px;
                     }
                 """
                 )
@@ -140,23 +213,36 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                     """
                     QProgressBar {
                         text-align: center;
-                        color: #DEDEDE;
+                        color: #FFFFFF;
+                        font-weight: bold;
+                        border: 2px solid #FF9800;
+                        border-radius: 8px;
+                        background-color: #E65100;
+                        font-size: 12px;
                     }
                     QProgressBar::chunk {
-                        background-color: #1EC8E0;
+                        background-color: #FF9800;
+                        border-radius: 6px;
                     }
                 """
                 )
             elif job.status == JobStatus.DOWNLOADED:
+                progress_bar.setValue(100)  # Ensure full progress for downloaded
                 progress_bar.setFormat("📁 Descargado")
                 progress_bar.setStyleSheet(
                     """
                     QProgressBar {
                         text-align: center;
-                        color: #558B2F;
+                        color: #FFFFFF;
+                        font-weight: bold;
+                        border: 2px solid #8BC34A;
+                        border-radius: 8px;
+                        background-color: #33691E;
+                        font-size: 12px;
                     }
                     QProgressBar::chunk {
                         background-color: #8BC34A;
+                        border-radius: 6px;
                     }
                 """
                 )
@@ -166,10 +252,16 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                     """
                     QProgressBar {
                         text-align: center;
-                        color: #1565C0;
+                        color: #FFFFFF;
+                        font-weight: bold;
+                        border: 2px solid #2196F3;
+                        border-radius: 8px;
+                        background-color: #0D47A1;
+                        font-size: 12px;
                     }
                     QProgressBar::chunk {
                         background-color: #2196F3;
+                        border-radius: 6px;
                     }
                 """
                 )
@@ -179,23 +271,36 @@ class JobTableWidgetLogic(JobTableWidgetUI):
                     """
                     QProgressBar {
                         text-align: center;
-                        color: #6A1B9A;
+                        color: #FFFFFF;
+                        font-weight: bold;
+                        border: 2px solid #9C27B0;
+                        border-radius: 8px;
+                        background-color: #4A148C;
+                        font-size: 12px;
                     }
                     QProgressBar::chunk {
                         background-color: #9C27B0;
+                        border-radius: 6px;
                     }
                 """
                 )
             else:  # PENDING or other status
+                progress_bar.setValue(0)  # No progress for pending
                 progress_bar.setFormat("⏳ Pendiente")
                 progress_bar.setStyleSheet(
                     """
                     QProgressBar {
                         text-align: center;
-                        color: #424242;
+                        color: #FFFFFF;
+                        font-weight: bold;
+                        border: 2px solid #9E9E9E;
+                        border-radius: 8px;
+                        background-color: #424242;
+                        font-size: 12px;
                     }
                     QProgressBar::chunk {
                         background-color: #9E9E9E;
+                        border-radius: 6px;
                     }
                 """
                 )

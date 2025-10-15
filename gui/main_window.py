@@ -39,6 +39,103 @@ class MainWindowUI(QMainWindow):
         self.setWindowTitle("EPSON PP-100 Disc Burner")
         self.setFixedSize(1024, 768)
 
+        # Apply dark theme styles
+        self.setStyleSheet("""
+            QMainWindow {
+                background-color: #2b2b2b;
+                color: #ffffff;
+            }
+            QWidget {
+                background-color: #2b2b2b;
+                color: #ffffff;
+            }
+            QMenuBar {
+                background-color: #3c3c3c;
+                color: #ffffff;
+                border-bottom: 1px solid #555555;
+            }
+            QMenuBar::item {
+                background-color: transparent;
+                padding: 4px 8px;
+            }
+            QMenuBar::item:selected {
+                background-color: #4a4a4a;
+            }
+            QMenu {
+                background-color: #3c3c3c;
+                color: #ffffff;
+                border: 1px solid #555555;
+            }
+            QMenu::item {
+                padding: 4px 20px;
+            }
+            QMenu::item:selected {
+                background-color: #4a4a4a;
+            }
+            QStatusBar {
+                background-color: #3c3c3c;
+                color: #ffffff;
+                border-top: 1px solid #555555;
+            }
+            QComboBox {
+                background-color: #3c3c3c;
+                color: #ffffff;
+                border: 1px solid #555555;
+                border-radius: 4px;
+                padding: 4px 8px;
+            }
+            QComboBox::drop-down {
+                border: none;
+                background-color: #4a4a4a;
+            }
+            QComboBox::down-arrow {
+                image: none;
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-top: 5px solid #ffffff;
+                margin-right: 5px;
+            }
+            QComboBox QAbstractItemView {
+                background-color: #3c3c3c;
+                color: #ffffff;
+                border: 1px solid #555555;
+                selection-background-color: #4a4a4a;
+            }
+            QPushButton {
+                background-color: #4a4a4a;
+                color: #ffffff;
+                border: 1px solid #555555;
+                border-radius: 4px;
+                padding: 6px 12px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #5a5a5a;
+            }
+            QPushButton:pressed {
+                background-color: #3a3a3a;
+            }
+            QPushButton:disabled {
+                background-color: #2a2a2a;
+                color: #666666;
+                border-color: #333333;
+            }
+            QGroupBox {
+                color: #ffffff;
+                border: 2px solid #555555;
+                border-radius: 5px;
+                margin-top: 1ex;
+                font-weight: bold;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 10px 0 10px;
+                color: #ffffff;
+                background-color: #2b2b2b;
+            }
+        """)
+
         # Create central widget
         central_widget = QWidget()
         self.setCentralWidget(central_widget)

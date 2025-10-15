@@ -38,23 +38,80 @@ class JobDetailsDialogUI(QDialog):
         self.setStyleSheet(
             """
             QDialog {
-                background-color: #2d2d2d;
+                background-color: #2b2b2b;
+                color: #ffffff;
             }
             QLabel {
                 color: #ffffff;
+                font-size: 12px;
+            }
+            QLineEdit {
+                background-color: #3c3c3c;
+                color: #ffffff;
+                border: 1px solid #555555;
+                border-radius: 4px;
+                padding: 6px;
+                font-size: 12px;
+            }
+            QLineEdit:read-only {
+                background-color: #333333;
+                color: #cccccc;
             }
             QGroupBox {
                 color: #ffffff;
                 border: 2px solid #555555;
-                border-radius: 5px;
+                border-radius: 8px;
                 margin-top: 1ex;
+                font-weight: bold;
+                font-size: 13px;
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
                 left: 10px;
                 padding: 0 10px 0 10px;
                 color: #ffffff;
-                background-color: #2d2d2d;
+                background-color: #2b2b2b;
+            }
+            QProgressBar {
+                border: 2px solid #555555;
+                border-radius: 8px;
+                background-color: #3c3c3c;
+                text-align: center;
+                color: #ffffff;
+                font-weight: bold;
+                font-size: 12px;
+            }
+            QProgressBar::chunk {
+                background-color: #4CAF50;
+                border-radius: 6px;
+            }
+            QPushButton {
+                background-color: #4a4a4a;
+                color: #ffffff;
+                border: 1px solid #555555;
+                border-radius: 6px;
+                padding: 8px 16px;
+                font-weight: bold;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #5a5a5a;
+            }
+            QPushButton:pressed {
+                background-color: #3a3a3a;
+            }
+            QPushButton:disabled {
+                background-color: #2a2a2a;
+                color: #666666;
+                border-color: #333333;
+            }
+            QTextEdit {
+                background-color: #3c3c3c;
+                color: #ffffff;
+                border: 1px solid #555555;
+                border-radius: 4px;
+                padding: 6px;
+                font-size: 12px;
             }
         """
         )
