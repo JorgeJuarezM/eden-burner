@@ -3,11 +3,10 @@ PyQt GUI for EPSON PP-100 Disc Burner Application - Main Window
 """
 
 from PyQt5.QtCore import QTimer, pyqtSignal
-from PyQt5.QtGui import QFont, QPixmap
+from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import (
     QAction,
     QButtonGroup,
-    QComboBox,
     QHBoxLayout,
     QLabel,
     QMainWindow,
@@ -41,7 +40,8 @@ class MainWindowUI(QMainWindow):
         self.setFixedSize(1024, 768)
 
         # Apply Eden-themed dark styles (black and white theme)
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             QMainWindow {
                 background-color: #000000;
                 color: #ffffff;
@@ -135,7 +135,8 @@ class MainWindowUI(QMainWindow):
                 color: #ffffff;
                 background-color: #000000;
             }
-        """)
+        """
+        )
 
         # Create central widget
         central_widget = QWidget()
@@ -162,7 +163,7 @@ class MainWindowUI(QMainWindow):
         layout = QVBoxLayout(central_widget)
         layout.setContentsMargins(8, 8, 8, 8)  # Smaller margins
         layout.setSpacing(8)  # Reduced spacing
-        
+
         # Add header with logo and title
         header_panel = self.create_header_panel()
         layout.addWidget(header_panel)
@@ -179,51 +180,55 @@ class MainWindowUI(QMainWindow):
         layout = QHBoxLayout(panel)
         layout.setContentsMargins(0, 0, 0, 0)  # No margins in header
         layout.setSpacing(12)  # Small spacing between elements
-        
+
         # Logo on the left (small and compact)
         logo_label = QLabel()
         logo_pixmap = QPixmap("assets/logo.png")
-        
+
         # Crop the logo minimally to preserve most of the image
         original_size = logo_pixmap.size()
         crop_margin = int(original_size.width() * 0.08)  # 8% margin on each side
-        
+
         cropped_pixmap = logo_pixmap.copy(
-            crop_margin, 
-            crop_margin, 
-            original_size.width() - 2 * crop_margin, 
-            original_size.height() - 2 * crop_margin
+            crop_margin,
+            crop_margin,
+            original_size.width() - 2 * crop_margin,
+            original_size.height() - 2 * crop_margin,
         )
-        
+
         # Scale down to a compact size
         scaled_pixmap = cropped_pixmap.scaled(48, 48, aspectRatioMode=1, transformMode=1)
         logo_label.setPixmap(scaled_pixmap)
-        
+
         # Add subtle styling to logo container
-        logo_label.setStyleSheet("""
+        logo_label.setStyleSheet(
+            """
             QLabel {
                 background-color: transparent;
                 padding: 4px;
                 border-radius: 4px;
             }
-        """)
-        
+        """
+        )
+
         layout.addWidget(logo_label)
-        
+
         # Title to the right of the logo
         title_label = QLabel("EPSON PP-100 Disc Burner")
-        title_label.setStyleSheet("""
+        title_label.setStyleSheet(
+            """
             QLabel {
                 color: #ffffff;
                 font-size: 18px;
                 font-weight: bold;
                 padding: 8px 0px;
             }
-        """)
-        
+        """
+        )
+
         layout.addWidget(title_label)
         layout.addStretch()  # Push everything to the left
-        
+
         return panel
 
     def create_job_list_panel(self):
@@ -240,22 +245,24 @@ class MainWindowUI(QMainWindow):
 
         # Compact panel title
         title_label = QLabel("Trabajos de Quemado")
-        title_label.setStyleSheet("""
+        title_label.setStyleSheet(
+            """
             QLabel {
                 color: #ffffff;
                 font-size: 14px;
                 font-weight: bold;
                 padding: 4px 0px;
             }
-        """)
+        """
+        )
         title_row_layout.addWidget(title_label)
-        
+
         # Spacer to push filter buttons to the right
         title_row_layout.addStretch()
-        
+
         # Filter buttons with toggle effect
         self.create_filter_buttons(title_row_layout)
-        
+
         layout.addLayout(title_row_layout)
 
         # Job table - no height limit to use full available space
@@ -285,7 +292,7 @@ class MainWindowUI(QMainWindow):
         # Create button group for exclusive selection
         self.filter_button_group = QButtonGroup()
         self.filter_button_group.setExclusive(True)
-        
+
         # Filter options
         filter_options = [
             ("Todos", "all", "🔍"),
@@ -293,16 +300,17 @@ class MainWindowUI(QMainWindow):
             ("Descargando", "downloading", "📥"),
             ("Quemando", "burning", "🔥"),
             ("Completados", "completed", "✅"),
-            ("Fallidos", "failed", "❌")
+            ("Fallidos", "failed", "❌"),
         ]
-        
+
         for text, value, icon in filter_options:
             button = QPushButton(f"{icon} {text}")
             button.setCheckable(True)
             button.setProperty("filter_value", value)
-            
+
             # Default styling
-            button.setStyleSheet("""
+            button.setStyleSheet(
+                """
                 QPushButton {
                     background-color: #333333;
                     color: #ffffff;
@@ -325,15 +333,16 @@ class MainWindowUI(QMainWindow):
                 QPushButton:checked:hover {
                     background-color: #1565C0;
                 }
-            """)
-            
+            """
+            )
+
             # Connect signal
             button.clicked.connect(lambda checked, v=value: self.on_filter_changed(v))
-            
+
             # Add to button group
             self.filter_button_group.addButton(button)
             layout.addWidget(button)
-            
+
             # Set "Todos" as default selected
             if value == "all":
                 button.setChecked(True)
@@ -464,7 +473,7 @@ class MainWindowLogic(MainWindowUI):
 
     def refresh_job_display(self):
         """Refresh the job table display."""
-        filter_status = getattr(self, 'current_filter', 'all')
+        filter_status = getattr(self, "current_filter", "all")
 
         if filter_status == "all":
             jobs = self.job_queue.get_all_jobs()

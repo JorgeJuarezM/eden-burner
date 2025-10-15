@@ -58,6 +58,9 @@ class BurnJob:
     robot_job_id: Optional[str] = None
     estimated_completion: Optional[datetime] = None
 
+    # Notification tracking
+    notification_sent: bool = False
+
     def update_status(
         self,
         status: JobStatus,
@@ -65,9 +68,13 @@ class BurnJob:
         job_queue: Optional["JobQueue"] = None,
     ):
         """Update job status and timestamp."""
+        if self.status == status:
+            return
+
         self.status = status
         self.updated_at = datetime.now()
         self.error_message = error_message
+        self.notification_sent = False  # Reset notification sent flag when status changes
 
         if job_queue and self.status in [
             JobStatus.COMPLETED,

@@ -187,9 +187,9 @@ class EpsonBurnerApp:
         if job.status.value in ["completed", "failed"]:
             self.show_job_notification(job)
 
-    def show_job_notification(self, job):
+    def show_job_notification(self, job: BurnJob):
         """Show system notification for job status change."""
-        if not self.config.show_notifications:
+        if not self.config.show_notifications or job.notification_sent:
             return
 
         title = "Trabajo de quemado"
@@ -198,9 +198,11 @@ class EpsonBurnerApp:
         if job.status.value == "completed":
             message += "completado exitosamente"
             self.tray_icon.showMessage(title, message, QSystemTrayIcon.Information, 5000)
+            job.notification_sent = True
         elif job.status.value == "failed":
             message += f"falló: {job.error_message or 'Error desconocido'}"
             self.tray_icon.showMessage(title, message, QSystemTrayIcon.Critical, 10000)
+            job.notification_sent = True
 
     def load_existing_jobs(self):
         """Load existing jobs from storage."""
