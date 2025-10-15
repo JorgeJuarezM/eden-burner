@@ -268,6 +268,7 @@ class EpsonBurnerApp:
                 if job.status not in [
                     JobStatus.COMPLETED,
                     JobStatus.FAILED,
+                    JobStatus.CANCELLED,
                 ]:
                     self.job_queue.job_queue.append(job.id)
 

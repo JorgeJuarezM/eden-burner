@@ -269,6 +269,11 @@ class JobQueue:
     def start_job_processing(self, job: BurnJob):
         """Start processing a job."""
         try:
+            # Check if job was cancelled before starting any processing
+            if job.status == JobStatus.CANCELLED:
+                self.logger.info(f"Skipping cancelled job {job.id}")
+                return
+
             if job.status == JobStatus.PENDING:
                 self._start_download(job)
             elif job.status == JobStatus.DOWNLOADED:
@@ -285,6 +290,11 @@ class JobQueue:
 
     def _start_download(self, job: BurnJob):
         """Start downloading ISO file."""
+        # Check if job was cancelled before starting download
+        if job.status == JobStatus.CANCELLED:
+            self.logger.info(f"Skipping download for cancelled job {job.id}")
+            return
+
         job.update_status(JobStatus.DOWNLOADING)
         self._notify_job_update(job)
 
@@ -301,13 +311,17 @@ class JobQueue:
                 job.iso_path = iso_path
 
                 # Detect disc type based on file size
-                job.disc_type = job.detect_disc_type(iso_path, self)
+                job.disc_type = job.detect_disc_type(iso_path)
 
-                job.update_status(JobStatus.DOWNLOADED)
-                self.logger.info(f"Downloaded ISO for job {job.id}")
+                # Check if job was cancelled before updating status
+                if job.status != JobStatus.CANCELLED:
+                    job.update_status(JobStatus.DOWNLOADED)
+                    self.logger.info(f"Downloaded ISO for job {job.id}")
             else:
-                job.update_status(JobStatus.FAILED, "Download failed", job_queue=self)
-                self.logger.error(f"Failed to download ISO for job {job.id}")
+                # Check if job was cancelled before marking as failed
+                if job.status != JobStatus.CANCELLED:
+                    job.update_status(JobStatus.FAILED, "Download failed", job_queue=self)
+                    self.logger.error(f"Failed to download ISO for job {job.id}")
 
         except Exception as e:
             job.update_status(JobStatus.FAILED, str(e), job_queue=self)
@@ -330,38 +344,62 @@ class JobQueue:
 
     def _start_jdf_generation(self, job: BurnJob):
         """Start JDF file generation."""
-        if not job.iso_path:
-            job.update_status(JobStatus.FAILED, "No ISO file path", job_queue=self)
-            self._notify_job_update(job)
+        # Check if job was cancelled before starting JDF generation
+        if job.status == JobStatus.CANCELLED:
+            self.logger.info(f"Skipping JDF generation for cancelled job {job.id}")
             return
 
-        job.update_status(JobStatus.GENERATING_JDF)
-        self._notify_job_update(job)
+        if not job.iso_path:
+            if job.status != JobStatus.CANCELLED:
+                job.update_status(JobStatus.FAILED, "No ISO file path", job_queue=self)
+                self._notify_job_update(job)
+            return
+
+        if job.status != JobStatus.CANCELLED:
+            job.update_status(JobStatus.GENERATING_JDF)
+            self._notify_job_update(job)
 
         try:
             jdf_generator = JDFGenerator(self.config, job.id)
             jdf_path = jdf_generator.create_burn_job_jdf()
 
             job.jdf_path = jdf_path
-            job.update_status(JobStatus.JDF_READY)
-            self.logger.info(f"Generated JDF for job {job.id}")
+
+            # Check if job was cancelled before updating status
+            if job.status != JobStatus.CANCELLED:
+                job.update_status(JobStatus.JDF_READY)
+                self.logger.info(f"Generated JDF for job {job.id}")
 
         except Exception as e:
-            job.update_status(JobStatus.FAILED, f"JDF generation failed: {str(e)}", job_queue=self)
-            self.logger.error(f"Failed to generate JDF for job {job.id}: {e}")
+            # Check if job was cancelled before marking as failed
+            if job.status != JobStatus.CANCELLED:
+                job.update_status(JobStatus.FAILED, f"JDF generation failed: {str(e)}", job_queue=self)
+                self.logger.error(f"Failed to generate JDF for job {job.id}: {e}")
         finally:
             self._notify_job_update(job)
 
     def _queue_for_burning(self, job: BurnJob):
         """Queue job for burning."""
-        job.update_status(JobStatus.QUEUED_FOR_BURNING)
-        self._notify_job_update(job)
+        # Check if job was cancelled before queuing for burning
+        if job.status == JobStatus.CANCELLED:
+            self.logger.info(f"Skipping queue for burning for cancelled job {job.id}")
+            return
+
+        if job.status != JobStatus.CANCELLED:
+            job.update_status(JobStatus.QUEUED_FOR_BURNING)
+            self._notify_job_update(job)
 
     def _start_burning(self, job: BurnJob):
         """Start burning process."""
-        job.update_status(JobStatus.BURNING)
-        job.progress = 0.0
-        self._notify_job_update(job)
+        # Check if job was cancelled before starting burning
+        if job.status == JobStatus.CANCELLED:
+            self.logger.info(f"Skipping burning for cancelled job {job.id}")
+            return
+
+        if job.status != JobStatus.CANCELLED:
+            job.update_status(JobStatus.BURNING)
+            job.progress = 0.0
+            self._notify_job_update(job)
 
         # In a real implementation, this would communicate with the robot
         # For now, we'll simulate the burning process
@@ -466,7 +504,7 @@ class JobQueue:
             # Check current status before changing it
             was_downloading = job.status == JobStatus.DOWNLOADING
 
-            job.update_status(JobStatus.CANCELLED, "Cancelled by  2", job_queue=self)
+            job.update_status(JobStatus.CANCELLED, "Cancelled by user", job_queue=self)
 
             # Remove from queue if present
             if job_id in self.job_queue:
