@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 from config import Config
+from src.graphql_client import SyncGraphQLClient
 from src.iso_downloader import ISODownloadManager
 from src.jdf_generator import JDFGenerator
 
@@ -57,12 +58,53 @@ class BurnJob:
     robot_job_id: Optional[str] = None
     estimated_completion: Optional[datetime] = None
 
-    def update_status(self, status: JobStatus, error_message: Optional[str] = None):
+    def update_status(
+        self,
+        status: JobStatus,
+        error_message: Optional[str] = None,
+        job_queue: Optional["JobQueue"] = None,
+    ):
         """Update job status and timestamp."""
         self.status = status
         self.updated_at = datetime.now()
-        if error_message:
-            self.error_message = error_message
+        self.error_message = error_message
+
+        if job_queue and self.status in [
+            JobStatus.COMPLETED,
+            JobStatus.FAILED,
+            JobStatus.CANCELLED,
+        ]:
+            self.update_status_to_api(job_queue)
+
+    def update_status_to_api(self, job_queue: "JobQueue"):
+        """Update job status to API."""
+        iso_id = self.iso_info["id"]
+
+        # Map internal status to API status
+        status_mapping = {
+            JobStatus.COMPLETED: "COMPLETED",
+            JobStatus.FAILED: "FAILED",
+            JobStatus.CANCELLED: "COMPLETED",
+        }
+
+        api_status = status_mapping.get(self.status)
+
+        try:
+            result = job_queue.graphql_client.update_download_iso_status(
+                iso_id=iso_id,
+                status_burn=api_status,
+                error_message=self.error_message if self.status == JobStatus.FAILED else None,
+            )
+
+            if result.get("success"):
+                job_queue.logger.info(f"Updated ISO {iso_id} status to {api_status} via API")
+            else:
+                job_queue.logger.error(
+                    f"Failed to update ISO {iso_id} status via API: {result.get('errors', [])}"
+                )
+
+        except Exception as e:
+            job_queue.logger.error(f"Error calling GraphQL mutation for ISO {iso_id}: {e}")
 
     def can_retry(self, max_retries: int) -> bool:
         """Check if job can be retried."""
@@ -98,6 +140,7 @@ class JobQueue:
 
         # Components
         self.download_manager = ISODownloadManager(config)
+        self.graphql_client = SyncGraphQLClient(config)
 
         # Setup progress callbacks
         self.download_manager.add_progress_callback(self._on_download_progress)
@@ -202,7 +245,7 @@ class JobQueue:
 
         except Exception as e:
             self.logger.error(f"Error processing job {job.id}: {e}")
-            job.update_status(JobStatus.FAILED, str(e))
+            job.update_status(JobStatus.FAILED, str(e), job_queue=self)
             self._notify_job_update(job)
 
     def _start_download(self, job: BurnJob):
@@ -224,11 +267,11 @@ class JobQueue:
                 job.update_status(JobStatus.DOWNLOADED)
                 self.logger.info(f"Downloaded ISO for job {job.id}")
             else:
-                job.update_status(JobStatus.FAILED, "Download failed")
+                job.update_status(JobStatus.FAILED, "Download failed", job_queue=self)
                 self.logger.error(f"Failed to download ISO for job {job.id}")
 
         except Exception as e:
-            job.update_status(JobStatus.FAILED, str(e))
+            job.update_status(JobStatus.FAILED, str(e), job_queue=self)
             self.logger.error(f"Error in download worker for job {job.id}: {e}")
         finally:
             self._notify_job_update(job)
@@ -249,7 +292,7 @@ class JobQueue:
     def _start_jdf_generation(self, job: BurnJob):
         """Start JDF file generation."""
         if not job.iso_path:
-            job.update_status(JobStatus.FAILED, "No ISO file path")
+            job.update_status(JobStatus.FAILED, "No ISO file path", job_queue=self)
             self._notify_job_update(job)
             return
 
@@ -265,7 +308,7 @@ class JobQueue:
             self.logger.info(f"Generated JDF for job {job.id}")
 
         except Exception as e:
-            job.update_status(JobStatus.FAILED, f"JDF generation failed: {str(e)}")
+            job.update_status(JobStatus.FAILED, f"JDF generation failed: {str(e)}", job_queue=self)
             self.logger.error(f"Failed to generate JDF for job {job.id}: {e}")
         finally:
             self._notify_job_update(job)
@@ -295,7 +338,7 @@ class JobQueue:
                 time.sleep(1)
 
         except Exception as e:
-            job.update_status(JobStatus.FAILED, str(e))
+            job.update_status(JobStatus.FAILED, str(e), job_queue=self)
             self._notify_job_update(job)
 
     def _check_burn_status(self, job: BurnJob):
@@ -303,20 +346,20 @@ class JobQueue:
         try:
             # Check if ISO file exists
             if not Path(job.iso_path).exists():
-                job.update_status(JobStatus.FAILED, "ISO file not found")
+                job.update_status(JobStatus.FAILED, "ISO file not found", job_queue=self)
                 self._notify_job_update(job)
                 return
 
             if job.status == JobStatus.CANCELLED:
                 print("Job cancelled")
-                job.update_status(JobStatus.CANCELLED)
+                job.update_status(JobStatus.CANCELLED, job_queue=self)
                 self._notify_job_update(job)
                 return
 
             # Replace file extension with .DON
             done_file = Path(job.jdf_path).with_suffix(".DON")
             if done_file.exists():
-                job.update_status(JobStatus.COMPLETED)
+                job.update_status(JobStatus.COMPLETED, job_queue=self)
                 job.progress = 100.0
                 self._notify_job_update(job)
 
@@ -337,12 +380,12 @@ class JobQueue:
             error_file = Path(job.jdf_path).with_suffix(".ERR")
             if error_file.exists():
                 print("Job failed")
-                job.update_status(JobStatus.FAILED, "Burning failed")
+                job.update_status(JobStatus.FAILED, "Burning failed", job_queue=self)
                 self._notify_job_update(job)
                 return
 
         except Exception as e:
-            job.update_status(JobStatus.FAILED, f"Burning failed: {str(e)}")
+            job.update_status(JobStatus.FAILED, f"Burning failed: {str(e)}", job_queue=self)
             self.logger.error(f"Error in burn worker for job {job.id}: {e}")
         finally:
             self._notify_job_update(job)
@@ -381,7 +424,7 @@ class JobQueue:
             if job.status in [JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED]:
                 return False
 
-            job.update_status(JobStatus.CANCELLED, "Cancelled by user")
+            job.update_status(JobStatus.CANCELLED, "Cancelled by user", job_queue=self)
 
             # Remove from queue if present
             if job_id in self.job_queue:

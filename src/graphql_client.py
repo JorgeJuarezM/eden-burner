@@ -258,6 +258,67 @@ class GraphQLClient:
         self.logger.warning(f"get_iso_info not implemented for ISO: {iso_id}")
         return None
 
+    async def update_download_iso_status(
+        self,
+        iso_id: str,
+        status_burn: str,
+        error_message: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Update ISO download status via GraphQL mutation.
+
+        Args:
+            iso_id: ISO identifier
+            status_burn: Burn status (e.g., 'COMPLETED', 'FAILED')
+            error_message: Optional error message if status is FAILED
+
+        Returns:
+            Mutation result with success/errors
+        """
+        try:
+            # GraphQL mutation for updating ISO status
+            mutation_string = """
+            mutation updateDownloadIso($id: UUID!, $statusBurn: String!, $errorMessage: String){
+                updateDownloadIso(id: $id, input: {statusBurn: $statusBurn, errorMessage: $errorMessage}) {
+                    errors
+                    success
+                }
+            }
+            """
+
+            mutation = gql(mutation_string)
+
+            variables = {
+                "id": iso_id,
+                "statusBurn": status_burn,
+                "errorMessage": error_message or "",
+            }
+
+            # Execute mutation with retry logic
+            max_retries = 3  # default retry attempts
+            if (
+                hasattr(self.config, "config_data")
+                and "api" in self.config.config_data
+                and "retry_attempts" in self.config.config_data["api"]
+            ):
+                max_retries = self.config.config_data["api"]["retry_attempts"]
+            elif hasattr(self.config, "retry_attempts"):
+                max_retries = self.config.retry_attempts
+
+            for attempt in range(max_retries):
+                try:
+                    result = await self.client.execute_async(mutation, variable_values=variables)
+                    self.logger.info(f"Successfully updated ISO {iso_id} status to {status_burn}")
+                    return result.get("updateDownloadIso", {})
+                except Exception as e:
+                    self.logger.warning(f"Mutation attempt {attempt + 1} failed: {e}")
+                    if attempt == max_retries - 1:
+                        raise
+                    await asyncio.sleep(2**attempt)  # Exponential backoff
+
+        except Exception as e:
+            self.logger.error(f"Error updating ISO status: {e}")
+            return {"success": False, "errors": [str(e)]}
+
 
 # Synchronous wrapper for easier integration
 class SyncGraphQLClient:
@@ -285,3 +346,14 @@ class SyncGraphQLClient:
     def test_connection(self) -> bool:
         """Synchronous version of test_connection."""
         return asyncio.run(self.client.test_connection())
+
+    def update_download_iso_status(
+        self,
+        iso_id: str,
+        status_burn: str,
+        error_message: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Synchronous version of update_download_iso_status."""
+        return asyncio.run(
+            self.client.update_download_iso_status(iso_id, status_burn, error_message)
+        )

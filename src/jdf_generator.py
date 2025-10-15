@@ -34,6 +34,12 @@ class JDFGenerator:
         Args:
             template_path: Path to the template file
         """
+        if not template_path:
+            raise ValueError("Template path is required")
+            
+        if not os.path.exists(template_path):
+            raise FileNotFoundError(f"Template file not found: {template_path}")
+
         with open(template_path, "r", encoding="utf-8") as f:
             return f.read()
 
@@ -142,6 +148,7 @@ class JDFGenerator:
 
         except Exception as e:
             self.logger.error(f"Error creating JDF file: {e}")
+            raise
 
     def get_disc_type_from_file_size(self, file_size: int) -> str:
         """Get the type of disc for a job.
