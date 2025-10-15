@@ -63,6 +63,7 @@ class Config:
                 "name": "EPSON_PP_100",
                 "jdf_template": str(app_dir / "templates/jdf_template.jdf"),
                 "label_file": str(app_dir / "templates/default.tdd"),
+                "data_template": str(app_dir / "templates/template.data"),
                 "burn_speed": "8x",
                 "verify_after_burn": True,
                 "auto_eject": False,
@@ -159,6 +160,11 @@ class Config:
     def label_file(self):
         """Label file (.tdd) for disc cover printing."""
         return self.config_data["robot"]["label_file"]
+
+    @property
+    def data_template(self):
+        """Data template file for additional disc information."""
+        return self.config_data["robot"]["data_template"]
 
     @property
     def burn_speed(self):

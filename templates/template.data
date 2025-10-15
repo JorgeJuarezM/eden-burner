@@ -1,0 +1,40 @@
+# Archivo de plantilla para datos adicionales del disco (.data)
+# Este archivo contiene información estructurada para el proceso de quemado
+# Formato: Archivo de datos para EPSON PP-100
+
+# Información del paciente y estudio
+PATIENT_NAME={{study_patient_name}}
+PATIENT_ID={{patient_id}}
+STUDY_DATE={{study_date}}
+STUDY_DESCRIPTION={{study_description}}
+STUDY_UID={{study_uid}}
+
+# Información del disco
+DISC_ID={{job_id}}
+VOLUME_LABEL={{volume_label}}
+DISC_TYPE={{disc_type}}
+CREATION_DATE={{current_date}}
+
+# Configuración técnica
+BURN_SPEED={{burn_speed}}
+VERIFY_AFTER_BURN={{verify_after_burn}}
+AUTO_EJECT={{auto_eject}}
+
+# Información del robot
+ROBOT_NAME={{robot_name}}
+ROBOT_UUID={{robot_uuid}}
+
+# Paths de archivos generados
+ISO_PATH={{iso_path}}
+JDF_PATH={{jdf_path}}
+LABEL_PATH={{label_path}}
+
+# Información adicional del estudio
+MODALITY={{modality}}
+SERIES_COUNT={{series_count}}
+IMAGE_COUNT={{image_count}}
+
+# Configuración específica
+REPLACE_FIELD={{replace_fields}}
+PUBLISHER={{publisher}}
+COPIES={{copies}}
