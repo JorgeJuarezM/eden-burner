@@ -20,6 +20,7 @@ from PyQt5.QtWidgets import (
 from config import Config
 from gui.job_details_dialog import JobDetailsDialog
 from gui.job_table_widget import JobTableWidget
+from gui.settings_dialog import SettingsDialog
 from src.job_queue import BurnJob, JobQueue, JobStatus
 
 
@@ -523,10 +524,8 @@ class MainWindowLogic(MainWindowUI):
 
     def show_settings(self):
         """Show settings dialog."""
-        # TODO: Implement settings dialog
-        QMessageBox.information(
-            self, "Configuración", "Diálogo de configuración no implementado aún."
-        )
+        dialog = SettingsDialog(self.config, self)
+        dialog.exec_()
 
     def test_api_connection(self):
         """Test API connection."""
