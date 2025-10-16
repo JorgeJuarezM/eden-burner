@@ -235,7 +235,7 @@ class JobQueue:
                 job = self.jobs[job_id]
 
                 # Skip cancelled or completed jobs
-                if job.status in [JobStatus.CANCELLED, JobStatus.COMPLETED]:
+                if job.status in [JobStatus.CANCELLED, JobStatus.COMPLETED, JobStatus.FAILED]:
                     self.job_queue.pop(0)
                     continue
 
@@ -243,6 +243,10 @@ class JobQueue:
                 if self._can_process_job(job):
                     self.job_queue.pop(0)
                     return job
+
+                # Break to prevent busy waiting
+                break
+                
 
             return None
 
@@ -280,7 +284,7 @@ class JobQueue:
                 self._start_jdf_generation(job)
             elif job.status == JobStatus.JDF_READY:
                 self._queue_for_burning(job)
-            elif job.status in [JobStatus.QUEUED_FOR_BURNING, JobStatus.BURNING]:
+            elif job.status in [JobStatus.QUEUED_FOR_BURNING]:
                 self._start_burning(job)
 
         except Exception as e:
@@ -414,7 +418,7 @@ class JobQueue:
             while job.status == JobStatus.BURNING:
                 self._check_burn_status(job)
                 self._notify_job_update(job)
-                time.sleep(1)
+                time.sleep(10)
 
         except Exception as e:
             job.update_status(JobStatus.FAILED, str(e), job_queue=self)
@@ -426,13 +430,11 @@ class JobQueue:
             # Check if ISO file exists
             if not Path(job.iso_path).exists():
                 job.update_status(JobStatus.FAILED, "ISO file not found", job_queue=self)
-                self._notify_job_update(job)
                 return
 
             if job.status == JobStatus.CANCELLED:
-                print("Job cancelled")
                 job.update_status(JobStatus.CANCELLED, job_queue=self)
-                self._notify_job_update(job)
+                self.logger.info("Cancelled Job: %s", job.id)
                 return
 
             # Replace file extension with .DON
@@ -440,7 +442,6 @@ class JobQueue:
             if done_file.exists():
                 job.update_status(JobStatus.COMPLETED, job_queue=self)
                 job.progress = 100.0
-                self._notify_job_update(job)
 
                 # Move files to completed folder
                 self._move_completed_files(job)
@@ -450,24 +451,18 @@ class JobQueue:
             # Replace file extension with .INP
             progress_file = Path(job.jdf_path).with_suffix(".INP")
             if progress_file.exists():
-                print("Job in progress")
+                self.logger.info("Job in progress: %s", job.id)
                 job.progress = 50.0
-                self._notify_job_update(job)
                 return
 
             # Replace file extension with .ERR
             error_file = Path(job.jdf_path).with_suffix(".ERR")
             if error_file.exists():
-                print("Job failed")
-                job.update_status(JobStatus.FAILED, "Burning failed", job_queue=self)
-                self._notify_job_update(job)
-                return
+                raise Exception(f"Burner responded with error: {error_file.read_text()}")
 
         except Exception as e:
             job.update_status(JobStatus.FAILED, f"Burning failed: {str(e)}", job_queue=self)
             self.logger.error(f"Error in burn worker for job {job.id}: {e}")
-        finally:
-            self._notify_job_update(job)
 
     def _move_completed_files(self, job: BurnJob):
         """Move completed job files to completed folder."""

@@ -96,7 +96,7 @@ class BackgroundWorker:
                 self._process_job_queue()
 
                 # Brief pause to prevent busy waiting
-                time.sleep(1)
+                time.sleep(10)
 
         except Exception as e:
             self.logger.error(f"Error in background worker loop: {e}")
@@ -182,6 +182,7 @@ class BackgroundWorker:
             # Add new ISOs as jobs
             added_count = 0
             for iso_info in new_isos:
+                self.logger.info("New ISO found: %s", iso_info.get("id"))
                 try:
                     # Check if we already have this ISO
                     existing_jobs = [
