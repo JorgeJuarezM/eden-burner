@@ -17,11 +17,11 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
+from app.job_queue import BurnJob, JobQueue, JobStatus
 from config import Config
 from gui.job_details_dialog import JobDetailsDialog
 from gui.job_table_widget import JobTableWidget
 from gui.settings_dialog import SettingsDialog
-from app.job_queue import BurnJob, JobQueue, JobStatus
 
 
 class MainWindowUI(QMainWindow):

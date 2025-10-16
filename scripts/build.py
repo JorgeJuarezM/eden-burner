@@ -57,7 +57,7 @@ def get_icon_path():
         icon_path = os.path.join(assets_dir, icon_file)
         if os.path.exists(icon_path):
             print(f"Icon found: {icon_path}")
-            return icon_path
+            return Path("assets") / icon_file
 
     print(f"Warning: No suitable icon file found in {assets_dir}")
     print(f"Checked for: {', '.join(platform_icons)}")
