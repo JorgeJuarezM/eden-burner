@@ -152,14 +152,15 @@ def build_simple():
 
     # Hidden imports for common dependencies
     hidden_imports = [
+        "jinja2"
         "PyQt5.QtCore",
         "PyQt5.QtGui",
-        "PyQt5.QtWidgets",
         "PyQt5.QtNetwork",
         "PyQt5.QtPrintSupport",
+        "PyQt5.QtWidgets",
         "schedule",
-        "yaml",
         "sqlalchemy.ext.baked",
+        "yaml",
     ]
 
     for import_name in hidden_imports:
