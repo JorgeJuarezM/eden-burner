@@ -185,20 +185,6 @@ class MainWindowUI(QMainWindow):
         # Logo on the left (small and compact)
         logo_label = QLabel()
         logo_pixmap = QPixmap("assets/logo.png")
-
-        # Crop the logo minimally to preserve most of the image
-        # original_size = logo_pixmap.size()
-        # crop_margin = int(original_size.width() * 0.08)  # 8% margin on each side
-
-        # cropped_pixmap = logo_pixmap.copy(
-        #     crop_margin,
-        #     crop_margin,
-        #     original_size.width() - 2 * crop_margin,
-        #     original_size.height() - 2 * crop_margin,
-        # )
-
-        # # Scale down to a compact size
-        # scaled_pixmap = cropped_pixmap.scaled(48, 48, aspectRatioMode=1, transformMode=1)
         logo_label.setPixmap(logo_pixmap)
 
         # Add subtle styling to logo container
