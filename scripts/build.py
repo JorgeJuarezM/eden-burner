@@ -152,7 +152,7 @@ def build_simple():
 
     # Hidden imports for common dependencies
     hidden_imports = [
-        "jinja2",
+        "Jinja2",
         "PyQt5.QtCore",
         "PyQt5.QtGui",
         "PyQt5.QtNetwork",
