@@ -7,7 +7,7 @@ import time
 from typing import Any, Callable, Dict, List, Optional
 
 from config import Config
-from src.graphql_client import SyncGraphQLClient
+from app.graphql_client import SyncGraphQLClient
 
 
 class DownloadProgress:

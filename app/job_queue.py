@@ -14,9 +14,9 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 from config import Config
-from src.graphql_client import SyncGraphQLClient
-from src.iso_downloader import ISODownloadManager
-from src.jdf_generator import JDFGenerator
+from app.graphql_client import SyncGraphQLClient
+from app.iso_downloader import ISODownloadManager
+from app.jdf_generator import JDFGenerator
 
 
 class JobStatus(Enum):

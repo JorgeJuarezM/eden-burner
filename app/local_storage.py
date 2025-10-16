@@ -21,7 +21,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker
 
 from config import Config
-from src.job_queue import BurnJob
+from app.job_queue import BurnJob
 
 Base = declarative_base()
 

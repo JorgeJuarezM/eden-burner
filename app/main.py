@@ -30,9 +30,9 @@ from PyQt5.QtWidgets import (
 
 from config import Config
 from gui.main_window import MainWindow
-from src.background_worker import BackgroundWorker
-from src.job_queue import BurnJob, JobQueue, JobStatus
-from src.local_storage import LocalStorage
+from app.background_worker import BackgroundWorker
+from app.job_queue import BurnJob, JobQueue, JobStatus
+from app.local_storage import LocalStorage
 
 
 class EpsonBurnerApp:
@@ -433,7 +433,7 @@ def main():
     if args.clear_database:
         # Clear the database
         try:
-            from src.local_storage import LocalStorage
+            from app.local_storage import LocalStorage
 
             config = Config()
             storage = LocalStorage(config)

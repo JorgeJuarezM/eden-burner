@@ -18,7 +18,7 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
 )
 
-from src.job_queue import BurnJob, JobStatus
+from app.job_queue import BurnJob, JobStatus
 
 
 class JobDetailsDialogUI(QDialog):

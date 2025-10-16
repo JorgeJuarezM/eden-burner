@@ -29,13 +29,14 @@ import os
 import platform
 import subprocess
 import sys
+from pathlib import Path
 
 
 def get_icon_path():
     """Get the appropriate icon path for the current platform."""
     current_platform = platform.system().lower()
     script_dir = os.path.dirname(__file__)
-    assets_dir = os.path.join(script_dir, "../assets")
+    assets_dir = Path(script_dir).parent / "assets"
 
     # Define icon files for each platform
     icon_files = {
@@ -55,7 +56,8 @@ def get_icon_path():
     for icon_file in platform_icons:
         icon_path = os.path.join(assets_dir, icon_file)
         if os.path.exists(icon_path):
-            return icon_path
+            print(f"Icon found: {icon_path}")
+            return Path("assets") / icon_file
 
     print(f"Warning: No suitable icon file found in {assets_dir}")
     print(f"Checked for: {', '.join(platform_icons)}")
@@ -150,14 +152,15 @@ def build_simple():
 
     # Hidden imports for common dependencies
     hidden_imports = [
+        "Jinja2",
         "PyQt5.QtCore",
         "PyQt5.QtGui",
-        "PyQt5.QtWidgets",
         "PyQt5.QtNetwork",
         "PyQt5.QtPrintSupport",
+        "PyQt5.QtWidgets",
         "schedule",
-        "yaml",
         "sqlalchemy.ext.baked",
+        "yaml",
     ]
 
     for import_name in hidden_imports:

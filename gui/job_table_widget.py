@@ -8,7 +8,7 @@ from PyQt5.QtCore import Q_ARG, QMetaObject, Qt, pyqtSlot
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QHeaderView, QProgressBar, QTableWidget, QTableWidgetItem
 
-from src.job_queue import BurnJob, JobStatus
+from app.job_queue import BurnJob, JobStatus
 
 
 class JobTableWidgetUI(QTableWidget):

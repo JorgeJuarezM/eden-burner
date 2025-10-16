@@ -9,7 +9,7 @@ importing the actual implementation from the src/ directory.
 import sys
 
 # Import and run the main application
-from src.main import main
+from app.main import main
 
 if __name__ == "__main__":
     sys.exit(main())
