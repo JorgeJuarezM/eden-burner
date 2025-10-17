@@ -3,6 +3,7 @@ Settings dialog for EPSON PP-100 Disc Burner Application
 """
 
 from pathlib import Path
+
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QCheckBox,

@@ -23,6 +23,7 @@ def safe_config_get(default_value: Any):
     Returns:
         The decorated property function
     """
+
     def decorator(func):
         @wraps(func)
         def wrapper(self):
@@ -32,7 +33,9 @@ def safe_config_get(default_value: Any):
                 # KeyError: key doesn't exist in config_data
                 # TypeError: config_data is None or not a dict
                 return default_value
+
         return wrapper
+
     return decorator
 
 
