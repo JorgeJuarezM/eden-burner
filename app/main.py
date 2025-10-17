@@ -17,6 +17,7 @@ import os
 import sys
 from datetime import datetime
 
+from filelock import FileLock, Timeout
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (
@@ -28,36 +29,35 @@ from PyQt5.QtWidgets import (
     QSystemTrayIcon,
 )
 
-from config import Config
-from gui.main_window import MainWindow
 from app.background_worker import BackgroundWorker
 from app.job_queue import BurnJob, JobQueue, JobStatus
 from app.local_storage import LocalStorage
-from filelock import FileLock, Timeout
+from config.config import Config
+from gui.main_window import MainWindow
+
+app_config = Config.get_current_config()
+
 
 class EpsonBurnerApp:
     """Main application class for EPSON PP-100 disc burner management."""
 
     def __init__(self):
-        # Load configuration FIRST
-        self.config = Config()
-
         # Setup logging (now that config is available)
         self.setup_logging()
 
         # Validate configuration
-        config_errors = self.config.validate_config()
+        config_errors = app_config.validate_config()
         if config_errors:
             self.show_config_errors(config_errors)
             return
 
         # Ensure folders exist
-        self.config.ensure_folders_exist()
+        app_config.ensure_folders_exist()
 
         # Initialize core components
-        self.storage = LocalStorage(self.config)
-        self.job_queue = JobQueue(self.config)
-        self.background_worker = BackgroundWorker(self.config, self.job_queue)
+        self.storage = LocalStorage()
+        self.job_queue = JobQueue()
+        self.background_worker = BackgroundWorker(self.job_queue)
 
         # Setup application
         self.app = QApplication(sys.argv)
@@ -90,17 +90,17 @@ class EpsonBurnerApp:
     def _create_main_window(self):
         """Create main window (lazy loading)."""
         if self.main_window is None:
-            self.main_window = MainWindow(self.config, self.job_queue)
+            self.main_window = MainWindow(self.job_queue)
             self.connect_signals()
 
     def setup_logging(self):
         """Setup application logging."""
         log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
         logging.basicConfig(
-            level=getattr(logging, self.config.config_data["logging"]["level"]),
+            level=getattr(logging, app_config.config_data["logging"]["level"]),
             format=log_format,
             handlers=[
-                logging.FileHandler(self.config.config_data["logging"]["file"]),
+                logging.FileHandler(app_config.config_data["logging"]["file"]),
                 logging.StreamHandler(),
             ],
         )
@@ -191,7 +191,7 @@ class EpsonBurnerApp:
 
     def show_job_notification(self, job: BurnJob):
         """Show system notification for job status change."""
-        if not self.config.show_notifications or job.notification_sent:
+        if not app_config.show_notifications or job.notification_sent:
             return
 
         title = "Trabajo de quemado"
@@ -441,8 +441,7 @@ def main():
         try:
             from app.local_storage import LocalStorage
 
-            config = Config()
-            storage = LocalStorage(config)
+            storage = LocalStorage()
 
             success = storage.clear_database()
             if success:
@@ -467,7 +466,11 @@ def main():
     except Timeout:
         print("Application already running")
         if show_gui:
-            QMessageBox.warning(None, "Aplicación ya en ejecución", "La aplicación Eden Burner ya se está ejecutando.")
+            QMessageBox.warning(
+                None,
+                "Aplicación ya en ejecución",
+                "La aplicación Eden Burner ya se está ejecutando.",
+            )
         return 1
     except Exception as e:
         print(f"Error starting application: {e}")

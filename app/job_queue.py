@@ -2,6 +2,7 @@
 Job Queue Management for EPSON PP-100 Disc Burner Application
 """
 
+import glob
 import logging
 import shutil
 import threading
@@ -13,11 +14,13 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
-from config import Config
 from app.graphql_client import SyncGraphQLClient
 from app.iso_downloader import ISODownloadManager
 from app.jdf_generator import JDFGenerator
-import glob
+from config.config import Config
+
+app_config = Config.get_current_config()
+
 
 class JobStatus(Enum):
     """Job status enumeration."""
@@ -154,13 +157,12 @@ class BurnJob:
 class JobQueue:
     """Thread-safe job queue for managing burning jobs."""
 
-    def __init__(self, config: Config):
+    def __init__(self):
         """Initialize job queue.
 
         Args:
             config: Application configuration
         """
-        self.config = config
         self.logger = logging.getLogger(__name__)
 
         # Job storage
@@ -174,8 +176,8 @@ class JobQueue:
         self.job_update_callbacks: List[Callable[[BurnJob], None]] = []
 
         # Components
-        self.download_manager = ISODownloadManager(config)
-        self.graphql_client = SyncGraphQLClient(config)
+        self.download_manager = ISODownloadManager()
+        self.graphql_client = SyncGraphQLClient()
 
         # Setup progress callbacks
         self.download_manager.add_progress_callback(self._on_download_progress)
@@ -246,29 +248,20 @@ class JobQueue:
 
                 # Break to prevent busy waiting
                 break
-                
 
             return None
 
     def _can_process_job(self, job: BurnJob) -> bool:
         """Check if a job can be processed (started or continued)."""
-        # Check concurrent job limit - only count truly active jobs
-        active_jobs = len(
-            [
-                j
-                for j in self.jobs.values()
-                if j.status in [JobStatus.DOWNLOADING, JobStatus.BURNING, JobStatus.VERIFYING]
-            ]
-        )
+        in_progress_statuses = [JobStatus.DOWNLOADING, JobStatus.BURNING, JobStatus.VERIFYING]
+        active_jobs = len([j for j in self.jobs.values() if j.status in in_progress_statuses])
 
         # Allow processing if:
         # 1. We have capacity for active jobs, OR
         # 2. The job is not in an active state (intermediate states like DOWNLOADED, JDF_READY, etc.)
-        return active_jobs < self.config.max_concurrent_jobs or job.status not in [
-            JobStatus.DOWNLOADING,
-            JobStatus.BURNING,
-            JobStatus.VERIFYING,
-        ]
+        return (
+            active_jobs < app_config.max_concurrent_jobs or job.status not in in_progress_statuses
+        )
 
     def start_job_processing(self, job: BurnJob):
         """Start processing a job."""
@@ -364,7 +357,7 @@ class JobQueue:
             self._notify_job_update(job)
 
         try:
-            jdf_generator = JDFGenerator(self.config, job.id)
+            jdf_generator = JDFGenerator(job.id)
             jdf_path = jdf_generator.create_burn_job_jdf()
 
             job.jdf_path = jdf_path
@@ -415,20 +408,20 @@ class JobQueue:
     def _burn_loop(self, job: BurnJob):
         """Loop for burning simulation."""
         try:
-            max_time = datetime.now() + timedelta(minutes=self.config.burner_timeout)
+            max_time = datetime.now() + timedelta(minutes=app_config.burner_timeout)
             while job.status == JobStatus.BURNING:
                 if datetime.now() > max_time:
                     raise Exception("Burning timed out")
 
                 self._check_burn_status(job)
                 self._notify_job_update(job)
-                time.sleep(10) # wait 10 seconds before checking again
+                time.sleep(10)  # wait 10 seconds before checking again
 
         except Exception as e:
             job.update_status(JobStatus.FAILED, str(e), job_queue=self)
             self._notify_job_update(job)
 
-    def _get_wildcard_files(self, file_path: str, extension:str) -> List[str]:
+    def _get_wildcard_files(self, file_path: str, extension: str) -> List[str]:
         """Get a list of files with wildcard and extension."""
         file_path_without_extension = Path(file_path).with_suffix("")
         return glob.glob(f"{file_path_without_extension}*.{extension}") or []
@@ -478,11 +471,11 @@ class JobQueue:
         try:
             if job.iso_path:
 
-                completed_iso = self.config.completed_folder / Path(job.iso_path).name
+                completed_iso = app_config.completed_folder / Path(job.iso_path).name
                 shutil.move(job.iso_path, completed_iso)
 
             if job.jdf_path:
-                completed_jdf = self.config.completed_folder / Path(job.jdf_path).name
+                completed_jdf = app_config.completed_folder / Path(job.jdf_path).name
 
                 shutil.move(job.jdf_path, completed_jdf)
 
@@ -621,7 +614,7 @@ class JobQueue:
                 "completed": completed,
                 "failed": failed,
                 "queue_length": len(self.job_queue),
-                "active_slots": min(self.config.max_concurrent_jobs, downloading + burning),
+                "active_slots": min(app_config.max_concurrent_jobs, downloading + burning),
             }
 
     def cleanup_completed_jobs(self, max_age_days: int = 7):

@@ -18,18 +18,19 @@ from PyQt5.QtWidgets import (
 )
 
 from app.job_queue import BurnJob, JobQueue, JobStatus
-from config import Config
+from config.config import Config
 from gui.job_details_dialog import JobDetailsDialog
 from gui.job_table_widget import JobTableWidget
 from gui.settings_dialog import SettingsDialog
+
+app_config = Config.get_current_config()
 
 
 class MainWindowUI(QMainWindow):
     """Main window UI class - handles only PyQt design and widget creation."""
 
-    def __init__(self, config: Config, job_queue: JobQueue):
+    def __init__(self, job_queue: JobQueue):
         super().__init__()
-        self.config = config
         self.job_queue = job_queue
 
         # Initialize UI only
@@ -380,9 +381,9 @@ class MainWindowLogic(MainWindowUI):
     job_completed = pyqtSignal(str)  # job_id
     job_failed = pyqtSignal(str)  # job_id
 
-    def __init__(self, config: Config, job_queue: JobQueue):
+    def __init__(self, job_queue: JobQueue):
         # Initialize the UI base class first
-        super().__init__(config, job_queue)
+        super().__init__(job_queue)
 
         # Then add business logic
         self.setup_connections()
@@ -414,7 +415,7 @@ class MainWindowLogic(MainWindowUI):
         # Timer for refreshing data
         self.refresh_timer = QTimer()
         self.refresh_timer.timeout.connect(self.refresh_data)
-        self.refresh_timer.start(self.config.gui_refresh_interval)
+        self.refresh_timer.start(app_config.gui_refresh_interval)
 
         # Timer for updating status bar
         self.status_timer = QTimer()
@@ -510,7 +511,7 @@ class MainWindowLogic(MainWindowUI):
 
     def show_settings(self):
         """Show settings dialog."""
-        dialog = SettingsDialog(self.config, self)
+        dialog = SettingsDialog(self)
         dialog.exec_()
 
     def test_api_connection(self):

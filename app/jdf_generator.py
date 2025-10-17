@@ -7,13 +7,15 @@ import os
 
 from jinja2 import Template
 
-from config import Config
+from config.config import Config
+
+app_config = Config.get_current_config()
 
 
 class JDFGenerator:
     """Generator for JDF files for EPSON PP-100 disc burning robot."""
 
-    def __init__(self, config: Config, job_id: str):
+    def __init__(self, job_id: str):
         """Initialize JDF generator.
 
         Args:
@@ -21,9 +23,8 @@ class JDFGenerator:
         """
         from app.local_storage import LocalStorage
 
-        self.config = config
         self.logger = logging.getLogger(__name__)
-        self.storage = LocalStorage(config)
+        self.storage = LocalStorage()
 
         self.job_id = job_id
         self.job_data = self.storage.get_job(job_id)
@@ -63,15 +64,15 @@ class JDFGenerator:
             Path to generated data file
         """
         # Ensure data folder exists (same as JDF folder for now)
-        self.config.ensure_folders_exist()
+        app_config.ensure_folders_exist()
 
         # Create data filename
         data_filename = f"{self.job_id}.data"
-        data_path = self.config.jdf_folder / data_filename
+        data_path = app_config.jdf_folder / data_filename
 
         try:
             # Read data template
-            template_content = self._read_file_template(self.config.data_template)
+            template_content = self._read_file_template(app_config.data_template)
 
             patient_name = self.job_data.study_patient_name
             study_description = self.job_data.study_dicom_description
@@ -114,18 +115,18 @@ class JDFGenerator:
             Path to generated JDF file
         """
         # Ensure JDF folder exists
-        self.config.ensure_folders_exist()
+        app_config.ensure_folders_exist()
 
         # Create JDF filename
         jdf_filename = f"{self.job_id}.jdf"
-        jdf_path = self.config.jdf_folder / jdf_filename
+        jdf_path = app_config.jdf_folder / jdf_filename
 
         try:
             # Generate data file (.data) for additional information
             data_path = self._create_data_file()
 
             # Read JDF template
-            template_content = self._read_file_template(self.config.jdf_template)
+            template_content = self._read_file_template(app_config.jdf_template)
             template = Template(template_content)
 
             patient_name = self.job_data.study_patient_name
@@ -133,7 +134,7 @@ class JDFGenerator:
                 disc_type=self.job_data.disc_type,
                 image=self.job_data.iso_path,
                 volume_label=patient_name,
-                label=self.config.label_file,
+                label=app_config.label_file,
                 replace_fields=data_path,
             )
 

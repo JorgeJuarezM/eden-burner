@@ -12,30 +12,31 @@ from typing import Any, Dict, Optional
 
 import schedule
 
-from config import Config
 from app.graphql_client import SyncGraphQLClient
 from app.job_queue import JobQueue, JobStatus
 from app.local_storage import LocalStorage
+from config.config import Config
+
+app_config = Config.get_current_config()
 
 
 class BackgroundWorker:
     """Background worker that manages job processing and API polling."""
 
-    def __init__(self, config: Config, job_queue: JobQueue):
+    def __init__(self, job_queue: JobQueue):
         """Initialize background worker.
 
         Args:
             config: Application configuration
             job_queue: Job queue instance
         """
-        self.config = config
         self.job_queue = job_queue
         self.logger = logging.getLogger(__name__)
 
         # Components
         self.download_manager = job_queue.download_manager
-        self.storage = LocalStorage(config)
-        self.graphql_client = SyncGraphQLClient(config)
+        self.storage = LocalStorage()
+        self.graphql_client = SyncGraphQLClient()
 
         # Control flags
         self.running = False
@@ -50,7 +51,7 @@ class BackgroundWorker:
     def setup_scheduler(self):
         """Setup the task scheduler."""
         # Schedule API checks
-        schedule.every(self.config.check_interval).seconds.do(self.check_for_new_isos)
+        schedule.every(app_config.check_interval).seconds.do(self.check_for_new_isos)
 
         # Schedule cleanup tasks
         schedule.every(1).hours.do(self.cleanup_old_jobs)
@@ -143,7 +144,7 @@ class BackgroundWorker:
                         in [JobStatus.DOWNLOADING, JobStatus.BURNING, JobStatus.VERIFYING]
                     ]
                 )
-                if active_jobs < self.config.max_concurrent_jobs:
+                if active_jobs < app_config.max_concurrent_jobs:
                     self.logger.debug(f"Processing ready job {job.id} for next stage")
                     self.job_queue.start_job_processing(job)
                     break  # Process one at a time

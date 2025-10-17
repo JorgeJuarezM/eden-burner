@@ -156,6 +156,15 @@ class Config:
         """API request timeout in seconds."""
         return self.config_data["api"]["timeout"]
 
+    @property
+    def api_retry_attempts(self):
+        """Maximum number of retries for failed jobs."""
+        return self.config_data["api"]["retry_attempts"]
+
+    @api_retry_attempts.setter
+    def api_retry_attempts(self, value):
+        self.config_data["api"]["retry_attempts"] = value
+
     # Folder Configuration
     @property
     def downloads_folder(self):
@@ -291,3 +300,15 @@ class Config:
             errors.append("Check interval must be at least 10 seconds")
 
         return errors
+
+    @staticmethod
+    def get_current_config() -> "Config":
+        """
+        Get the current configuration instance.
+
+        The configuration is a singleton instance of the Config class.
+        """
+        if not hasattr(Config, "_instance"):
+            setattr(Config, "_instance", Config())
+
+        return getattr(Config, "_instance")
