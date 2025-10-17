@@ -140,6 +140,7 @@ def build_simple():
 
     # Build PyInstaller command based on platform
     cmd = [python_exe, "-m", "PyInstaller", "--onedir"]
+    cmd.extend(["--add-data=assets:assets"])
 
     # Output format options
     if is_windows:
@@ -152,6 +153,7 @@ def build_simple():
 
     # Hidden imports for common dependencies
     hidden_imports = [
+        "filelock",
         "Jinja2",
         "PyQt5.QtCore",
         "PyQt5.QtGui",
