@@ -9,7 +9,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-CODE_PATHS = ["app/", "config/", "gui/", "tools/", "scripts/"]
+CODE_PATHS = ["app/", "db/", "config/", "gui/", "tools/", "scripts/"]
 
 
 def run_command(cmd, description="", cwd=None):

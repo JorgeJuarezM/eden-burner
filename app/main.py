@@ -29,6 +29,7 @@ from PyQt5.QtWidgets import (
     QSystemTrayIcon,
 )
 
+import db
 from app.background_worker import BackgroundWorker
 from app.job_queue import BurnJob, JobQueue, JobStatus
 from app.local_storage import LocalStorage
@@ -64,6 +65,11 @@ class EpsonBurnerApp:
         self.app.setQuitOnLastWindowClosed(False)
 
     def initialize_application(self, show_gui=False):
+        # Migrate database
+        success = self.storage.migrate_database()
+        if not success:
+            self.logger.error("Error migrating database")
+            raise Exception("Error migrating database")
 
         # Setup system tray
         self.setup_system_tray()
@@ -183,7 +189,7 @@ class EpsonBurnerApp:
     def on_job_updated_from_gui(self, job):
         """Handle job updates from GUI."""
         # Update storage
-        self.storage.update_job_state(job)
+        db.BurnJob.update_job_state(job)
 
         # Show notification for important status changes
         if job.status.value in ["completed", "failed"]:
@@ -209,7 +215,7 @@ class EpsonBurnerApp:
     def load_existing_jobs(self):
         """Load existing jobs from storage."""
         try:
-            jobs = self.storage.get_all_jobs()
+            jobs = db.BurnJob.get_all_jobs()
             for job_record in jobs:
                 # Convert storage record to job object
                 iso_info = {
@@ -392,7 +398,7 @@ class EpsonBurnerApp:
         try:
             # Update all job statuses in storage
             for job in self.job_queue.get_all_jobs():
-                self.storage.update_job_state(job)
+                db.BurnJob.update_job_state(job)
 
             self.logger.info("Application state saved")
 
@@ -442,7 +448,6 @@ def main():
             from app.local_storage import LocalStorage
 
             storage = LocalStorage()
-
             success = storage.clear_database()
             if success:
                 print("Database cleared successfully")
