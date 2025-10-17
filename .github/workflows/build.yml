@@ -4,16 +4,13 @@ on:
   pull_request:
     branches: [ main ]
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  pyinstaller-build:
+    runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: PyInstaller Windows
-      uses: JackMcKew/pyinstaller-action-windows@main
-      with:
-        path: .
-    - uses: actions/upload-artifact@v4
-      with:
-        name: burner
-        path: |
-          dist
+      - name: Create Executable
+        uses: sayyid5416/pyinstaller@v1
+        with:
+          python_ver: '3.10'
+          spec: 'Eden Burner.spec'
+          requirements: 'requirements.txt'
+          upload_exe_with_name: 'Eden Burner'
