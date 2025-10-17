@@ -152,6 +152,7 @@ def build_simple():
 
     # Hidden imports for common dependencies
     hidden_imports = [
+        "filelock",
         "Jinja2",
         "PyQt5.QtCore",
         "PyQt5.QtGui",
