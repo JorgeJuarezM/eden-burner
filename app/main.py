@@ -272,8 +272,12 @@ class EpsonBurnerApp:
                 ]:
                     self.job_queue.job_queue.append(job.id)
 
-                # if job.status == JobStatus.BURNING:
-                #     self.job_queue._queue_for_burning(job)
+                if job.status == JobStatus.BURNING:
+                    self.job_queue._queue_for_burning(job)
+                elif job.status == JobStatus.DOWNLOADING:
+                    self.job_queue._start_download(job)
+                elif job.status == JobStatus.QUEUED_FOR_BURNING:
+                    self.job_queue._start_burning(job)
 
             self.logger.info(f"Loaded {len(jobs)} existing jobs from storage")
 

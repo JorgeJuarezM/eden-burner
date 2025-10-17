@@ -428,7 +428,7 @@ class JobQueue:
             job.update_status(JobStatus.FAILED, str(e), job_queue=self)
             self._notify_job_update(job)
 
-    def _get_wildcard_filed(self, file_path: str, extension:str) -> List[str]:
+    def _get_wildcard_files(self, file_path: str, extension:str) -> List[str]:
         """Get a list of files with wildcard and extension."""
         file_path_without_extension = Path(file_path).with_suffix("")
         return glob.glob(f"{file_path_without_extension}*.{extension}") or []
