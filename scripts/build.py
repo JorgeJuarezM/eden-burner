@@ -140,6 +140,7 @@ def build_simple():
 
     # Build PyInstaller command based on platform
     cmd = [python_exe, "-m", "PyInstaller", "--onedir"]
+    cmd.extend(["--add-data=assets:assets"])
 
     # Output format options
     if is_windows:
