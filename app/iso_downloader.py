@@ -6,8 +6,10 @@ import logging
 import time
 from typing import Any, Callable, Dict, List, Optional
 
-from config import Config
 from app.graphql_client import SyncGraphQLClient
+from config.config import Config
+
+app_config = Config.get_current_config()
 
 
 class DownloadProgress:
@@ -49,17 +51,16 @@ class DownloadProgress:
 class ISODownloadManager:
     """Manager for downloading ISO files with progress tracking."""
 
-    def __init__(self, config: Config):
+    def __init__(self):
         """Initialize download manager.
 
         Args:
             config: Application configuration
         """
-        self.config = config
         self.logger = logging.getLogger(__name__)
 
         # Initialize GraphQL client
-        self.graphql_client = SyncGraphQLClient(config)
+        self.graphql_client = SyncGraphQLClient()
 
         # Download tracking
         self.active_downloads: Dict[str, DownloadProgress] = {}
@@ -69,7 +70,7 @@ class ISODownloadManager:
         self.progress_callbacks: List[Callable[[str, DownloadProgress], None]] = []
 
         # Ensure download folder exists
-        self.config.ensure_folders_exist()
+        app_config.ensure_folders_exist()
 
     def add_progress_callback(self, callback: Callable[[str, DownloadProgress], None]):
         """Add a callback for download progress updates.
@@ -111,7 +112,7 @@ class ISODownloadManager:
             return ""
 
         filename = f"iso_{iso_id}.iso"
-        download_path = self.config.downloads_folder / filename
+        download_path = app_config.downloads_folder / filename
 
         # Check if file already exists
         if download_path.exists():

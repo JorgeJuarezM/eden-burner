@@ -20,8 +20,10 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker
 
-from config import Config
 from app.job_queue import BurnJob
+from config.config import Config
+
+app_config = Config.get_current_config()
 
 Base = declarative_base()
 
@@ -152,21 +154,20 @@ class BurnJobRecord(Base):
 class LocalStorage:
     """Local database storage manager."""
 
-    def __init__(self, config: Config):
+    def __init__(self):
         """Initialize local storage.
 
         Args:
             config: Application configuration
         """
-        self.config = config
         self.logger = logging.getLogger(__name__)
 
         # Create database directory if it doesn't exist
-        db_dir = self.config.database_file.parent
+        db_dir = app_config.database_file.parent
         db_dir.mkdir(parents=True, exist_ok=True)
 
         # Create database engine
-        db_url = f"sqlite:///{self.config.database_file}"
+        db_url = f"sqlite:///{app_config.database_file}"
 
         self.logger.info(f"Using database: {db_url}")
         self.engine = create_engine(db_url, echo=False)
@@ -392,8 +393,8 @@ class LocalStorage:
     def _get_database_size(self) -> float:
         """Get database file size in MB."""
         try:
-            if self.config.database_file.exists():
-                size_bytes = self.config.database_file.stat().st_size
+            if app_config.database_file.exists():
+                size_bytes = app_config.database_file.stat().st_size
                 return round(size_bytes / (1024 * 1024), 2)
             return 0.0
         except Exception:
@@ -407,12 +408,12 @@ class LocalStorage:
         """
         try:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            backup_path = self.config.database_file.with_suffix(f".backup_{timestamp}")
+            backup_path = app_config.database_file.with_suffix(f".backup_{timestamp}")
 
             # Simple file copy backup
             import shutil
 
-            shutil.copy2(self.config.database_file, backup_path)
+            shutil.copy2(app_config.database_file, backup_path)
 
             self.logger.info(f"Created database backup: {backup_path}")
             return str(backup_path)
@@ -431,11 +432,11 @@ class LocalStorage:
             Number of backups deleted
         """
         if keep_count is None:
-            keep_count = self.config.database_backup_count
+            keep_count = app_config.database_backup_count
 
         try:
-            backup_pattern = self.config.database_file.stem + ".backup_*"
-            backup_files = list(self.config.database_file.parent.glob(backup_pattern))
+            backup_pattern = app_config.database_file.stem + ".backup_*"
+            backup_files = list(app_config.database_file.parent.glob(backup_pattern))
 
             if len(backup_files) <= keep_count:
                 return 0

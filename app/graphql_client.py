@@ -11,30 +11,31 @@ import aiohttp
 from gql import Client, gql
 from gql.transport.aiohttp import AIOHTTPTransport
 
-from config import Config
+from config.config import Config
+
+app_config = Config.get_current_config()
 
 
 class GraphQLClient:
     """GraphQL client for querying ISO files."""
 
-    def __init__(self, config: Config):
+    def __init__(self):
         """Initialize GraphQL client.
 
         Args:
             config: Application configuration
         """
-        self.config = config
         self.logger = logging.getLogger(__name__)
 
         # Initialize transport
         headers = {}
-        if self.config.api_key:
-            headers["Authorization"] = f"Token {self.config.api_key}"
+        if app_config.api_key:
+            headers["Authorization"] = f"Token {app_config.api_key}"
 
         self.transport = AIOHTTPTransport(
-            url=self.config.graphql_endpoint,
+            url=app_config.graphql_endpoint,
             headers=headers,
-            timeout=self.config.api_timeout,  # Pass timeout directly as seconds
+            timeout=app_config.api_timeout,  # Pass timeout directly as seconds
         )
 
         # Initialize client
@@ -70,28 +71,10 @@ class GraphQLClient:
             """
 
             query = gql(query_string)
-
-            # Ensure robot_uuid is available and valid
-            robot_uuid = getattr(self.config, "robot_uuid", None)
-            if not robot_uuid:
-                self.logger.error("robot_uuid not configured in application config")
-                return []
-
-            variables = {"burner": robot_uuid}
-            # if last_check_time:
-            #     variables['lastCheckTime'] = last_check_time
+            variables = {"burner": app_config.robot_uuid}
 
             # Execute query with retry logic
-            max_retries = 3  # default retry attempts
-            if (
-                hasattr(self.config, "config_data")
-                and "api" in self.config.config_data
-                and "retry_attempts" in self.config.config_data["api"]
-            ):
-                max_retries = self.config.config_data["api"]["retry_attempts"]
-            elif hasattr(self.config, "retry_attempts"):
-                max_retries = self.config.retry_attempts
-
+            max_retries = app_config.api_retry_attempts
             for attempt in range(max_retries):
                 try:
                     result = await self.client.execute_async(query, variable_values=variables)
@@ -241,16 +224,7 @@ class GraphQLClient:
             }
 
             # Execute mutation with retry logic
-            max_retries = 3  # default retry attempts
-            if (
-                hasattr(self.config, "config_data")
-                and "api" in self.config.config_data
-                and "retry_attempts" in self.config.config_data["api"]
-            ):
-                max_retries = self.config.config_data["api"]["retry_attempts"]
-            elif hasattr(self.config, "retry_attempts"):
-                max_retries = self.config.retry_attempts
-
+            max_retries = app_config.api_retry_attempts
             for attempt in range(max_retries):
                 try:
                     result = await self.client.execute_async(mutation, variable_values=variables)
@@ -271,9 +245,8 @@ class GraphQLClient:
 class SyncGraphQLClient:
     """Synchronous wrapper for GraphQL client."""
 
-    def __init__(self, config: Config):
-        self.config = config
-        self.client = GraphQLClient(config)
+    def __init__(self):
+        self.client = GraphQLClient()
 
     def query_new_isos(self, last_check_time: Optional[str] = None) -> List[Dict[str, Any]]:
         """Synchronous version of query_new_isos."""

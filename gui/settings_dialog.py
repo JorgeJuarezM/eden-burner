@@ -23,15 +23,16 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from config import Config
+from config.config import Config
+
+app_config = Config.get_current_config()
 
 
 class SettingsDialog(QDialog):
     """Settings dialog with tabbed interface for configuration management."""
 
-    def __init__(self, config: Config, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.config = config
         self.modified_settings = {}
 
         self.setWindowTitle("Configuración - EPSON PP-100 Disc Burner")
@@ -444,12 +445,12 @@ class SettingsDialog(QDialog):
     def load_current_settings(self):
         """Load current configuration values into form fields."""
         # General tab
-        self.api_endpoint_edit.setText(self.config.graphql_endpoint)
-        self.api_key_edit.setText(self.config.api_key)
+        self.api_endpoint_edit.setText(app_config.graphql_endpoint)
+        self.api_key_edit.setText(app_config.api_key)
 
         # Set API timeout in combobox (convert seconds to index)
         timeout_options = [30, 60, 90, 120]
-        current_timeout = self.config.api_timeout
+        current_timeout = app_config.api_timeout
         if current_timeout in timeout_options:
             index = timeout_options.index(current_timeout)
             self.api_timeout_combo.setCurrentIndex(index)
@@ -457,27 +458,27 @@ class SettingsDialog(QDialog):
             # If current value is not in our options, set to first option
             self.api_timeout_combo.setCurrentIndex(0)
 
-        self.robot_uuid_edit.setText(self.config.robot_uuid)
-        self.robot_uuid_edit2.setText(self.config.robot_uuid)
+        self.robot_uuid_edit.setText(app_config.robot_uuid)
+        self.robot_uuid_edit2.setText(app_config.robot_uuid)
 
         # Folders tab
-        self.downloads_edit.setText(str(self.config.downloads_folder))
-        self.jdf_edit.setText(str(self.config.jdf_folder))
-        self.completed_edit.setText(str(self.config.completed_folder))
-        self.failed_edit.setText(str(self.config.failed_folder))
-        self.temp_edit.setText(str(self.config.temp_folder))
+        self.downloads_edit.setText(str(app_config.downloads_folder))
+        self.jdf_edit.setText(str(app_config.jdf_folder))
+        self.completed_edit.setText(str(app_config.completed_folder))
+        self.failed_edit.setText(str(app_config.failed_folder))
+        self.temp_edit.setText(str(app_config.temp_folder))
 
         # Robot tab
-        self.jdf_template_edit.setText(self.config.jdf_template)
-        self.label_edit.setText(self.config.label_file)
-        self.data_template_edit.setText(self.config.data_template)
+        self.jdf_template_edit.setText(app_config.jdf_template)
+        self.label_edit.setText(app_config.label_file)
+        self.data_template_edit.setText(app_config.data_template)
 
         # Jobs tab
-        self.max_concurrent_spin.setValue(self.config.max_concurrent_jobs)
+        self.max_concurrent_spin.setValue(app_config.max_concurrent_jobs)
 
         # Set check interval in combobox (convert seconds to index)
         check_interval_options = [10, 30, 60, 300, 600]  # seconds
-        current_check_interval = self.config.check_interval
+        current_check_interval = app_config.check_interval
         if current_check_interval in check_interval_options:
             index = check_interval_options.index(current_check_interval)
             self.check_interval_combo.setCurrentIndex(index)
@@ -485,14 +486,14 @@ class SettingsDialog(QDialog):
             # If current value is not in our options, set to first option (10 seconds)
             self.check_interval_combo.setCurrentIndex(0)
 
-        self.retry_failed_check.setChecked(self.config.retry_failed_jobs)
-        self.max_retries_spin.setValue(self.config.max_retries)
-        self.burner_timeout_spin.setValue(self.config.burner_timeout)
+        self.retry_failed_check.setChecked(app_config.retry_failed_jobs)
+        self.max_retries_spin.setValue(app_config.max_retries)
+        self.burner_timeout_spin.setValue(app_config.burner_timeout)
 
         # Interface tab
         # Set refresh interval in combobox (convert ms to index)
         refresh_interval_options = [1000, 2000, 5000, 10000]  # milliseconds
-        current_refresh_interval = self.config.gui_refresh_interval
+        current_refresh_interval = app_config.gui_refresh_interval
         if current_refresh_interval in refresh_interval_options:
             index = refresh_interval_options.index(current_refresh_interval)
             self.refresh_interval_combo.setCurrentIndex(index)
@@ -500,16 +501,16 @@ class SettingsDialog(QDialog):
             # If current value is not in our options, set to first option (1 second)
             self.refresh_interval_combo.setCurrentIndex(0)
 
-        self.show_notifications_check.setChecked(self.config.show_notifications)
-        self.log_level_combo.setCurrentText(self.config.config_data["logging"]["level"])
-        self.log_file_edit.setText(self.config.config_data["logging"]["file"])
+        self.show_notifications_check.setChecked(app_config.show_notifications)
+        self.log_level_combo.setCurrentText(app_config.config_data["logging"]["level"])
+        self.log_file_edit.setText(app_config.config_data["logging"]["file"])
         self.log_max_size_spin.setValue(
-            self.config.config_data["logging"]["max_size"] // (1024 * 1024)
+            app_config.config_data["logging"]["max_size"] // (1024 * 1024)
         )
 
         # Database tab
-        self.database_file_edit.setText(str(self.config.database_file))
-        self.backup_count_spin.setValue(self.config.database_backup_count)
+        self.database_file_edit.setText(str(app_config.database_file))
+        self.backup_count_spin.setValue(app_config.database_backup_count)
 
     def select_folder(self, edit_widget):
         """Open folder selection dialog."""
@@ -531,71 +532,71 @@ class SettingsDialog(QDialog):
         """Save settings to configuration."""
         try:
             # General tab
-            self.config.graphql_endpoint = self.api_endpoint_edit.text().strip()
-            self.config.api_key = self.api_key_edit.text().strip()
+            app_config.graphql_endpoint = self.api_endpoint_edit.text().strip()
+            app_config.api_key = self.api_key_edit.text().strip()
 
             # Convert combobox index to seconds
             timeout_options = [30, 60, 90, 120]
             selected_index = self.api_timeout_combo.currentIndex()
-            self.config.config_data["api"]["timeout"] = (
+            app_config.config_data["api"]["timeout"] = (
                 timeout_options[selected_index] if selected_index >= 0 else 30
             )
 
-            self.config.config_data["robot"]["robot_uuid"] = self.robot_uuid_edit.text().strip()
+            app_config.config_data["robot"]["robot_uuid"] = self.robot_uuid_edit.text().strip()
 
             # Folders tab
-            self.config.config_data["folders"]["downloads"] = self.downloads_edit.text().strip()
-            self.config.config_data["folders"]["jdf_files"] = self.jdf_edit.text().strip()
-            self.config.config_data["folders"]["completed"] = self.completed_edit.text().strip()
-            self.config.config_data["folders"]["failed"] = self.failed_edit.text().strip()
-            self.config.config_data["folders"]["temp"] = self.temp_edit.text().strip()
+            app_config.config_data["folders"]["downloads"] = self.downloads_edit.text().strip()
+            app_config.config_data["folders"]["jdf_files"] = self.jdf_edit.text().strip()
+            app_config.config_data["folders"]["completed"] = self.completed_edit.text().strip()
+            app_config.config_data["folders"]["failed"] = self.failed_edit.text().strip()
+            app_config.config_data["folders"]["temp"] = self.temp_edit.text().strip()
 
             # Robot tab
-            self.config.config_data["robot"]["jdf_template"] = self.jdf_template_edit.text().strip()
-            self.config.config_data["robot"]["label_file"] = self.label_edit.text().strip()
-            self.config.config_data["robot"][
+            app_config.config_data["robot"]["jdf_template"] = self.jdf_template_edit.text().strip()
+            app_config.config_data["robot"]["label_file"] = self.label_edit.text().strip()
+            app_config.config_data["robot"][
                 "data_template"
             ] = self.data_template_edit.text().strip()
 
             # Jobs tab
-            self.config.config_data["jobs"]["max_concurrent"] = self.max_concurrent_spin.value()
+            app_config.config_data["jobs"]["max_concurrent"] = self.max_concurrent_spin.value()
 
             # Convert combobox index to seconds for check interval
             check_interval_options = [10, 30, 60, 300, 600]  # seconds
             check_selected_index = self.check_interval_combo.currentIndex()
-            self.config.config_data["jobs"]["check_interval"] = (
+            app_config.config_data["jobs"]["check_interval"] = (
                 check_interval_options[check_selected_index] if check_selected_index >= 0 else 10
             )
 
-            self.config.config_data["jobs"]["retry_failed"] = self.retry_failed_check.isChecked()
-            self.config.config_data["jobs"]["max_retries"] = self.max_retries_spin.value()
-            self.config.config_data["jobs"]["burner_timeout"] = self.burner_timeout_spin.value()
+            app_config.config_data["jobs"]["retry_failed"] = self.retry_failed_check.isChecked()
+            app_config.config_data["jobs"]["max_retries"] = self.max_retries_spin.value()
+            app_config.config_data["jobs"]["burner_timeout"] = self.burner_timeout_spin.value()
 
             # Interface tab
             # Convert combobox index to milliseconds for refresh interval
             refresh_interval_options = [1000, 2000, 5000, 10000]  # milliseconds
             refresh_selected_index = self.refresh_interval_combo.currentIndex()
-            self.config.config_data["gui"]["refresh_interval"] = (
+            app_config.config_data["gui"]["refresh_interval"] = (
                 refresh_interval_options[refresh_selected_index]
                 if refresh_selected_index >= 0
                 else 1000
             )
 
-            self.config.config_data["gui"][
+            app_config.config_data["gui"][
                 "show_notifications"
             ] = self.show_notifications_check.isChecked()
-            self.config.config_data["logging"]["level"] = self.log_level_combo.currentText()
-            self.config.config_data["logging"]["file"] = self.log_file_edit.text().strip()
-            self.config.config_data["logging"]["max_size"] = (
+            app_config.config_data["logging"]["level"] = self.log_level_combo.currentText()
+            app_config.config_data["logging"]["file"] = self.log_file_edit.text().strip()
+            app_config.config_data["logging"]["max_size"] = (
                 self.log_max_size_spin.value() * 1024 * 1024
             )
 
             # Database tab
-            self.config.config_data["database"]["file"] = self.database_file_edit.text().strip()
-            self.config.config_data["database"]["backup_count"] = self.backup_count_spin.value()
+            app_config.config_data["database"]["file"] = self.database_file_edit.text().strip()
+            app_config.config_data["database"]["backup_count"] = self.backup_count_spin.value()
 
             # Save configuration
-            self.config.save_config()
+            app_config.save_config()
 
             QMessageBox.information(
                 self, "Configuración Guardada", "La configuración se ha guardado exitosamente."
@@ -611,10 +612,10 @@ class SettingsDialog(QDialog):
         summary = []
 
         # Check each setting for changes
-        if self.api_endpoint_edit.text().strip() != self.config.graphql_endpoint:
+        if self.api_endpoint_edit.text().strip() != app_config.graphql_endpoint:
             summary.append(f"API Endpoint: {self.api_endpoint_edit.text().strip()}")
 
-        if self.api_key_edit.text().strip() != self.config.api_key:
+        if self.api_key_edit.text().strip() != app_config.api_key:
             summary.append("API Key: [modificado]")
 
         # Check API timeout (convert combobox index to seconds)
@@ -622,7 +623,7 @@ class SettingsDialog(QDialog):
         selected_index = self.api_timeout_combo.currentIndex()
         current_timeout_value = timeout_options[selected_index] if selected_index >= 0 else 30
 
-        if current_timeout_value != self.config.api_timeout:
+        if current_timeout_value != app_config.api_timeout:
             summary.append(f"API Timeout: {current_timeout_value}s")
 
         # Check check interval (convert combobox index to seconds)
@@ -632,7 +633,7 @@ class SettingsDialog(QDialog):
             check_interval_options[check_selected_index] if check_selected_index >= 0 else 10
         )
 
-        if current_check_value != self.config.check_interval:
+        if current_check_value != app_config.check_interval:
             summary.append(f"Intervalo de Verificación: {current_check_value}s")
 
         # Check refresh interval (convert combobox index to milliseconds)
@@ -644,10 +645,10 @@ class SettingsDialog(QDialog):
             else 1000
         )
 
-        if current_refresh_value != self.config.gui_refresh_interval:
+        if current_refresh_value != app_config.gui_refresh_interval:
             summary.append(f"Intervalo de Actualización GUI: {current_refresh_value}ms")
 
-        if self.robot_uuid_edit.text().strip() != self.config.robot_uuid:
+        if self.robot_uuid_edit.text().strip() != app_config.robot_uuid:
             summary.append(f"Robot UUID: {self.robot_uuid_edit.text().strip()}")
 
         # Add more checks for other settings...
