@@ -17,7 +17,7 @@ from config import Config
 from app.graphql_client import SyncGraphQLClient
 from app.iso_downloader import ISODownloadManager
 from app.jdf_generator import JDFGenerator
-
+import glob
 
 class JobStatus(Enum):
     """Job status enumeration."""
@@ -424,6 +424,11 @@ class JobQueue:
             job.update_status(JobStatus.FAILED, str(e), job_queue=self)
             self._notify_job_update(job)
 
+    def _get_wildcard_filed(self, file_path: str, extension:str) -> List[str]:
+        """Get a list of files with wildcard and extension."""
+        file_path_without_extension = Path(file_path).with_suffix("")
+        return glob.glob(f"{file_path_without_extension}*.{extension}") or []
+
     def _check_burn_status(self, job: BurnJob):
         """Worker function for burning simulation."""
         try:
@@ -437,9 +442,9 @@ class JobQueue:
                 self.logger.info("Cancelled Job: %s", job.id)
                 return
 
-            # Replace file extension with .DON
-            done_file = Path(job.jdf_path).with_suffix(".DON")
-            if done_file.exists():
+            # Check if done file exists
+            done_files = self._get_wildcard_files(job.jdf_path, "DON")
+            if done_files:
                 job.update_status(JobStatus.COMPLETED, job_queue=self)
                 job.progress = 100.0
 
@@ -448,17 +453,17 @@ class JobQueue:
                 self.logger.info(f"Completed job {job.id}")
                 return
 
-            # Replace file extension with .INP
-            progress_file = Path(job.jdf_path).with_suffix(".INP")
-            if progress_file.exists():
+            # Check if INP file exists
+            inp_files = self._get_wildcard_files(job.jdf_path, "INP")
+            if inp_files:
                 self.logger.info("Job in progress: %s", job.id)
                 job.progress = 50.0
                 return
 
-            # Replace file extension with .ERR
-            error_file = Path(job.jdf_path).with_suffix(".ERR")
-            if error_file.exists():
-                raise Exception(f"Burner responded with error: {error_file.read_text()}")
+            # Check if ERR file exists
+            err_files = self._get_wildcard_files(job.jdf_path, "ERR")
+            if err_files:
+                raise Exception(f"Burner responded with error for job {job.id}")
 
         except Exception as e:
             job.update_status(JobStatus.FAILED, f"Burning failed: {str(e)}", job_queue=self)
@@ -563,21 +568,21 @@ class JobQueue:
                 self.logger.debug(f"Removed JDF file: {job.jdf_path}")
 
             # Remove done file if it exists
-            done_file = Path(job.jdf_path).with_suffix(".DON")
-            if done_file.exists():
-                done_file.unlink()
+            done_files = self._get_wildcard_files(job.jdf_path, "DON")
+            for done_file in done_files:
+                Path(done_file).unlink()
                 self.logger.debug(f"Removed done file: {done_file}")
 
-            # Remove progress file if it exists
-            progress_file = Path(job.jdf_path).with_suffix(".INP")
-            if progress_file.exists():
-                progress_file.unlink()
-                self.logger.debug(f"Removed progress file: {progress_file}")
+            # Remove inp file if it exists
+            inp_files = self._get_wildcard_files(job.jdf_path, "INP")
+            for inp_file in inp_files:
+                Path(inp_file).unlink()
+                self.logger.debug(f"Removed inp file: {inp_file}")
 
             # Remove error file if it exists
-            error_file = Path(job.jdf_path).with_suffix(".ERR")
-            if error_file.exists():
-                error_file.unlink()
+            error_files = self._get_wildcard_files(job.jdf_path, "ERR")
+            for error_file in error_files:
+                Path(error_file).unlink()
                 self.logger.debug(f"Removed error file: {error_file}")
 
         except Exception as e:
