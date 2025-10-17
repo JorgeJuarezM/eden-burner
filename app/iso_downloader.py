@@ -110,7 +110,7 @@ class ISODownloadManager:
             self.logger.error("ISO info missing ID")
             return ""
 
-        filename = iso_info.get("filename", f"iso_{iso_id}.iso")
+        filename = f"iso_{iso_id}.iso"
         download_path = self.config.downloads_folder / filename
 
         # Check if file already exists
