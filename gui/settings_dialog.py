@@ -2,6 +2,7 @@
 Settings dialog for EPSON PP-100 Disc Burner Application
 """
 
+from pathlib import Path
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QCheckBox,
@@ -349,6 +350,12 @@ class SettingsDialog(QDialog):
         self.max_retries_spin.setRange(0, 10)
         layout.addRow("Máximo de Reintentos:", self.max_retries_spin)
 
+        # Burner timeout
+        self.burner_timeout_spin = QSpinBox()
+        self.burner_timeout_spin.setRange(1, 60)
+        self.burner_timeout_spin.setSuffix(" minutos")
+        layout.addRow("Timeout del Quemador:", self.burner_timeout_spin)
+
         self.tab_widget.addTab(tab, "Trabajos")
 
     def create_interface_tab(self):
@@ -479,6 +486,7 @@ class SettingsDialog(QDialog):
 
         self.retry_failed_check.setChecked(self.config.retry_failed_jobs)
         self.max_retries_spin.setValue(self.config.max_retries)
+        self.burner_timeout_spin.setValue(self.config.burner_timeout)
 
         # Interface tab
         # Set refresh interval in combobox (convert ms to index)
@@ -560,6 +568,7 @@ class SettingsDialog(QDialog):
 
             self.config.config_data["jobs"]["retry_failed"] = self.retry_failed_check.isChecked()
             self.config.config_data["jobs"]["max_retries"] = self.max_retries_spin.value()
+            self.config.config_data["jobs"]["burner_timeout"] = self.burner_timeout_spin.value()
 
             # Interface tab
             # Convert combobox index to milliseconds for refresh interval

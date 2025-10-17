@@ -29,6 +29,7 @@ jobs:
   max_concurrent: 3              # Número máximo de trabajos simultáneos
   check_interval: 10             # Intervalo de verificación en segundos
   retry_failed: true             # Reintentar trabajos fallidos automáticamente
+  burner_timeout: 10            # Tiempo de espera en minutos antes de marcar como fallido
 
 # Configuración de logging
 logging:

@@ -3,9 +3,37 @@ Configuration management for EPSON PP-100 Disc Burner Application
 """
 
 import os
+from functools import wraps
 from pathlib import Path
+from typing import Any
 
 import yaml
+
+
+def safe_config_get(default_value: Any):
+    """Decorator for config properties that provides a fallback default value.
+
+    This decorator catches KeyError and other exceptions when accessing
+    configuration values that may not exist in older config files, and
+    returns the specified default value instead.
+
+    Args:
+        default_value: The default value to return if the config key is missing
+
+    Returns:
+        The decorated property function
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(self):
+            try:
+                return func(self)
+            except (KeyError, TypeError):
+                # KeyError: key doesn't exist in config_data
+                # TypeError: config_data is None or not a dict
+                return default_value
+        return wrapper
+    return decorator
 
 
 class Config:
@@ -86,6 +114,7 @@ class Config:
                 "check_interval": 30,  # seconds
                 "retry_failed": True,
                 "max_retries": 2,
+                "burner_timeout": 10,  # minutes
             },
             "gui": {
                 "refresh_interval": 5000,  # milliseconds
@@ -183,14 +212,22 @@ class Config:
         return self.config_data["jobs"]["check_interval"]
 
     @property
+    @safe_config_get(True)  # Default: True (retry failed jobs)
     def retry_failed_jobs(self):
         """Whether to retry failed jobs."""
         return self.config_data["jobs"]["retry_failed"]
 
     @property
+    @safe_config_get(2)  # Default: 2 retries
     def max_retries(self):
         """Maximum number of retries for failed jobs."""
         return self.config_data["jobs"]["max_retries"]
+
+    @property
+    @safe_config_get(10)  # Default: 10 minutes
+    def burner_timeout(self):
+        """Timeout in minutes before marking a burn job as failed."""
+        return self.config_data["jobs"]["burner_timeout"]
 
     # GUI Configuration
     @property
@@ -199,6 +236,7 @@ class Config:
         return self.config_data["gui"]["refresh_interval"]
 
     @property
+    @safe_config_get(True)  # Default: True
     def show_notifications(self):
         """Whether to show system notifications."""
         return self.config_data["gui"]["show_notifications"]
@@ -210,6 +248,7 @@ class Config:
         return Path(self.config_data["database"]["file"])
 
     @property
+    @safe_config_get(5)  # Default: 5 backups
     def database_backup_count(self):
         """Number of database backups to keep."""
         return self.config_data["database"]["backup_count"]

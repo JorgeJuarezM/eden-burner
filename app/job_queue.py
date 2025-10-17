@@ -8,7 +8,7 @@ import threading
 import time
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
@@ -415,10 +415,14 @@ class JobQueue:
     def _burn_loop(self, job: BurnJob):
         """Loop for burning simulation."""
         try:
+            max_time = datetime.now() + timedelta(minutes=self.config.burner_timeout)
             while job.status == JobStatus.BURNING:
+                if datetime.now() > max_time:
+                    raise Exception("Burning timed out")
+
                 self._check_burn_status(job)
                 self._notify_job_update(job)
-                time.sleep(10)
+                time.sleep(10) # wait 10 seconds before checking again
 
         except Exception as e:
             job.update_status(JobStatus.FAILED, str(e), job_queue=self)
