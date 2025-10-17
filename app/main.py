@@ -33,12 +33,12 @@ from gui.main_window import MainWindow
 from app.background_worker import BackgroundWorker
 from app.job_queue import BurnJob, JobQueue, JobStatus
 from app.local_storage import LocalStorage
-
+from filelock import FileLock, Timeout
 
 class EpsonBurnerApp:
     """Main application class for EPSON PP-100 disc burner management."""
 
-    def __init__(self, show_gui=False):
+    def __init__(self):
         # Load configuration FIRST
         self.config = Config()
 
@@ -62,6 +62,8 @@ class EpsonBurnerApp:
         # Setup application
         self.app = QApplication(sys.argv)
         self.app.setQuitOnLastWindowClosed(False)
+
+    def initialize_application(self, show_gui=False):
 
         # Setup system tray
         self.setup_system_tray()
@@ -458,11 +460,15 @@ def main():
     show_gui = not args.background
 
     try:
-        burner_app = EpsonBurnerApp(show_gui=show_gui)
-        if hasattr(burner_app, "logger"):  # Check if app was properly initialized
+        burner_app = EpsonBurnerApp()
+        with FileLock("app.lock", timeout=1):
+            burner_app.initialize_application(show_gui=show_gui)
             return burner_app.run()
-        else:
-            return 1
+    except Timeout:
+        print("Application already running")
+        if show_gui:
+            QMessageBox.warning(None, "Aplicación ya en ejecución", "La aplicación Eden Burner ya se está ejecutando.")
+        return 1
     except Exception as e:
         print(f"Error starting application: {e}")
         return 1
