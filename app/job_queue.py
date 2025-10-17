@@ -1,5 +1,46 @@
 """
-Job Queue Management for EPSON PP-100 Disc Burner Application
+Job Queue Management System for EPSON PP-100 Disc Burner Application
+
+This module implements a sophisticated job queue management system that handles
+the entire lifecycle of ISO burning jobs from discovery to completion.
+
+Architecture:
+    - Multi-threaded job processing with configurable concurrency
+    - State machine pattern for job status transitions
+    - Event-driven architecture with callback notifications
+    - Integration with database, file system, and robot communication
+
+Components:
+    - BurnJob: Data class representing individual burning jobs
+    - JobStatus: Enumeration of all possible job states
+    - JobQueue: Thread-safe queue manager with processing logic
+    - Integration with ISODownloadManager, JDFGenerator, and GraphQL API
+
+Job Lifecycle:
+    1. PENDING → DOWNLOADING → DOWNLOADED → GENERATING_JDF → JDF_READY
+    2. JDF_READY → QUEUED_FOR_BURNING → BURNING → VERIFYING → COMPLETED
+    3. Any state → FAILED (with retry capability)
+    4. Any active state → CANCELLED (user-initiated)
+
+Features:
+    - Automatic disc type detection (CD/DVD) based on file size
+    - Progress tracking and status updates
+    - Retry mechanism for failed jobs
+    - Concurrent job processing with configurable limits
+    - Integration with robot status files (.INP, .DON, .ERR)
+    - Automatic file management (downloads, JDF files, completed jobs)
+    - DICOM study information extraction and display
+
+Threading Model:
+    - Main thread: GUI interactions and job queue management
+    - Background threads: Individual job processing (download, burn, verify)
+    - Worker threads: Specific task execution with proper synchronization
+
+Error Handling:
+    - Comprehensive error logging and user notifications
+    - Graceful degradation on component failures
+    - Automatic retry with exponential backoff
+    - Detailed error messages for troubleshooting
 """
 
 import glob

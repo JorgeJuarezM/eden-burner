@@ -1,3 +1,27 @@
+"""
+Database Service Layer for Burn Job Management
+
+This module provides the data access layer for managing burn job records in the SQLite database.
+Implements the Repository pattern with static methods for clean separation of concerns.
+
+Architecture:
+    - Service layer: Business logic for job operations
+    - Model layer: SQLAlchemy ORM models
+    - Engine layer: Database connection and session management
+
+Features:
+    - CRUD operations for burn job records
+    - DICOM study information management
+    - Automatic session lifecycle management
+    - Error handling and logging
+    - Database statistics and cleanup operations
+
+Thread Safety:
+    - All operations use context managers for automatic session management
+    - No shared mutable state between threads
+    - Session-scoped operations ensure data consistency
+"""
+
 import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -86,7 +110,32 @@ def save_job(
 
 
 class BurnJob:
-    """Service for managing burn job records."""
+    """
+    Service class for managing burn job records in the database.
+
+    This class implements the Repository pattern, providing a clean API for
+    all database operations related to burn jobs. All methods are static
+    to ensure thread safety and avoid state management complexity.
+
+    Database Operations:
+        - save_job(): Create or update job records
+        - get_all_jobs(): Retrieve all jobs with optional filtering
+        - get_job(): Retrieve specific job by ID
+        - update_job_state(): Update job status and progress
+        - delete_job(): Remove job from database
+        - cleanup_old_jobs(): Remove old completed/failed jobs
+        - get_storage_stats(): Get database statistics
+
+    DICOM Integration:
+        - Automatic extraction of patient and study information
+        - Mapping between GraphQL API response and database schema
+        - Support for all DICOM study fields (patient, dates, descriptions)
+
+    Error Handling:
+        - SQLAlchemy exceptions are caught and logged
+        - Graceful degradation with empty results on errors
+        - Comprehensive error logging for debugging
+    """
 
     @staticmethod
     @with_session

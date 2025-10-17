@@ -2,40 +2,70 @@
 
 Aplicación profesional para gestión de quemado de discos con robot EPSON PP-100.
 
-## 🏗️ Estructura del Proyecto
+## 🏗️ Arquitectura del Proyecto
 
 ```
-epson-burner-app/
-├── src/                          # Código fuente principal
-│   ├── main.py                   # Punto de entrada de la aplicación
+eden-burner/
+├── app/                          # Capa de aplicación (business logic)
+│   ├── __init__.py              # Exporta clases principales
+│   ├── main.py                   # Aplicación principal (GUI + lógica)
 │   ├── background_worker.py      # Trabajador en segundo plano
 │   ├── job_queue.py              # Gestión de cola de trabajos
 │   ├── iso_downloader.py         # Descarga de archivos ISO
 │   ├── jdf_generator.py          # Generación de archivos JDF
 │   ├── graphql_client.py         # Cliente GraphQL API
-│   └── local_storage.py          # Gestión de almacenamiento local
+│   └── local_storage.py          # Gestión de almacenamiento (mantenimiento)
+├── db/                           # Capa de datos (data access layer)
+│   ├── __init__.py              # Exporta servicios de datos
+│   ├── engine.py                # Gestión de sesiones SQLAlchemy
+│   ├── burn_job.py              # Servicio de gestión de trabajos
+│   └── models/                  # Modelos ORM
+│       ├── __init__.py
+│       ├── base.py              # Base declarative de SQLAlchemy
+│       └── burn_job.py          # Modelo BurnJobRecord
 ├── config/                       # Configuración de la aplicación
-│   ├── config.py                 # Gestor de configuración
+│   ├── __init__.py
+│   ├── config.py                 # Gestor de configuración (singleton)
 │   ├── config.yaml              # Configuración del usuario
 │   └── config.example.yaml      # Ejemplo de configuración
 ├── gui/                         # Interfaz gráfica de usuario
+│   ├── __init__.py
 │   ├── main_window.py           # Ventana principal
-│   └── __init__.py
+│   ├── job_details_dialog.py    # Diálogo de detalles de trabajo
+│   ├── job_table_widget.py      # Widget de tabla de trabajos
+│   └── settings_dialog.py       # Diálogo de configuración
+├── assets/                      # Recursos de la aplicación
+│   ├── icon.icns               # Icono macOS
+│   ├── icon.ico                # Icono Windows
+│   └── logo.png                # Logo de la aplicación
 ├── docs/                        # Documentación
 │   ├── README.md               # Este archivo
 │   ├── BUILD_README.md        # Guía de construcción
+│   ├── CODE_QUALITY_README.md # Guía de calidad de código
 │   ├── DEVELOPMENT_README.md   # Guía de desarrollo
 │   ├── DISTRIBUTION_README.md  # Guía de distribución
-│   └── LICENSE.txt             # Licencia
+│   ├── LICENSE.txt             # Licencia
+│   └── TEMPLATES_README.md     # Guía de plantillas
 ├── tools/                       # Herramientas de desarrollo
+│   ├── __init__.py
 │   ├── dev_tools.py            # Herramientas de desarrollo
-│   ├── test_config.py          # Pruebas de configuración
-│   └── __init__.py
+│   └── test_config.py          # Pruebas de configuración
 ├── scripts/                     # Scripts de construcción y despliegue
+│   ├── __init__.py
 │   ├── build.py                # Script de construcción principal
-│   ├── create_windows_package.py # Empaquetado para Windows
-│   ├── rebuild.py              # Reconstrucción completa
-│   └── __init__.py
+│   ├── code_quality.py          # Herramientas de calidad de código
+│   └── rebuild.py              # Reconstrucción completa
+├── templates/                   # Plantillas para generación de archivos
+│   ├── default.tdd             # Plantilla de etiqueta por defecto
+│   ├── jdf_template.jdf        # Plantilla JDF para robot
+│   └── template.data           # Plantilla de archivo de datos
+├── tests/                       # Suite de pruebas
+│   ├── __init__.py
+│   └── test_build.py           # Pruebas de construcción
+├── completed/                   # Trabajos completados
+├── failed/                      # Trabajos fallidos
+├── downloads/                   # Archivos descargados temporalmente
+├── jdf_files/                   # Archivos JDF generados
 ├── main.py                      # Launcher principal (raíz)
 ├── requirements.txt             # Dependencias Python
 ├── requirements-dev.txt         # Dependencias de desarrollo
@@ -149,10 +179,12 @@ Las plantillas pueden personalizarse editando los archivos correspondientes en l
 
 ## 📚 Documentación Adicional
 
+- [Arquitectura del Sistema](docs/ARCHITECTURE.md)
 - [Guía de Desarrollo](docs/DEVELOPMENT_README.md)
 - [Guía de Construcción](docs/BUILD_README.md)
 - [Guía de Distribución](docs/DISTRIBUTION_README.md)
 - [Guía de Plantillas](docs/TEMPLATES_README.md)
+- [Guía de Calidad de Código](docs/CODE_QUALITY_README.md)
 
 ## 🛠️ Desarrollo
 

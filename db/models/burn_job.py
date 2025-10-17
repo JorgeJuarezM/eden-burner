@@ -1,5 +1,28 @@
 """
-Database model for burn job records
+Database model for burn job records.
+
+This module defines the SQLAlchemy ORM model for storing burn job information
+in the SQLite database. The model captures all relevant information about
+ISO burning jobs including file details, DICOM study information, and
+processing status.
+
+Model Fields:
+    - Core job identification (id, iso_id, filename)
+    - File information (file_size, download_url, checksum)
+    - Processing status and progress tracking
+    - DICOM study information (patient, study details)
+    - Robot interaction data (robot_job_id, disc_type)
+    - Timestamps and error handling
+
+Relationships:
+    - No foreign key relationships (self-contained job records)
+    - All DICOM information embedded as columns for performance
+
+Design Decisions:
+    - UUID primary keys for job identification
+    - Nullable fields for optional DICOM information
+    - Automatic timestamps with timezone awareness
+    - Support for both CD and DVD disc types
 """
 
 from datetime import datetime

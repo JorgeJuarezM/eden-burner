@@ -1,6 +1,48 @@
 """
-Background worker for EPSON PP-100 Disc Burner Application
-Handles job processing when GUI is closed
+Background Worker System for EPSON PP-100 Disc Burner Application
+
+This module implements a comprehensive background processing system that manages
+job processing and API polling when the GUI is closed or running in system tray mode.
+
+Architecture:
+    - Event-driven scheduling system using the `schedule` library
+    - Multi-threaded job processing with proper synchronization
+    - API polling for new ISO discoveries
+    - Database maintenance and cleanup operations
+    - System monitoring and statistics collection
+
+Components:
+    - BackgroundWorker: Main coordinator class
+    - Scheduler integration: Periodic task execution
+    - Job queue monitoring: Ready job detection and processing
+    - Database maintenance: Backup, cleanup, statistics
+    - API integration: ISO discovery and status updates
+
+Scheduling System:
+    - API polling: Configurable interval for checking new ISOs
+    - Job cleanup: Daily cleanup of old completed/failed jobs
+    - Download cleanup: Periodic cleanup of old download cache
+    - Database maintenance: Backup creation and old backup removal
+    - Statistics collection: System performance monitoring
+
+Threading Model:
+    - Main background thread: Runs scheduler and monitors job queue
+    - Worker threads: Individual job processing tasks
+    - Synchronization: Proper locking for shared resources
+
+Features:
+    - Automatic retry mechanism for failed operations
+    - Graceful shutdown with cleanup
+    - Comprehensive logging and error reporting
+    - Real-time status monitoring and reporting
+    - Configurable intervals and timeouts
+    - System resource monitoring (CPU, memory, disk usage)
+
+Error Handling:
+    - Exception isolation prevents scheduler crashes
+    - Automatic retry with exponential backoff
+    - Detailed error logging for troubleshooting
+    - Graceful degradation on component failures
 """
 
 import json

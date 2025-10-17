@@ -2,13 +2,29 @@
 """
 EPSON PP-100 Disc Burner Application
 
-A PyQt5 application for managing ISO burning jobs with EPSON PP-100 robot.
+A professional PyQt5 application for managing ISO burning jobs with EPSON PP-100 robot.
+
+Architecture:
+    - 3-layer architecture with clean separation of concerns
+    - Data layer (db/): SQLAlchemy ORM and repository pattern
+    - Business logic layer (app/): Core application functionality
+    - Presentation layer (gui/): PyQt5 user interface
+
 Features:
-- GraphQL API integration for ISO discovery
-- Multi-task job queue management
-- JDF file generation for robot communication
-- Background execution support
-- Intuitive GUI for job monitoring
+    - GraphQL API integration for automatic ISO discovery
+    - Multi-task job queue management with priority support
+    - JDF file generation for robot communication
+    - Background execution support with system tray integration
+    - Intuitive GUI for job monitoring and configuration
+    - DICOM study information processing and display
+    - Template-based file generation (JDF, labels, data files)
+    - SQLite database with automatic backups
+    - Cross-platform compatibility (Windows, macOS, Linux)
+
+Command Line Options:
+    --background: Run in background mode (system tray only)
+    --test-config: Validate configuration and exit
+    --clear-database: Clear database and exit
 """
 
 import argparse
@@ -40,7 +56,32 @@ app_config = Config.get_current_config()
 
 
 class EpsonBurnerApp:
-    """Main application class for EPSON PP-100 disc burner management."""
+    """
+    Main application class for EPSON PP-100 disc burner management.
+
+    This class serves as the central coordinator for the entire application,
+    managing the lifecycle of all components including GUI, background workers,
+    job queue, and database operations.
+
+    Architecture:
+        - Coordinates between GUI (PyQt5) and business logic
+        - Manages background worker threads for API polling and job processing
+        - Handles system tray integration and notifications
+        - Provides centralized configuration management
+        - Manages database initialization and job loading
+
+    Components:
+        - storage: Local database management (backup, cleanup)
+        - job_queue: Multi-threaded job processing queue
+        - background_worker: API polling and job scheduling
+        - main_window: GUI interface (lazy-loaded)
+        - tray_icon: System tray integration
+
+    Threading:
+        - Main thread: GUI and user interactions
+        - Background thread: API polling and job processing
+        - Worker threads: Individual job processing tasks
+    """
 
     def __init__(self):
         # Setup logging (now that config is available)

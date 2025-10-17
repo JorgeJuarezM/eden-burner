@@ -1,5 +1,40 @@
 """
-Configuration management for EPSON PP-100 Disc Burner Application
+Configuration Management System for EPSON PP-100 Disc Burner Application
+
+This module implements a robust configuration management system with the following features:
+
+Singleton Pattern:
+    - Single configuration instance across the entire application
+    - Thread-safe configuration access
+    - Lazy initialization on first access
+
+Configuration Sources:
+    - YAML configuration files (config.yaml)
+    - Environment variable overrides
+    - Runtime configuration updates
+    - Backward compatibility with legacy configurations
+
+Features:
+    - Type-safe property access with validation
+    - Automatic folder creation for required directories
+    - Configuration validation with detailed error reporting
+    - Safe fallbacks for missing configuration keys
+    - Support for complex nested configurations
+
+Configuration Sections:
+    - API settings (GraphQL endpoint, authentication, timeouts)
+    - Robot configuration (UUID, templates, file paths)
+    - Job management (concurrency, intervals, retry policies)
+    - GUI settings (refresh intervals, notifications)
+    - Logging configuration (levels, files, rotation)
+    - Database settings (file path, backup policies)
+    - Folder structure (downloads, completed, failed jobs)
+
+Usage:
+    from config.config import Config
+    config = Config.get_current_config()
+    endpoint = config.graphql_endpoint
+    max_jobs = config.max_concurrent_jobs
 """
 
 import os
@@ -40,7 +75,37 @@ def safe_config_get(default_value: Any):
 
 
 class Config:
-    """Configuration manager for the application."""
+    """
+    Singleton configuration manager for the EPSON PP-100 Disc Burner application.
+
+    This class provides a centralized, thread-safe configuration management system
+    that loads settings from YAML files and provides type-safe access to all
+    configuration parameters.
+
+    Architecture:
+        - Singleton pattern ensures single configuration instance
+        - Lazy initialization on first access
+        - Thread-safe property access
+        - Automatic configuration validation
+
+    Configuration Hierarchy:
+        1. YAML file (config.yaml) - primary configuration source
+        2. Environment variables - runtime overrides
+        3. Default values - fallback for missing keys
+        4. Runtime updates - programmatic configuration changes
+
+    Key Features:
+        - Type-safe property access with validation decorators
+        - Automatic folder creation for required directories
+        - Comprehensive configuration validation
+        - Backward compatibility with older config versions
+        - Runtime configuration reloading capability
+
+    Thread Safety:
+        - All properties are read-only after initialization
+        - Safe for concurrent access across threads
+        - No mutable state shared between threads
+    """
 
     def __init__(self, config_file=None):
         """Initialize configuration.
