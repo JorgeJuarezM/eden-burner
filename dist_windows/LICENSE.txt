@@ -1,7 +1,0 @@
-EPSON PP-100 Disc Burner License Agreement
-
-This software is provided "as is" without warranty of any kind.
-
-Copyright (C) 2024 EPSON Corporation
-
-Permission is granted to use this software for personal and commercial purposes.
