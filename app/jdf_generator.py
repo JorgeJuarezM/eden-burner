@@ -10,6 +10,7 @@ from jinja2 import Template
 from config.config import Config
 
 app_config = Config.get_current_config()
+import db
 
 
 class JDFGenerator:
@@ -21,13 +22,10 @@ class JDFGenerator:
         Args:
             config: Application configuration
         """
-        from app.local_storage import LocalStorage
-
         self.logger = logging.getLogger(__name__)
-        self.storage = LocalStorage()
 
         self.job_id = job_id
-        self.job_data = self.storage.get_job(job_id)
+        self.job_data = db.BurnJob.get_job(job_id)
 
     def _read_file_template(self, template_path: str) -> str:
         """Read a file template.

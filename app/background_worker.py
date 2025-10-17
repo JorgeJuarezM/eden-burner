@@ -12,6 +12,7 @@ from typing import Any, Dict, Optional
 
 import schedule
 
+import db
 from app.graphql_client import SyncGraphQLClient
 from app.job_queue import JobQueue, JobStatus
 from app.local_storage import LocalStorage
@@ -195,7 +196,7 @@ class BackgroundWorker:
                     if not existing_jobs:
                         # Add as new job
                         job_id = self.job_queue.add_job(iso_info)
-                        self.storage.save_job(job_id, iso_info)
+                        db.BurnJob.save_job(job_id, iso_info)
                         added_count += 1
                         self.logger.info(f"Added job {job_id} for ISO {iso_info.get('id')}")
 
@@ -218,7 +219,7 @@ class BackgroundWorker:
         """Clean up old completed and failed jobs."""
         try:
             # Clean from storage
-            deleted_count = self.storage.cleanup_old_jobs(max_age_days=7)
+            deleted_count = db.BurnJob.cleanup_old_jobs(max_age_days=7)
 
             # Clean from job queue (in-memory cleanup)
             self.job_queue.cleanup_completed_jobs(max_age_days=7)
@@ -250,7 +251,7 @@ class BackgroundWorker:
                 self.logger.info(f"Cleaned up {deleted_backups} old backups")
 
             # Get storage stats
-            stats = self.storage.get_storage_stats()
+            stats = db.BurnJob.get_storage_stats()
             self.logger.info(f"Storage stats: {stats}")
 
         except Exception as e:
@@ -264,7 +265,7 @@ class BackgroundWorker:
         """
         try:
             queue_status = self.job_queue.get_queue_status()
-            storage_stats = self.storage.get_storage_stats()
+            storage_stats = db.BurnJob.get_storage_stats()
             download_stats = self.download_manager.get_download_stats()
 
             return {

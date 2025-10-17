@@ -32,7 +32,6 @@ class MainWindowUI(QMainWindow):
     def __init__(self, job_queue: JobQueue):
         super().__init__()
         self.job_queue = job_queue
-
         # Initialize UI only
         self.setup_ui()
 

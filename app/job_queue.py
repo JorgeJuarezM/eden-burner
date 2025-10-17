@@ -423,6 +423,10 @@ class JobQueue:
 
     def _get_wildcard_files(self, file_path: str, extension: str) -> List[str]:
         """Get a list of files with wildcard and extension."""
+        if not file_path:
+            self.logger.error(f"File path is required for wildcard files: {file_path}")
+            return []
+
         file_path_without_extension = Path(file_path).with_suffix("")
         return glob.glob(f"{file_path_without_extension}*.{extension}") or []
 

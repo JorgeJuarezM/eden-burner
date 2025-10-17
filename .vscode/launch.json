@@ -69,6 +69,22 @@
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             }
+        },
+        {
+            "name": "Python: Clear Database",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "python": "${workspaceFolder}/venv/bin/python3",
+            "args": [
+                "--clear-database"
+            ],
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "EPSON_DEBUG": "1"
+            }
         }
     ]
 }
