@@ -5,6 +5,25 @@ EPSON PP-100 Disc Burner Application Launcher
 This script serves as the main entry point for the application,
 importing the actual implementation from the src/ directory.
 """
+
+
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="https://20f2faec570fd6297963b277a8ec4f11@sentry.edenmed.com/13",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
+    send_default_pii=True,
+    enable_tracing=True,
+    include_local_variables=True,
+    include_source_context=True,
+)
+
 import argparse
 import sys
 

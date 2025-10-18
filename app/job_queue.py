@@ -53,6 +53,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
+import sentry_sdk
+
 from app.graphql_client import SyncGraphQLClient
 from app.iso_downloader import ISODownloadManager
 from app.jdf_generator import JDFGenerator
@@ -547,6 +549,7 @@ class JobQueue:
                 time.sleep(10)  # wait 10 seconds before checking again
 
         except Exception as e:
+            sentry_sdk.capture_exception(e)
             self.logger.error(f"Error in burn loop for job {job.id}")
             job.update_status(JobStatus.FAILED, str(e), job_queue=self)
             self._notify_job_update(job)
