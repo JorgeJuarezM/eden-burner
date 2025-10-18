@@ -154,7 +154,30 @@ class Config:
             yaml.dump(self.config_data, f, default_flow_style=False, indent=2)
 
     def get_default_config(self):
-        """Get default configuration values."""
+        """
+        Generate comprehensive default configuration structure.
+
+        This method creates a complete default configuration dictionary with
+        all required sections and sensible defaults for the EPSON PP-100
+        Disc Burner application. The configuration is organized into logical
+        sections for easy management and extension.
+
+        Configuration Sections:
+        - api: GraphQL API settings (endpoint, authentication, timeouts)
+        - folders: File system paths for various operations
+        - robot: Robot-specific configuration (UUID, templates)
+        - jobs: Job processing parameters (concurrency, intervals)
+        - gui: User interface settings (refresh, notifications)
+        - database: Database file and backup settings
+        - logging: Application logging configuration
+
+        All paths are dynamically generated based on the application
+        configuration directory to ensure portability across systems.
+
+        Returns:
+            dict: Complete default configuration structure with all sections
+                 and appropriate default values for production use.
+        """
         config_dir = self.get_app_config_folder()
 
         return {
@@ -197,28 +220,69 @@ class Config:
             },
         }
 
-    # API Configuration
+    # API Configuration Properties
     @property
     def graphql_endpoint(self):
-        """GraphQL API endpoint URL."""
+        """
+        GraphQL API endpoint URL for ISO discovery and job management.
+
+        This property provides access to the configured GraphQL API endpoint
+        that the application uses to query for new ISO files and update job statuses.
+
+        Returns:
+            str: The GraphQL API endpoint URL (e.g., "https://api.example.com/graphql")
+
+        Note:
+            The endpoint should include the full path to the GraphQL endpoint,
+            typically ending with "/graphql" or similar.
+        """
         return self.config_data["api"]["graphql_endpoint"]
 
     @graphql_endpoint.setter
     def graphql_endpoint(self, value):
+        """Set the GraphQL API endpoint URL."""
         self.config_data["api"]["graphql_endpoint"] = value
 
     @property
     def api_key(self):
-        """API key for authentication."""
+        """
+        API authentication key for GraphQL requests.
+
+        This property manages the API key used for authenticating requests
+        to the GraphQL API. The key is sent in the Authorization header
+        as "Token <api_key>".
+
+        Returns:
+            str: The API authentication key, or empty string if not configured.
+
+        Security Note:
+            API keys should be kept secure and not logged in plain text.
+            The application handles this appropriately in production.
+        """
         return self.config_data["api"]["api_key"]
 
     @api_key.setter
     def api_key(self, value):
+        """Set the API authentication key."""
         self.config_data["api"]["api_key"] = value
 
     @property
     def api_timeout(self):
-        """API request timeout in seconds."""
+        """
+        Timeout for GraphQL API requests in seconds.
+
+        This property controls how long the application will wait for API
+        responses before timing out. The timeout applies to all GraphQL
+        operations including queries and mutations.
+
+        Returns:
+            int: Timeout value in seconds (default: 30 seconds)
+
+        The timeout should be set based on:
+        - Network latency expectations
+        - API server performance characteristics
+        - User experience requirements
+        """
         return self.config_data["api"]["timeout"]
 
     @property
@@ -344,7 +408,48 @@ class Config:
             folder.mkdir(parents=True, exist_ok=True)
 
     def validate_config(self):
-        """Validate configuration values."""
+        """
+        Comprehensive validation of all configuration parameters.
+
+        This method performs thorough validation of the entire configuration
+        to ensure all required values are present, properly formatted, and within
+        acceptable operational ranges. It checks for common configuration errors
+        that could cause application failures or unexpected behavior.
+
+        Validation Categories:
+        1. API Configuration: URL format and accessibility
+        2. Folder Structure: Directory existence and permissions
+        3. Job Processing: Concurrency limits and intervals
+        4. Robot Configuration: Template files and UUID format
+        5. Database Settings: File paths and backup policies
+        6. Logging Configuration: File paths and size limits
+
+        Enhanced Validations:
+        - URL format validation for GraphQL endpoint
+        - Parent directory existence for all folder paths
+        - Numeric range validation for timeouts and limits
+        - File path accessibility and permissions
+
+        Args:
+            self: Configuration instance with loaded config_data
+
+        Returns:
+            list: List of validation error messages. Empty list if all validations pass.
+
+        Error Types Validated:
+        - Missing or malformed configuration values
+        - Invalid URL formats (must start with http:// or https://)
+        - Non-existent parent directories for folder paths
+        - Invalid numeric ranges (negative timeouts, zero concurrency)
+        - Incompatible configuration combinations
+
+        Usage:
+            errors = config.validate_config()
+            if errors:
+                for error in errors:
+                    print(f"Config error: {error}")
+                sys.exit(1)
+        """
         errors = []
 
         # Validate API configuration
