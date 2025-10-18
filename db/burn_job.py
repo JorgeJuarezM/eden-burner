@@ -38,20 +38,20 @@ logger = logging.getLogger(__name__)
 def with_session(func):
     """Decorator for automatic session management."""
 
-    def execute_func(session: Session, *args, **kwargs):
-        commit = kwargs.get("commit", True)
+    def execute_func(*args, session: Session = None, **kwargs):
+        commit = kwargs.pop("commit", False)
         result = func(*args, **kwargs, session=session)
         if commit:
             session.commit()
         return result
 
     def wrapper(*args, **kwargs):
-        session = kwargs.get("session")
+        session = kwargs.pop("session", None)
         if session:
-            return execute_func(*args, **kwargs, session=session)
+            return execute_func(*args, session=session, **kwargs)
 
         with SessionLocal() as session:
-            return execute_func(*args, **kwargs, session=session)
+            return execute_func(*args, session=session, **kwargs)
 
     return wrapper
 
@@ -201,14 +201,39 @@ class BurnJob:
 
     @staticmethod
     @with_session
-    def update_job_state(job, session: Session = None) -> bool:
-        """Update job status and optionally error message and progress.
+    def update_job_state(job, session: Session = None, **kwargs) -> bool:
+        """
+        Update job status and related fields in the database.
+
+        This method synchronizes the in-memory job object with the database record,
+        updating status, progress, file paths, error messages, and timestamps.
+        It's called whenever a job's state changes during processing.
 
         Args:
-            job: Job to update
+            job: BurnJob instance containing updated status and metadata
+            session: Optional SQLAlchemy session (auto-managed if not provided)
+            **kwargs: Additional arguments for the update
 
         Returns:
-            True if updated successfully
+            bool: True if update was successful, False if job not found or error occurred
+
+        Updated Fields:
+        - status: Current job status (PENDING, DOWNLOADING, etc.)
+        - progress: Numeric progress percentage (0.0 to 100.0)
+        - iso_path: Path to downloaded ISO file
+        - jdf_path: Path to generated JDF file
+        - error_message: Error description if job failed
+        - disc_type: Detected disc type (CD/DVD)
+        - updated_at: Timestamp of last update
+
+        Error Handling:
+        - Returns False if job record not found in database
+        - Logs SQLAlchemy errors but doesn't raise them
+        - Ensures atomic updates within session transaction
+
+        Thread Safety:
+        - Session management ensures thread-safe database operations
+        - Multiple concurrent updates to different jobs are supported
         """
         try:
             job_record = session.query(BurnJobRecord).filter_by(id=job.id).first()
@@ -232,13 +257,34 @@ class BurnJob:
     @staticmethod
     @with_session
     def delete_job(job_id: str, session: Session = None) -> bool:
-        """Delete a job record.
+        """
+        Permanently remove a job record from the database.
+
+        This method performs a hard delete of the specified job record.
+        Use with caution as this operation cannot be undone and removes
+        all historical data about the job.
 
         Args:
-            job_id: Job ID
+            job_id: Unique identifier of the job to delete
+            session: Optional SQLAlchemy session (auto-managed if not provided)
 
         Returns:
-            True if deleted successfully
+            bool: True if job was found and deleted, False if job not found
+
+        Warning:
+        - This is a destructive operation that cannot be reversed
+        - Consider using job status updates instead of deletion for auditing
+        - Deleted jobs cannot be recovered from backups if needed
+
+        Error Handling:
+        - Returns False if job_id not found in database
+        - Logs SQLAlchemy errors but doesn't raise them
+        - Ensures atomic deletion within session transaction
+
+        Use Cases:
+        - Removing duplicate job entries
+        - Cleaning up test data
+        - Administrative job removal (with proper authorization)
         """
         try:
             job = session.query(BurnJobRecord).filter_by(id=job_id).first()
