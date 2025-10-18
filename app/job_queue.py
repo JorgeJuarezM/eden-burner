@@ -43,9 +43,7 @@ Error Handling:
     - Detailed error messages for troubleshooting
 """
 
-import glob
 import logging
-import shutil
 import threading
 import time
 import uuid
@@ -59,6 +57,7 @@ from app.graphql_client import SyncGraphQLClient
 from app.iso_downloader import ISODownloadManager
 from app.jdf_generator import JDFGenerator
 from config.config import Config
+from services.jdf_handler import JDFHandler
 
 app_config = Config.get_current_config()
 
@@ -199,10 +198,28 @@ class JobQueue:
     """Thread-safe job queue for managing burning jobs."""
 
     def __init__(self):
-        """Initialize job queue.
+        """
+        Initialize the thread-safe job queue system.
 
-        Args:
-            config: Application configuration
+        This constructor sets up the complete job queue infrastructure including:
+        - Job storage and queue management
+        - Thread synchronization primitives
+        - Callback system for job status updates
+        - Component integration (download manager, GraphQL client)
+        - Progress callback registration
+
+        The job queue manages the entire lifecycle of burning jobs from creation
+        through completion, handling concurrent processing with proper synchronization.
+
+        Thread Safety:
+        - Uses RLock for thread-safe operations on shared data
+        - All public methods are thread-safe
+        - Callback execution is protected from exceptions
+
+        Components Initialized:
+        - ISODownloadManager: For file download operations
+        - SyncGraphQLClient: For API communication
+        - Progress callbacks: For download progress tracking
         """
         self.logger = logging.getLogger(__name__)
 
@@ -224,11 +241,37 @@ class JobQueue:
         self.download_manager.add_progress_callback(self._on_download_progress)
 
     def add_job_update_callback(self, callback: Callable[[BurnJob], None]):
-        """Add callback for job updates."""
+        """
+        Register a callback function for job status updates.
+
+        Callbacks are invoked whenever a job's status changes, allowing
+        external components (like the GUI) to react to job progress.
+
+        Args:
+            callback: Function that accepts a BurnJob parameter and returns None.
+                     The callback should handle its own error conditions.
+
+        The callback system provides real-time job monitoring and enables
+        responsive UI updates without tight coupling between components.
+        """
         self.job_update_callbacks.append(callback)
 
     def remove_job_update_callback(self, callback: Callable[[BurnJob], None]):
-        """Remove job update callback."""
+        """
+        Unregister a job update callback function.
+
+        Removes a previously registered callback from the notification system.
+
+        Args:
+            callback: The callback function to remove (must be the same object reference)
+
+        Returns:
+            None
+
+        Note:
+            If the callback is not found in the list, this method silently succeeds
+            to avoid errors when cleaning up callbacks.
+        """
         if callback in self.job_update_callbacks:
             self.job_update_callbacks.remove(callback)
 
@@ -241,13 +284,35 @@ class JobQueue:
                 self.logger.error(f"Error in job update callback: {e}")
 
     def add_job(self, iso_info: Dict[str, Any]) -> str:
-        """Add a new job to the queue.
+        """
+        Add a new burning job to the processing queue.
+
+        This method creates a new BurnJob instance from ISO information and
+        adds it to both the job storage and processing queue for subsequent
+        execution through the job lifecycle pipeline.
 
         Args:
-            iso_info: ISO information from API
+            iso_info (Dict[str, Any]): Complete ISO information from GraphQL API including:
+                - id: Unique ISO identifier
+                - filename: ISO file name
+                - fileSize: Size in bytes
+                - downloadUrl: URL for file download
+                - checksum: File integrity check
+                - study: DICOM study information (patient, dates, descriptions)
 
         Returns:
-            Job ID
+            str: Unique job ID (UUID) for the created job
+
+        Process:
+        1. Generate unique job ID using UUID4
+        2. Create BurnJob instance with PENDING status
+        3. Store job in internal jobs dictionary
+        4. Add job ID to processing queue (FIFO order)
+        5. Trigger callback notifications for job creation
+        6. Log job creation for audit trail
+
+        Thread Safety:
+            Uses RLock to ensure atomic job creation and queue updates
         """
         job_id = str(uuid.uuid4())
 
@@ -265,7 +330,30 @@ class JobQueue:
         return job_id
 
     def get_next_job(self) -> Optional[BurnJob]:
-        """Get the next job to process."""
+        """
+        Retrieve the next job ready for processing from the queue.
+
+        This method implements a thread-safe job selection algorithm that:
+        1. Examines jobs in FIFO order from the processing queue
+        2. Validates job still exists in storage
+        3. Skips cancelled, completed, or failed jobs
+        4. Checks if job can be processed (capacity and status)
+        5. Returns the first processable job or None if none available
+
+        Returns:
+            Optional[BurnJob]: Next job ready for processing, or None if queue is empty
+                             or no jobs can be processed at this time.
+
+        Algorithm:
+        - Iterates through job_queue in FIFO order
+        - Validates job exists in self.jobs dictionary
+        - Filters out terminal state jobs (CANCELLED, COMPLETED, FAILED)
+        - Checks processing capacity using _can_process_job()
+        - Returns first valid job or None if no suitable jobs found
+
+        Thread Safety:
+            Uses RLock to prevent race conditions during queue examination
+        """
         with self.lock:
             while self.job_queue:
                 job_id = self.job_queue[0]
@@ -459,73 +547,32 @@ class JobQueue:
                 time.sleep(10)  # wait 10 seconds before checking again
 
         except Exception as e:
+            self.logger.error(f"Error in burn loop for job {job.id}")
             job.update_status(JobStatus.FAILED, str(e), job_queue=self)
             self._notify_job_update(job)
 
-    def _get_wildcard_files(self, file_path: str, extension: str) -> List[str]:
-        """Get a list of files with wildcard and extension."""
-        if not file_path:
-            self.logger.error(f"File path is required for wildcard files: {file_path}")
-            return []
-
-        file_path_without_extension = Path(file_path).with_suffix("")
-        return glob.glob(f"{file_path_without_extension}*.{extension}") or []
-
     def _check_burn_status(self, job: BurnJob):
         """Worker function for burning simulation."""
+        jdf_handler = JDFHandler(job.jdf_path)
         try:
-            # Check if ISO file exists
-            if not Path(job.iso_path).exists():
-                job.update_status(JobStatus.FAILED, "ISO file not found", job_queue=self)
-                return
-
-            if job.status == JobStatus.CANCELLED:
-                job.update_status(JobStatus.CANCELLED, job_queue=self)
-                self.logger.info("Cancelled Job: %s", job.id)
-                return
-
-            # Check if done file exists
-            done_files = self._get_wildcard_files(job.jdf_path, "DON")
-            if done_files:
+            if jdf_handler.status == JDFHandler.Status.SUCCESS:
                 job.update_status(JobStatus.COMPLETED, job_queue=self)
                 job.progress = 100.0
 
-                # Move files to completed folder
-                self._move_completed_files(job)
                 self.logger.info(f"Completed job {job.id}")
                 return
 
-            # Check if INP file exists
-            inp_files = self._get_wildcard_files(job.jdf_path, "INP")
-            if inp_files:
+            if jdf_handler.status == JDFHandler.Status.PROCESSING:
                 self.logger.info("Job in progress: %s", job.id)
                 job.progress = 50.0
                 return
 
-            # Check if ERR file exists
-            err_files = self._get_wildcard_files(job.jdf_path, "ERR")
-            if err_files:
+            if jdf_handler.status == JDFHandler.Status.ERROR:
                 raise Exception(f"Burner responded with error for job {job.id}")
 
         except Exception as e:
             job.update_status(JobStatus.FAILED, f"Burning failed: {str(e)}", job_queue=self)
             self.logger.error(f"Error in burn worker for job {job.id}: {e}")
-
-    def _move_completed_files(self, job: BurnJob):
-        """Move completed job files to completed folder."""
-        try:
-            if job.iso_path:
-
-                completed_iso = app_config.completed_folder / Path(job.iso_path).name
-                shutil.move(job.iso_path, completed_iso)
-
-            if job.jdf_path:
-                completed_jdf = app_config.completed_folder / Path(job.jdf_path).name
-
-                shutil.move(job.jdf_path, completed_jdf)
-
-        except Exception as e:
-            self.logger.error(f"Error moving completed files for job {job.id}: {e}")
 
     def cancel_job(self, job_id: str) -> bool:
         """Cancel a job.
