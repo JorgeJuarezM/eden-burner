@@ -550,7 +550,7 @@ class JobQueue:
 
         except Exception as e:
             sentry_sdk.capture_exception(e)
-            self.logger.error(f"Error in burn loop for job {job.id}: {e}")
+            self.logger.error(f"Error in burn loop for job {job.id}")
             job.update_status(JobStatus.FAILED, str(e), job_queue=self)
             self._notify_job_update(job)
 
