@@ -4,10 +4,12 @@ JDF (Job Definition Format) file generator for EPSON PP-100 robot
 
 import logging
 import os
+from pathlib import Path
 
 from jinja2 import Template
 
 from config.config import Config
+from services.jdf_handler import JDFHandler
 
 app_config = Config.get_current_config()
 import db
@@ -26,6 +28,9 @@ class JDFGenerator:
 
         self.job_id = job_id
         self.job_data = db.BurnJob.get_job(job_id)
+
+        jdf_file_path = Path(app_config.jdf_folder) / f"{self.job_id}.jdf"
+        self.jdf_handler = JDFHandler(jdf_file_path)
 
     def _read_file_template(self, template_path: str) -> str:
         """Read a file template.
@@ -112,12 +117,11 @@ class JDFGenerator:
         Returns:
             Path to generated JDF file
         """
+        if self.jdf_handler.exists():
+            return self.jdf_handler.get_jdf_path()
+
         # Ensure JDF folder exists
         app_config.ensure_folders_exist()
-
-        # Create JDF filename
-        jdf_filename = f"{self.job_id}.jdf"
-        jdf_path = app_config.jdf_folder / jdf_filename
 
         try:
             # Generate data file (.data) for additional information
@@ -136,6 +140,7 @@ class JDFGenerator:
                 replace_fields=data_path,
             )
 
+            jdf_path = self.jdf_handler.get_jdf_path()
             self._write_file(jdf_path, jdf_content)
 
             self.logger.info(f"Generated JDF file: {jdf_path}")
