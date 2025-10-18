@@ -32,6 +32,7 @@ import os
 import sys
 from datetime import datetime
 
+import qdarktheme
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (
@@ -115,6 +116,12 @@ class EpsonBurnerApp:
         # Setup application
         self.app = QApplication(sys.argv)
         self.app.setQuitOnLastWindowClosed(False)
+
+        pallete = qdarktheme.load_palette(theme="dark")
+        self.app.setPalette(pallete)
+
+        stylesheet = qdarktheme.load_stylesheet(theme="dark")
+        self.app.setStyleSheet(stylesheet)
 
     def initialize_application(self, show_gui=False):
         """

@@ -40,105 +40,6 @@ class MainWindowUI(QMainWindow):
         self.setWindowTitle("EPSON PP-100 Disc Burner")
         self.setFixedSize(1024, 768)
 
-        # Apply Eden-themed dark styles (black and white theme)
-        self.setStyleSheet(
-            """
-            QMainWindow {
-                background-color: #000000;
-                color: #ffffff;
-            }
-            QWidget {
-                background-color: #000000;
-                color: #ffffff;
-            }
-            QMenuBar {
-                background-color: #1a1a1a;
-                color: #ffffff;
-                border-bottom: 1px solid #333333;
-            }
-            QMenuBar::item {
-                background-color: transparent;
-                padding: 4px 8px;
-            }
-            QMenuBar::item:selected {
-                background-color: #333333;
-            }
-            QMenu {
-                background-color: #1a1a1a;
-                color: #ffffff;
-                border: 1px solid #333333;
-            }
-            QMenu::item {
-                padding: 4px 20px;
-            }
-            QMenu::item:selected {
-                background-color: #333333;
-            }
-            QStatusBar {
-                background-color: #1a1a1a;
-                color: #ffffff;
-                border-top: 1px solid #333333;
-            }
-            QComboBox {
-                background-color: #1a1a1a;
-                color: #ffffff;
-                border: 1px solid #333333;
-                border-radius: 4px;
-                padding: 4px 8px;
-            }
-            QComboBox::drop-down {
-                border: none;
-                background-color: #333333;
-            }
-            QComboBox::down-arrow {
-                image: none;
-                border-left: 5px solid transparent;
-                border-right: 5px solid transparent;
-                border-top: 5px solid #ffffff;
-                margin-right: 5px;
-            }
-            QComboBox QAbstractItemView {
-                background-color: #1a1a1a;
-                color: #ffffff;
-                border: 1px solid #333333;
-                selection-background-color: #333333;
-            }
-            QPushButton {
-                background-color: #333333;
-                color: #ffffff;
-                border: 1px solid #555555;
-                border-radius: 4px;
-                padding: 6px 12px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #444444;
-            }
-            QPushButton:pressed {
-                background-color: #222222;
-            }
-            QPushButton:disabled {
-                background-color: #111111;
-                color: #666666;
-                border-color: #222222;
-            }
-            QGroupBox {
-                color: #ffffff;
-                border: 2px solid #333333;
-                border-radius: 5px;
-                margin-top: 1ex;
-                font-weight: bold;
-            }
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                left: 10px;
-                padding: 0 10px 0 10px;
-                color: #ffffff;
-                background-color: #000000;
-            }
-        """
-        )
-
         # Create central widget
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -161,6 +62,7 @@ class MainWindowUI(QMainWindow):
         """Create the main content area with header and job table."""
         # Create central widget with header and job table
         central_widget = QWidget()
+
         layout = QVBoxLayout(central_widget)
         layout.setContentsMargins(8, 8, 8, 8)  # Smaller margins
         layout.setSpacing(8)  # Reduced spacing
@@ -178,41 +80,20 @@ class MainWindowUI(QMainWindow):
     def create_header_panel(self):
         """Create the header panel with logo and title."""
         panel = QWidget()
+
         layout = QHBoxLayout(panel)
         layout.setContentsMargins(0, 0, 0, 0)  # No margins in header
         layout.setSpacing(12)  # Small spacing between elements
 
         # Logo on the left (small and compact)
         logo_label = QLabel()
-        logo_pixmap = QPixmap("assets/logo.png")
+        logo_pixmap = QPixmap("assets/eden64x64.png")
         logo_label.setPixmap(logo_pixmap)
-
-        # Add subtle styling to logo container
-        logo_label.setStyleSheet(
-            """
-            QLabel {
-                background-color: transparent;
-                padding: 4px;
-                border-radius: 4px;
-            }
-        """
-        )
 
         layout.addWidget(logo_label)
 
         # Title to the right of the logo
         title_label = QLabel("EPSON PP-100 Disc Burner")
-        title_label.setStyleSheet(
-            """
-            QLabel {
-                color: #ffffff;
-                font-size: 18px;
-                font-weight: bold;
-                padding: 8px 0px;
-            }
-        """
-        )
-
         layout.addWidget(title_label)
         layout.addStretch()  # Push everything to the left
 
@@ -221,6 +102,7 @@ class MainWindowUI(QMainWindow):
     def create_job_list_panel(self):
         """Create the job list panel with improved design."""
         panel = QWidget()
+
         layout = QVBoxLayout(panel)
         layout.setContentsMargins(0, 0, 0, 0)  # No margins
         layout.setSpacing(8)  # Reduced spacing
@@ -232,16 +114,6 @@ class MainWindowUI(QMainWindow):
 
         # Compact panel title
         title_label = QLabel("Trabajos de Quemado")
-        title_label.setStyleSheet(
-            """
-            QLabel {
-                color: #ffffff;
-                font-size: 14px;
-                font-weight: bold;
-                padding: 4px 0px;
-            }
-        """
-        )
         title_row_layout.addWidget(title_label)
 
         # Spacer to push filter buttons to the right
@@ -294,34 +166,6 @@ class MainWindowUI(QMainWindow):
             button = QPushButton(f"{icon} {text}")
             button.setCheckable(True)
             button.setProperty("filter_value", value)
-
-            # Default styling
-            button.setStyleSheet(
-                """
-                QPushButton {
-                    background-color: #333333;
-                    color: #ffffff;
-                    border: 1px solid #555555;
-                    border-radius: 4px;
-                    padding: 6px 12px;
-                    font-size: 11px;
-                    font-weight: bold;
-                    margin: 0px 2px;
-                }
-                QPushButton:hover {
-                    background-color: #444444;
-                    border-color: #666666;
-                }
-                QPushButton:checked {
-                    background-color: #1976D2;
-                    border-color: #1976D2;
-                    color: #ffffff;
-                }
-                QPushButton:checked:hover {
-                    background-color: #1565C0;
-                }
-            """
-            )
 
             # Connect signal
             button.clicked.connect(lambda checked, v=value: self.on_filter_changed(v))

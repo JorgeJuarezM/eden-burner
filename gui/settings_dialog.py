@@ -42,49 +42,12 @@ class SettingsDialog(QDialog):
         self.setup_ui()
         self.load_current_settings()
 
-        self.setStyleSheet(
-            """
-                * {
-                    background-color: black;
-                }
-            """
-        )
-
     def setup_ui(self):
         """Setup the user interface."""
         layout = QVBoxLayout(self)
 
         # Create tab widget
         self.tab_widget = QTabWidget()
-        self.tab_widget.setStyleSheet(
-            """
-            QTabWidget::pane {
-                border: none;
-            }
-            QTabBar::tab {
-                background-color: black; /* Default tab background */
-                color: white;
-                border: 1px solid white;
-                padding: 10px;
-            }
-            QTabBar::tab:selected {
-                background-color: darkgray; /* Selected tab background */
-            }
-            QTabBar::tab:hover {
-                background-color: #212121; /* Tab background on hover */
-            }
-
-            QLineEdit,
-            QComboBox,
-            QSpinBox {
-                padding: 5px;
-                border: 1px solid #212121;
-            }
-            QGroupBox {
-                padding: 10px;
-            }
-            """
-        )
 
         # Create tabs
         self.create_general_tab()
@@ -101,39 +64,9 @@ class SettingsDialog(QDialog):
 
         self.save_button = QPushButton("Guardar")
         self.save_button.clicked.connect(self.save_settings)
-        self.save_button.setStyleSheet(
-            """
-            QPushButton {
-                background-color: #4CAF50;
-                color: white;
-                border: none;
-                padding: 8px 16px;
-                border-radius: 4px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #45a049;
-            }
-        """
-        )
 
         self.cancel_button = QPushButton("Cancelar")
         self.cancel_button.clicked.connect(self.reject)
-        self.cancel_button.setStyleSheet(
-            """
-            QPushButton {
-                background-color: #f44336;
-                color: white;
-                border: none;
-                padding: 8px 16px;
-                border-radius: 4px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #da190b;
-            }
-        """
-        )
 
         buttons_layout.addStretch()
         buttons_layout.addWidget(self.save_button)
@@ -144,13 +77,8 @@ class SettingsDialog(QDialog):
     def create_general_tab(self):
         """Create General settings tab."""
         tab = QWidget()
-        tab.setStyleSheet(
-            """
-            margin: 5px;
-            """
-        )
-
         layout = QFormLayout(tab)
+        layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
         layout.setSpacing(20)
 
         # API Endpoint

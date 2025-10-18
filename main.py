@@ -10,8 +10,6 @@ import sys
 
 from PyQt5.QtWidgets import QMessageBox
 from filelock import FileLock, Timeout
-
-# Import and run the main application
 from app.main import EpsonBurnerApp
 from config.config import Config
 
