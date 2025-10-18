@@ -42,6 +42,21 @@
                 "PYTHONPATH": "${workspaceFolder}",
                 "EPSON_DEBUG": "1",
                 "DISPLAY": "${env:DISPLAY}",
+                "QT_MAC_WANTS_LAYER": "1"
+            }
+        },
+        {
+            "name": "Wayland: Main Application (GUI)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "python": "${workspaceFolder}/venv/bin/python3",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "EPSON_DEBUG": "1",
+                "DISPLAY": "${env:DISPLAY}",
                 "QT_MAC_WANTS_LAYER": "1",
                 "QT_QPA_PLATFORM": "wayland"
             }

@@ -36,85 +36,6 @@ class JobDetailsDialogUI(QDialog):
         """Setup the dialog UI."""
         self.setWindowTitle(f"Detalles del Trabajo - {self.job.id[:16]}...")
         self.setMinimumSize(600, 500)
-        self.setStyleSheet(
-            """
-            QDialog {
-                background-color: #000000;
-                color: #ffffff;
-            }
-            QLabel {
-                color: #ffffff;
-                font-size: 11px;
-            }
-            QLineEdit {
-                background-color: #1a1a1a;
-                color: #ffffff;
-                border: 1px solid #333333;
-                border-radius: 2px;
-                padding: 4px 6px;
-                font-size: 11px;
-            }
-            QLineEdit:read-only {
-                background-color: #111111;
-                color: #cccccc;
-            }
-            QGroupBox {
-                color: #ffffff;
-                border: 1px solid #333333;
-                border-radius: 3px;
-                margin-top: 6px;
-                font-weight: bold;
-                font-size: 11px;
-            }
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                left: 8px;
-                padding: 0 4px 0 4px;
-                color: #ffffff;
-                background-color: #000000;
-            }
-            QProgressBar {
-                border: 1px solid #333333;
-                border-radius: 2px;
-                background-color: #1a1a1a;
-                color: #ffffff;
-                font-weight: bold;
-                font-size: 11px;
-            }
-            QProgressBar::chunk {
-                background-color: #4CAF50;
-                border-radius: 1px;
-            }
-            QPushButton {
-                background-color: #333333;
-                color: #ffffff;
-                border: 1px solid #555555;
-                border-radius: 2px;
-                padding: 6px 12px;
-                font-weight: bold;
-                font-size: 11px;
-            }
-            QPushButton:hover {
-                background-color: #444444;
-            }
-            QPushButton:pressed {
-                background-color: #222222;
-            }
-            QPushButton:disabled {
-                background-color: #111111;
-                color: #666666;
-                border-color: #222222;
-            }
-            QTextEdit {
-                background-color: #1a1a1a;
-                color: #ffffff;
-                border: 1px solid #333333;
-                border-radius: 2px;
-                padding: 4px 6px;
-                font-size: 11px;
-            }
-        """
-        )
 
         layout = QVBoxLayout(self)
 
@@ -127,7 +48,6 @@ class JobDetailsDialogUI(QDialog):
         self.job_id_txt.setReadOnly(True)
         self.job_id_txt.setMinimumWidth(400)
         self.job_id_txt.setMaximumWidth(400)
-        self.job_id_txt.setStyleSheet("QTextEdit { background-color: #313131; color: #ffffff; }")
         info_layout.addRow("ID:", self.job_id_txt)
 
         self.status_label = QLabel("--")
@@ -174,38 +94,9 @@ class JobDetailsDialogUI(QDialog):
         self.error_text.setMaximumHeight(100)
         self.error_text.setReadOnly(True)
         self.error_text.setText("")
-        self.error_text.setStyleSheet(
-            """
-            QTextEdit {
-                background-color: #1a1a1a;
-                color: #ff6b6b;
-                border: 1px solid #ff6b6b;
-                border-radius: 4px;
-                padding: 8px;
-                font-family: monospace;
-            }
-        """
-        )
         error_layout.addWidget(self.error_text)
 
         self.error_group.setLayout(error_layout)
-        self.error_group.setStyleSheet(
-            """
-            QGroupBox {
-                font-weight: bold;
-                border: 2px solid #ff6b6b;
-                border-radius: 5px;
-                margin-top: 1ex;
-                color: #ff6b6b;
-            }
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                left: 10px;
-                padding: 0 5px 0 5px;
-                color: #ff6b6b;
-            }
-        """
-        )
         layout.addWidget(self.error_group)
 
         # Buttons
@@ -328,22 +219,6 @@ class JobDetailsDialogLogic(JobDetailsDialogUI):
         disc_type_text = self.job.disc_type if self.job.disc_type else "No detectado"
         self.disc_type_label.setText(disc_type_text)
 
-        # Color code disc type in details dialog
-        if self.job.disc_type == "CD":
-            self.disc_type_label.setStyleSheet("color: #0066cc; font-weight: bold;")  # Blue for CD
-        elif self.job.disc_type == "DVD":
-            self.disc_type_label.setStyleSheet(
-                "color: #006600; font-weight: bold;"
-            )  # Green for DVD
-        elif self.job.disc_type == "Invalid":
-            self.disc_type_label.setStyleSheet(
-                "color: #cc0000; font-weight: bold;"
-            )  # Red for invalid
-        else:
-            self.disc_type_label.setStyleSheet(
-                "color: #666666; font-weight: bold;"
-            )  # Gray for unknown
-
         # Patient information
         study_info = self.job.iso_info.get("study", {})
         patient_info = study_info.get("patient", {})
@@ -361,14 +236,6 @@ class JobDetailsDialogLogic(JobDetailsDialogUI):
 
         # Update progress bar
         self.progress_bar.setValue(int(self.job.progress))
-
-        # Color code progress bar
-        if self.job.status == JobStatus.COMPLETED:
-            self.progress_bar.setStyleSheet("QProgressBar::chunk { background-color: #90EE90; }")
-        elif self.job.status == JobStatus.FAILED:
-            self.progress_bar.setStyleSheet("QProgressBar::chunk { background-color: #FFB6C1; }")
-        else:
-            self.progress_bar.setStyleSheet("QProgressBar::chunk { background-color: #ADD8E6; }")
 
         # Update button states
         # Get max retries from parent window's config if available
