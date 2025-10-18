@@ -280,7 +280,7 @@ class EpsonBurnerApp:
         self.tray_icon = QSystemTrayIcon(self.app)
 
         # Try to load icon, fallback to default if not available
-        icon_path = os.path.join(os.path.dirname(__file__), "..", "assets", "icon.png")
+        icon_path = os.path.join(os.path.dirname(__file__), "..", "assets", "logo.png")
         if os.path.exists(icon_path):
             self.tray_icon.setIcon(QIcon(icon_path))
         else:
@@ -418,6 +418,14 @@ class EpsonBurnerApp:
                     estimated_completion=job_record.estimated_completion,
                 )
 
+                # Override in progress statuses
+                if job.status == JobStatus.BURNING:
+                    job.status = JobStatus.QUEUED_FOR_BURNING
+                elif job.status == JobStatus.DOWNLOADING:
+                    job.status = JobStatus.PENDING
+                elif job.status == JobStatus.GENERATING_JDF:
+                    job.status = JobStatus.DOWNLOADED
+
                 # Add to job queue
                 self.job_queue.jobs[job.id] = job
 
@@ -428,13 +436,6 @@ class EpsonBurnerApp:
                     JobStatus.CANCELLED,
                 ]:
                     self.job_queue.job_queue.append(job.id)
-
-                if job.status == JobStatus.BURNING:
-                    self.job_queue._queue_for_burning(job)
-                elif job.status == JobStatus.DOWNLOADING:
-                    self.job_queue._start_download(job)
-                elif job.status == JobStatus.QUEUED_FOR_BURNING:
-                    self.job_queue._start_burning(job)
 
             self.logger.info(f"Loaded {len(jobs)} existing jobs from storage")
 

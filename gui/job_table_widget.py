@@ -95,18 +95,18 @@ class JobTableWidgetLogic(JobTableWidgetUI):
 
             # Color code disc type
             if disc_type == "CD":
-                disc_type_item.setBackground(QColor(173, 216, 230))  # Light blue for CD
+                disc_type_item.setForeground(QColor(173, 216, 230))  # Light blue for CD
             elif disc_type == "DVD":
-                disc_type_item.setBackground(QColor(144, 238, 144))  # Light green for DVD
+                disc_type_item.setForeground(QColor(144, 238, 144))  # Light green for DVD
             elif disc_type == "Invalid":
-                disc_type_item.setBackground(QColor(255, 182, 193))  # Light pink for invalid
+                disc_type_item.setForeground(QColor(255, 182, 193))  # Light pink for invalid
             else:
-                disc_type_item.setBackground(QColor(211, 211, 211))  # Light gray for unknown
+                disc_type_item.setForeground(QColor(211, 211, 211))  # Light gray for unknown
 
             disc_type_item.setToolTip(
                 f"Tipo de disco: {disc_type}" if disc_type else "Tipo de disco aún no detectado"
             )
-            disc_type_item.setForeground(QColor(0, 0, 0))  # Black text for better contrast
+            # disc_type_item.setForeground(QColor(0, 0, 0))  # Black text for better contrast
             self.setItem(row, 2, disc_type_item)
 
             # Progress bar with custom text (compact design)
@@ -115,33 +115,27 @@ class JobTableWidgetLogic(JobTableWidgetUI):
             progress_bar.setValue(int(job.progress))
             progress_bar.setTextDirection(QProgressBar.Direction.TopToBottom)
             progress_bar.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            progress_bar.setFixedHeight(20)  # Compact height
+            # progress_bar.setFixedHeight(20)  # Compact height
+            progress_bar.setValue(0)  # Reset progress bar
+
+            progress_bar.setStyleSheet("QProgressBar::chunk { background-color: #004875; }")
 
             # Set custom text based on status with enhanced dark theme colors
             if job.status == JobStatus.COMPLETED:
-                progress_bar.setValue(100)  # Ensure full progress for completed
                 progress_bar.setFormat("✓ Completado")
             elif job.status == JobStatus.FAILED:
-                progress_bar.setValue(100)  # Ensure full progress for failed
                 progress_bar.setFormat("✗ Fallido")
             elif job.status == JobStatus.DOWNLOADING:
+                progress_bar.setValue(int(job.progress))
                 progress_bar.setFormat(f"📥 Descargando {int(job.progress)}%")
-            elif job.status == JobStatus.DOWNLOADED:
-                progress_bar.setValue(100)  # Ensure full progress for downloaded
-                progress_bar.setFormat("📁 Descargado")
             elif job.status == JobStatus.BURNING:
                 progress_bar.setFormat(f"🔥 Quemando {int(job.progress)}%")
-            elif job.status == JobStatus.VERIFYING:
-                progress_bar.setFormat(f"🔍 Verificando {int(job.progress)}%")
             elif job.status == JobStatus.CANCELLED:
-                progress_bar.setValue(100)  # Ensure full progress for cancelled
                 progress_bar.setFormat("✗ Cancelado")
             elif job.status == JobStatus.PENDING:
-                progress_bar.setValue(0)  # No progress for pending
                 progress_bar.setFormat("⏳ Pendiente")
             else:
-                progress_bar.setValue(int(job.progress))
-                progress_bar.setFormat(f"{int(job.progress)}%")
+                progress_bar.setFormat("⏳ Esperando...")
 
             self.setCellWidget(row, 3, progress_bar)
 

@@ -236,18 +236,15 @@ class BackgroundWorker:
     def _process_job_queue(self):
         """Process the job queue."""
         try:
+            # First continue with in progress jobs
+            self._check_ready_jobs()
+
             # Get next job to process (for new jobs or pending jobs)
             job = self.job_queue.get_next_job()
 
             if job:
                 self.logger.debug(f"Processing job: {job.id}")
                 self.job_queue.start_job_processing(job)
-
-                # After processing, check if job is ready for next stage
-                # self._check_job_stage_progression(job)
-
-            # Also check for jobs that are ready for next stage
-            self._check_ready_jobs()
 
         except Exception as e:
             self.logger.error(f"Error processing job queue: {e}")
@@ -265,19 +262,11 @@ class BackgroundWorker:
 
             for job in ready_jobs:
                 # Check if we can start this job (enough capacity)
-                active_jobs = len(
-                    [
-                        j
-                        for j in self.job_queue.get_all_jobs()
-                        if j.status
-                        in [JobStatus.DOWNLOADING, JobStatus.BURNING, JobStatus.VERIFYING]
-                    ]
-                )
-                if active_jobs < app_config.max_concurrent_jobs:
-                    self.logger.debug(f"Processing ready job {job.id} for next stage")
-                    self.job_queue.start_job_processing(job)
-                    break  # Process one at a time
+                if not self.job_queue._can_process_job(job):
+                    break
 
+                self.logger.debug(f"Processing ready job {job.id} for next stage")
+                self.job_queue.start_job_processing(job)
         except Exception as e:
             self.logger.error(f"Error checking ready jobs: {e}")
 

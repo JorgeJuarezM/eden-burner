@@ -384,13 +384,7 @@ class JobQueue:
         """Check if a job can be processed (started or continued)."""
         in_progress_statuses = [JobStatus.DOWNLOADING, JobStatus.BURNING, JobStatus.VERIFYING]
         active_jobs = len([j for j in self.jobs.values() if j.status in in_progress_statuses])
-
-        # Allow processing if:
-        # 1. We have capacity for active jobs, OR
-        # 2. The job is not in an active state (intermediate states like DOWNLOADED, JDF_READY, etc.)
-        return (
-            active_jobs < app_config.max_concurrent_jobs or job.status not in in_progress_statuses
-        )
+        return active_jobs < app_config.max_concurrent_jobs
 
     def start_job_processing(self, job: BurnJob):
         """Start processing a job."""
@@ -651,29 +645,16 @@ class JobQueue:
                 Path(job.iso_path).unlink()
                 self.logger.debug(f"Removed ISO file: {job.iso_path}")
 
-            # Remove JDF file if it exists
-            if job.jdf_path and Path(job.jdf_path).exists():
-                Path(job.jdf_path).unlink()
-                self.logger.debug(f"Removed JDF file: {job.jdf_path}")
+            # Ensure JDF path is set
+            if not job.jdf_path:
+                return
 
-            # Remove done file if it exists
-            done_files = self._get_wildcard_files(job.jdf_path, "DON")
-            for done_file in done_files:
-                Path(done_file).unlink()
-                self.logger.debug(f"Removed done file: {done_file}")
-
-            # Remove inp file if it exists
-            inp_files = self._get_wildcard_files(job.jdf_path, "INP")
-            for inp_file in inp_files:
-                Path(inp_file).unlink()
-                self.logger.debug(f"Removed inp file: {inp_file}")
-
-            # Remove error file if it exists
-            error_files = self._get_wildcard_files(job.jdf_path, "ERR")
-            for error_file in error_files:
-                Path(error_file).unlink()
-                self.logger.debug(f"Removed error file: {error_file}")
-
+            jdf_handler = JDFHandler(job.jdf_path)
+            found_jdf_files = jdf_handler.get_matching_files()
+            for key, value in found_jdf_files.items():
+                for file_path in value:
+                    Path(file_path).unlink()
+                    self.logger.debug(f"Removed {key} file: {file_path}")
         except Exception as e:
             self.logger.warning(f"Error cleaning up files for job {job.id}: {e}")
 
