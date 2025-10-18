@@ -64,14 +64,58 @@ app_config = Config.get_current_config()
 
 
 class BackgroundWorker:
-    """Background worker that manages job processing and API polling."""
+    """
+    Background worker that manages job processing and API polling.
+
+    This class implements a comprehensive background processing system that handles
+    job queue monitoring, API polling for new ISOs, and scheduled maintenance tasks.
+    It operates independently of the GUI, allowing the application to continue
+    processing jobs even when the main window is closed.
+
+    Key Responsibilities:
+        - Monitor job queue for ready-to-process jobs
+        - Poll GraphQL API for new ISO discoveries
+        - Execute scheduled maintenance tasks (cleanup, backups)
+        - Provide real-time status and statistics
+        - Handle graceful startup and shutdown
+
+    Threading Strategy:
+        - Runs in dedicated background thread using threading.Thread
+        - Uses daemon thread to prevent blocking application exit
+        - Proper synchronization with job queue operations
+        - Exception isolation to prevent scheduler crashes
+
+    Scheduling Tasks:
+        - API polling (configurable interval)
+        - Job cleanup (daily)
+        - Download cache cleanup (24 hours)
+        - Database maintenance (24 hours)
+        - Statistics collection (ongoing)
+
+    Integration Points:
+        - JobQueue: For job processing coordination
+        - GraphQLClient: For API communication
+        - LocalStorage: For database maintenance
+        - Configuration: For interval and timeout settings
+    """
 
     def __init__(self, job_queue: JobQueue):
-        """Initialize background worker.
+        """
+        Initialize the background worker system.
+
+        Sets up all necessary components for background operation including
+        logging, scheduler configuration, and component integration.
 
         Args:
-            config: Application configuration
-            job_queue: Job queue instance
+            job_queue (JobQueue): The job queue instance to monitor and process.
+                                 Must be fully initialized before passing.
+
+        The initialization process:
+        1. Sets up logging for background operations
+        2. Initializes component references (download_manager, storage, graphql_client)
+        3. Configures control flags for thread management
+        4. Sets up the task scheduler with periodic jobs
+        5. Prepares for background thread execution
         """
         self.job_queue = job_queue
         self.logger = logging.getLogger(__name__)
@@ -92,7 +136,26 @@ class BackgroundWorker:
         self.setup_scheduler()
 
     def setup_scheduler(self):
-        """Setup the task scheduler."""
+        """
+        Configure the task scheduler with all periodic operations.
+
+        This method sets up the complete scheduling system for background tasks
+        including API polling, cleanup operations, and maintenance activities.
+
+        Scheduled Tasks:
+            - API Polling: Check for new ISOs every N seconds (configurable)
+            - Job Cleanup: Remove old completed/failed jobs daily
+            - Download Cleanup: Clean old download cache every 6 hours
+            - Database Maintenance: Backup and cleanup every 24 hours
+
+        The scheduler uses the `schedule` library for reliable periodic execution
+        and integrates with the background worker's main loop for task processing.
+
+        All tasks are configured with appropriate intervals based on:
+        - app_config.check_interval: API polling frequency
+        - Business logic requirements for cleanup operations
+        - Database maintenance best practices
+        """
         # Schedule API checks
         schedule.every(app_config.check_interval).seconds.do(self.check_for_new_isos)
 
@@ -104,7 +167,30 @@ class BackgroundWorker:
         schedule.every(24).hours.do(self.database_maintenance)
 
     def start(self):
-        """Start the background worker."""
+        """
+        Start the background worker thread.
+
+        This method initiates the background processing thread that will handle
+        all scheduled tasks and job queue monitoring. The thread is created as
+        a daemon thread to prevent blocking application exit.
+
+        The startup process includes:
+        1. Validation that worker is not already running
+        2. Setting the running flag to prevent duplicate starts
+        3. Creating and starting the background thread
+        4. Logging the successful startup
+
+        The background thread will immediately begin:
+        - Processing scheduled tasks via schedule.run_pending()
+        - Monitoring job queue for ready jobs
+        - Executing API polling and maintenance tasks
+
+        Returns:
+            None
+
+        Raises:
+            RuntimeError: If attempted to start while already running (logged as warning)
+        """
         if self.running:
             self.logger.warning("Background worker already running")
             return
@@ -238,7 +324,7 @@ class BackgroundWorker:
                     if not existing_jobs:
                         # Add as new job
                         job_id = self.job_queue.add_job(iso_info)
-                        db.BurnJob.save_job(job_id, iso_info)
+                        db.BurnJob.save_job(job_id, iso_info, commit=True)
                         added_count += 1
                         self.logger.info(f"Added job {job_id} for ISO {iso_info.get('id')}")
 
@@ -261,7 +347,7 @@ class BackgroundWorker:
         """Clean up old completed and failed jobs."""
         try:
             # Clean from storage
-            deleted_count = db.BurnJob.cleanup_old_jobs(max_age_days=7)
+            deleted_count = db.BurnJob.cleanup_old_jobs(max_age_days=7, commit=True)
 
             # Clean from job queue (in-memory cleanup)
             self.job_queue.cleanup_completed_jobs(max_age_days=7)
