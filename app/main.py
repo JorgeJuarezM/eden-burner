@@ -27,13 +27,11 @@ Command Line Options:
     --clear-database: Clear database and exit
 """
 
-import argparse
 import logging
 import os
 import sys
 from datetime import datetime
 
-from filelock import FileLock, Timeout
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (
@@ -84,6 +82,19 @@ class EpsonBurnerApp:
     """
 
     def __init__(self):
+        """
+        Initialize the EPSON PP-100 Disc Burner application.
+
+        This constructor sets up the complete application environment including:
+        - Logging configuration using application settings
+        - Configuration validation and error handling
+        - Required folder structure creation
+        - Core component initialization (storage, job queue, background worker)
+        - PyQt5 application setup with system tray support
+
+        The initialization follows a fail-fast approach - if configuration
+        is invalid, the application exits immediately with detailed error messages.
+        """
         # Setup logging (now that config is available)
         self.setup_logging()
 
@@ -106,6 +117,28 @@ class EpsonBurnerApp:
         self.app.setQuitOnLastWindowClosed(False)
 
     def initialize_application(self, show_gui=False):
+        """
+        Initialize and start the complete application system.
+
+        This method performs the full application bootstrap including database setup,
+        system tray integration, GUI initialization, and background processing startup.
+
+        Args:
+            show_gui (bool): Whether to show the main window immediately.
+                           If False, application runs in system tray mode only.
+
+        Raises:
+            Exception: If database migration fails or critical initialization errors occur.
+
+        The initialization sequence ensures:
+        1. Database schema is up to date
+        2. System tray is properly configured
+        3. GUI is created (if requested)
+        4. Signal connections are established
+        5. Background worker starts processing
+        6. Existing jobs are loaded from storage
+        7. GUI is shown after a brief delay for proper initialization
+        """
         # Migrate database
         success = self.storage.migrate_database()
         if not success:
@@ -135,13 +168,39 @@ class EpsonBurnerApp:
             QTimer.singleShot(1000, self.show_main_window)  # Delay to ensure proper initialization
 
     def _create_main_window(self):
-        """Create main window (lazy loading)."""
+        """
+        Create main window using lazy loading pattern.
+
+        This method implements lazy initialization for the main GUI window,
+        creating it only when first needed. This improves startup performance
+        and reduces memory usage when running in background mode.
+
+        The method ensures:
+        - Window is created only once (singleton pattern)
+        - Signal connections are established after creation
+        - Proper error handling for window creation failures
+        """
         if self.main_window is None:
             self.main_window = MainWindow(self.job_queue)
             self.connect_signals()
 
     def setup_logging(self):
-        """Setup application logging."""
+        """
+        Configure application-wide logging system.
+
+        Sets up structured logging using configuration from app_config with:
+        - File logging for persistent records
+        - Console logging for development/debugging
+        - Configurable log levels (DEBUG, INFO, WARNING, ERROR)
+        - Timestamped log format for better traceability
+
+        The logging configuration is read from:
+        - config_data["logging"]["level"]: Log level (DEBUG, INFO, etc.)
+        - config_data["logging"]["file"]: Log file path for file handler
+
+        This method must be called early in application initialization
+        to ensure all subsequent logging calls are properly configured.
+        """
         log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
         logging.basicConfig(
             level=getattr(logging, app_config.config_data["logging"]["level"]),
@@ -154,7 +213,23 @@ class EpsonBurnerApp:
         self.logger = logging.getLogger(__name__)
 
     def show_config_errors(self, errors: list):
-        """Show configuration errors to user."""
+        """
+        Display configuration validation errors to the user.
+
+        This method handles configuration errors discovered during application
+        initialization. It provides both console and GUI feedback depending
+        on whether the QApplication has been initialized.
+
+        Args:
+            errors (list): List of configuration error messages to display.
+
+        The method formats errors as a bulleted list and shows them either:
+        - In console (if QApplication not yet initialized)
+        - In a critical message box (if GUI is available)
+
+        After displaying errors, the application exits with code 1 to prevent
+        running with invalid configuration.
+        """
         error_text = "Errores de configuración encontrados:\n\n" + "\n".join(
             f"• {error}" for error in errors
         )
@@ -168,11 +243,37 @@ class EpsonBurnerApp:
             sys.exit(1)
 
     def setup_system_tray(self):
-        """Setup system tray icon and menu."""
+        """
+        Initialize and configure the system tray icon and menu.
+
+        This method sets up the complete system tray integration including:
+        - Icon loading with fallback to system default
+        - Tooltip configuration
+        - Context menu with all available actions
+        - Signal connections for tray interactions
+
+        The system tray provides background operation capabilities when
+        the main window is closed, allowing users to:
+        - Show/hide the main window
+        - Check system status
+        - Force API checks for new ISOs
+        - Quit the application
+
+        Icon Strategy:
+        1. Try to load custom application icon from assets
+        2. Fallback to system computer icon if custom not available
+        3. Ensure PyQt5 compatibility with icon loading
+
+        Menu Actions:
+        - Show/Hide: Toggle main window visibility
+        - System Status: Display current system statistics
+        - Force API Check: Manually trigger ISO discovery
+        - Quit: Graceful application shutdown
+        """
         self.tray_icon = QSystemTrayIcon(self.app)
 
         # Try to load icon, fallback to default if not available
-        icon_path = os.path.join(os.path.dirname(__file__), "..", "resources", "icon.png")
+        icon_path = os.path.join(os.path.dirname(__file__), "..", "assets", "icon.png")
         if os.path.exists(icon_path):
             self.tray_icon.setIcon(QIcon(icon_path))
         else:
@@ -230,7 +331,7 @@ class EpsonBurnerApp:
     def on_job_updated_from_gui(self, job):
         """Handle job updates from GUI."""
         # Update storage
-        db.BurnJob.update_job_state(job)
+        db.BurnJob.update_job_state(job, commit=True)
 
         # Show notification for important status changes
         if job.status.value in ["completed", "failed"]:
@@ -439,7 +540,7 @@ class EpsonBurnerApp:
         try:
             # Update all job statuses in storage
             for job in self.job_queue.get_all_jobs():
-                db.BurnJob.update_job_state(job)
+                db.BurnJob.update_job_state(job, commit=True)
 
             self.logger.info("Application state saved")
 
@@ -449,79 +550,3 @@ class EpsonBurnerApp:
     def run(self):
         """Run the application."""
         return self.app.exec_()
-
-
-def main():
-    """Main entry point."""
-    parser = argparse.ArgumentParser(description="EPSON PP-100 Disc Burner Application")
-    parser.add_argument(
-        "--background",
-        action="store_true",
-        help="Run in background mode (system tray only, no GUI on startup)",
-    )
-    parser.add_argument("--test-config", action="store_true", help="Test configuration and exit")
-    parser.add_argument("--clear-database", action="store_true", help="Clear the database and exit")
-
-    args = parser.parse_args()
-
-    if args.test_config:
-        # Test configuration without starting GUI
-        try:
-            config = Config()
-            config_errors = config.validate_config()
-            if config_errors:
-                print("Configuration errors found:")
-                for error in config_errors:
-                    print(f"  - {error}")
-                return 1
-            else:
-                print("Configuration is valid")
-                print(f"Robot UUID: {config.robot_uuid}")
-                print(f"API Endpoint: {config.graphql_endpoint}")
-                return 0
-        except Exception as e:
-            print(f"Error testing configuration: {e}")
-            return 1
-
-    if args.clear_database:
-        # Clear the database
-        try:
-            from app.local_storage import LocalStorage
-
-            storage = LocalStorage()
-            success = storage.clear_database()
-            if success:
-                print("Database cleared successfully")
-                return 0
-            else:
-                print("Error clearing database")
-                return 1
-        except Exception as e:
-            print(f"Error clearing database: {e}")
-            return 1
-
-    # Default behavior: show GUI
-    # Use --background flag to run in system tray only mode
-    show_gui = not args.background
-
-    try:
-        burner_app = EpsonBurnerApp()
-        with FileLock("app.lock", timeout=1):
-            burner_app.initialize_application(show_gui=show_gui)
-            return burner_app.run()
-    except Timeout:
-        print("Application already running")
-        if show_gui:
-            QMessageBox.warning(
-                None,
-                "Aplicación ya en ejecución",
-                "La aplicación Eden Burner ya se está ejecutando.",
-            )
-        return 1
-    except Exception as e:
-        print(f"Error starting application: {e}")
-        return 1
-
-
-if __name__ == "__main__":
-    sys.exit(main())
