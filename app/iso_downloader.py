@@ -117,7 +117,8 @@ class ISODownloadManager:
         # Check if file already exists
         if download_path.exists():
             self.logger.info(f"ISO file already exists: {download_path}")
-            return str(download_path)
+            download_path.unlink()
+            self.logger.info(f"Deleted existing ISO file: {download_path}")
 
         # Create progress tracker
         progress = DownloadProgress(iso_id, filename)
